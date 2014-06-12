@@ -34,6 +34,7 @@
         <module>message-query</module>
         <module>message-info</module>
         <module>smartcom-demo</module>
+        <module>core</module>
     </modules>
 
     <dependencies>

@@ -17,5 +17,18 @@
             <artifactId>smartcom-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom.mb;
+package at.ac.tuwien.dsg.smartcom.broker;
 
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.queue.FeedbackRaiser;

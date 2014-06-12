@@ -1,5 +1,6 @@
-package at.ac.tuwien.dsg.smartcom.mb;
+package at.ac.tuwien.dsg.smartcom;
 
+import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 
 import java.util.HashMap;
@@ -11,21 +12,17 @@ import java.util.concurrent.LinkedBlockingDeque;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public final class SimpleMessageBroker{
+public final class SimpleMessageBroker implements MessageBroker {
 
-    private SimpleMessageBroker() {
-    }
+    private final BlockingDeque<Message> feedbackQueue = new LinkedBlockingDeque<>();
+    private final Map<String,BlockingDeque<Message>> requestQueues = new HashMap<>();
+    private final Map<String,BlockingDeque<Message>> taskQueues = new HashMap<>();
 
-
-    private static final BlockingDeque<Message> feedbackQueue = new LinkedBlockingDeque<>();
-    private static final Map<String,BlockingDeque<Message>> requestQueues = new HashMap<>();
-    private static final Map<String,BlockingDeque<Message>> taskQueues = new HashMap<>();
-
-    public static void raiseFeedback(Message message) {
+    public void raiseFeedback(Message message) {
         feedbackQueue.add(message);
     }
 
-    public static Message receiveFeedback() {
+    public Message receiveFeedback() {
         try {
             return feedbackQueue.take();
         } catch (InterruptedException e) {
@@ -33,7 +30,7 @@ public final class SimpleMessageBroker{
         }
     }
 
-    public static Message receiveRequests(String id) {
+    public Message receiveRequests(String id) {
         try {
             BlockingDeque<Message> queue;
             synchronized (requestQueues) {
@@ -50,7 +47,7 @@ public final class SimpleMessageBroker{
         }
     }
 
-    public static void publishRequest(String id, Message message) {
+    public void publishRequest(String id, Message message) {
         BlockingDeque<Message> queue;
         synchronized (requestQueues) {
             queue = requestQueues.get(id);
@@ -63,7 +60,7 @@ public final class SimpleMessageBroker{
         queue.add(message);
     }
 
-    public static Message receiveTasks(String id) {
+    public Message receiveTasks(String id) {
         try {
             BlockingDeque<Message> queue;
             synchronized (taskQueues) {
@@ -80,7 +77,7 @@ public final class SimpleMessageBroker{
         }
     }
 
-    public static void publishTask(String id, Message message) {
+    public void publishTask(String id, Message message) {
         BlockingDeque<Message> queue;
         synchronized (taskQueues) {
             queue = taskQueues.get(id);

@@ -27,9 +27,9 @@ class AdapterExecutionEngine {
     private final AddressResolver addressResolver;
     private final MessageBroker broker;
 
-    private final Map<String, FeedbackAdapterExecution> feedbackAdapterMap = new HashMap<String, FeedbackAdapterExecution>();
-    private final Map<String, PeerAdapterExecution> peerAdapterMap = new HashMap<String, PeerAdapterExecution>();
-    private final Map<String, Future<?>> futureMap = new HashMap<String, Future<?>>();
+    private final Map<String, FeedbackAdapterExecution> feedbackAdapterMap = new HashMap<>();
+    private final Map<String, PeerAdapterExecution> peerAdapterMap = new HashMap<>();
+    private final Map<String, Future<?>> futureMap = new HashMap<>();
 
     AdapterExecutionEngine(AddressResolver addressResolver, MessageBroker broker) {
         this.addressResolver = addressResolver;

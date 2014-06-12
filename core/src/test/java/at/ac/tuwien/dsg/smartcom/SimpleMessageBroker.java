@@ -1,6 +1,7 @@
 package at.ac.tuwien.dsg.smartcom;
 
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
+import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 
 import java.util.HashMap;
@@ -13,15 +14,42 @@ import java.util.concurrent.LinkedBlockingDeque;
  * @version 1.0
  */
 public final class SimpleMessageBroker implements MessageBroker {
+    private final static String AUTH_QUEUE = "AUTH_QUEUE";
+    private final static String MIS_QUEUE = "MIS_QUEUE";
+    private final static String MPS_QUEUE = "MPS_QUEUE";
+    private final static String CONTROL_QUEUE = "CONTROL_QUEUE";
+    private final static String LOG_QUEUE = "LOG_QUEUE";
 
     private final BlockingDeque<Message> feedbackQueue = new LinkedBlockingDeque<>();
     private final Map<String,BlockingDeque<Message>> requestQueues = new HashMap<>();
     private final Map<String,BlockingDeque<Message>> taskQueues = new HashMap<>();
+    private final Map<String, BlockingDeque<Message>> specialQueues = new HashMap<>();
 
-    public void raiseFeedback(Message message) {
-        feedbackQueue.add(message);
+    private MessageListener feedbackListener = null;
+    private final Map<String,MessageListener> requestListeners = new HashMap<>();
+    private final Map<String,MessageListener> taskListeners = new HashMap<>();
+    private final Map<String, MessageListener> specialListeners = new HashMap<>();
+
+    public SimpleMessageBroker() {
+        specialQueues.put(AUTH_QUEUE, new LinkedBlockingDeque<Message>());
+        specialQueues.put(MIS_QUEUE, new LinkedBlockingDeque<Message>());
+        specialQueues.put(MPS_QUEUE, new LinkedBlockingDeque<Message>());
+        specialQueues.put(CONTROL_QUEUE, new LinkedBlockingDeque<Message>());
+        specialQueues.put(LOG_QUEUE, new LinkedBlockingDeque<Message>());
     }
 
+    @Override
+    public void publishFeedback(Message message) {
+        synchronized (feedbackQueue) {
+            if (feedbackListener == null) {
+                feedbackQueue.add(message);
+            } else {
+                feedbackListener.onMessage(message);
+            }
+        }
+    }
+
+    @Override
     public Message receiveFeedback() {
         try {
             return feedbackQueue.take();
@@ -30,15 +58,24 @@ public final class SimpleMessageBroker implements MessageBroker {
         }
     }
 
+    @Override
+    public void registerFeedbackListener(MessageListener listener) {
+        synchronized (feedbackQueue) {
+            feedbackListener = listener;
+        }
+    }
+
+    @Override
     public Message receiveRequests(String id) {
         try {
-            BlockingDeque<Message> queue;
-            synchronized (requestQueues) {
-                queue = requestQueues.get(id);
-
-                if (queue == null) {
-                    queue = new LinkedBlockingDeque<Message>();
-                    requestQueues.put(id, queue);
+            BlockingDeque<Message> queue = requestQueues.get(id);
+            if (queue == null) {
+                synchronized (requestQueues) {
+                    queue = requestQueues.get(id);
+                    if (queue == null) {
+                        queue = new LinkedBlockingDeque<>();
+                        requestQueues.put(id, queue);
+                    }
                 }
             }
             return queue.take();
@@ -47,19 +84,35 @@ public final class SimpleMessageBroker implements MessageBroker {
         }
     }
 
-    public void publishRequest(String id, Message message) {
-        BlockingDeque<Message> queue;
-        synchronized (requestQueues) {
-            queue = requestQueues.get(id);
-
-            if (queue == null) {
-                queue = new LinkedBlockingDeque<Message>();
-                requestQueues.put(id, queue);
-            }
+    @Override
+    public void registerRequestListener(String id, MessageListener listener) {
+        synchronized (requestListeners) {
+            requestListeners.put(id, listener);
         }
-        queue.add(message);
     }
 
+    @Override
+    public void publishRequest(String id, Message message) {
+        BlockingDeque<Message> queue = requestQueues.get(id);
+        if (queue == null) {
+            synchronized (requestQueues) {
+                queue = requestQueues.get(id);
+
+                if (queue == null) {
+                    queue = new LinkedBlockingDeque<>();
+                    requestQueues.put(id, queue);
+                }
+            }
+        }
+        MessageListener listener = requestListeners.get(id);
+        if (listener != null) {
+            listener.onMessage(message);
+        } else {
+            queue.add(message);
+        }
+    }
+
+    @Override
     public Message receiveTasks(String id) {
         try {
             BlockingDeque<Message> queue;
@@ -67,7 +120,7 @@ public final class SimpleMessageBroker implements MessageBroker {
                 queue = taskQueues.get(id);
 
                 if (queue == null) {
-                    queue = new LinkedBlockingDeque<Message>();
+                    queue = new LinkedBlockingDeque<>();
                     taskQueues.put(id, queue);
                 }
             }
@@ -77,16 +130,120 @@ public final class SimpleMessageBroker implements MessageBroker {
         }
     }
 
-    public void publishTask(String id, Message message) {
-        BlockingDeque<Message> queue;
-        synchronized (taskQueues) {
-            queue = taskQueues.get(id);
+    @Override
+    public void registerTaskListener(String id, MessageListener listener) {
+        synchronized (taskListeners) {
+            taskListeners.put(id, listener);
+        }
+    }
 
-            if (queue == null) {
-                queue = new LinkedBlockingDeque<Message>();
-                taskQueues.put(id, queue);
+    @Override
+    public void publishTask(String id, Message message) {
+        BlockingDeque<Message> queue = taskQueues.get(id);
+        if (queue == null) {
+            synchronized (taskQueues) {
+                queue = taskQueues.get(id);
+
+                if (queue == null) {
+                    queue = new LinkedBlockingDeque<>();
+                    taskQueues.put(id, queue);
+                }
             }
         }
-        queue.add(message);
+        MessageListener listener = taskListeners.get(id);
+        if (listener != null) {
+            listener.onMessage(message);
+        } else {
+            queue.add(message);
+        }
+    }
+
+    @Override
+    public void publishControl(Message message) {
+        publishSpecial(CONTROL_QUEUE, message);
+    }
+
+    @Override
+    public Message receiveControl() {
+        return receiveSpecial(CONTROL_QUEUE);
+    }
+
+    @Override
+    public void registerControlListener(MessageListener listener) {
+        specialListeners.put(CONTROL_QUEUE, listener);
+    }
+
+    @Override
+    public void publishAuthRequest(Message message) {
+        publishSpecial(AUTH_QUEUE, message);
+    }
+
+    @Override
+    public Message receiveAuthRequest() {
+        return receiveSpecial(AUTH_QUEUE);
+    }
+
+    @Override
+    public void registerAuthListener(MessageListener listener) {
+        specialListeners.put(AUTH_QUEUE, listener);
+    }
+
+    @Override
+    public void publishMessageInfoRequest(Message message) {
+        publishSpecial(MIS_QUEUE, message);
+    }
+
+    @Override
+    public Message receiveMessageInfoRequest() {
+        return receiveSpecial(MIS_QUEUE);
+    }
+
+    @Override
+    public void registerMessageInfoListener(MessageListener listener) {
+        specialListeners.put(MIS_QUEUE, listener);
+    }
+
+    @Override
+    public void publishMetricsRequest(Message message) {
+        publishSpecial(MPS_QUEUE, message);
+    }
+
+    @Override
+    public Message receiveMetricsRequest() {
+        return receiveSpecial(MPS_QUEUE);
+    }
+
+    @Override
+    public void registerMetricsListener(MessageListener listener) {
+        specialListeners.put(MPS_QUEUE, listener);
+    }
+
+    @Override
+    public void publishLog(Message message) {
+        publishSpecial(LOG_QUEUE, message);
+    }
+
+    @Override
+    public Message receiveLog() {
+        return receiveSpecial(LOG_QUEUE);
+    }
+
+    @Override
+    public void registerLogListener(MessageListener listener) {
+        specialListeners.put(LOG_QUEUE, listener);
+    }
+
+    private void publishSpecial(String id, Message message) {
+        BlockingDeque<Message> messages = specialQueues.get(id);
+        MessageListener listener = specialListeners.get(id);
+        if (listener != null) {
+            listener.onMessage(message);
+        } else {
+            messages.add(message);
+        }
+    }
+
+    private Message receiveSpecial(String id) {
+        return specialQueues.get(id).poll();
     }
 }

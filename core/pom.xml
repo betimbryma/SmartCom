@@ -33,6 +33,9 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <excludes>
+                        <exclude>*Test.class</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

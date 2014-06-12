@@ -60,7 +60,7 @@ public class AdapterManagerImpl implements AdapterManager {
         //init the adapter
         adapter.init();
         if (adapter instanceof FeedbackPushAdapterImpl) {
-            ((FeedbackPushAdapterImpl) adapter).setFeedbackRaiser(broker);
+            ((FeedbackPushAdapterImpl) adapter).setFeedbackPublisher(broker);
 
         }
 

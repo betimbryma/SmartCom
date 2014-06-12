@@ -55,7 +55,7 @@ public class FeedbackAdapterExecution implements Runnable {
                 enhanceMessage(response);
                 log.info("Received response {}", response);
 
-                broker.raiseFeedback(response);
+                broker.publishFeedback(response);
             } else {
                 //TODO
             }

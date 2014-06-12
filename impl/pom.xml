@@ -11,5 +11,42 @@
 
     <artifactId>smartcom-impl</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-adapter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-authentication</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-message-broker</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-message-info</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-message-query</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-messaging</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
+    </dependencies>
 </project>

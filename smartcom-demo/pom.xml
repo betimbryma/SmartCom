@@ -11,5 +11,11 @@
 
     <artifactId>smartcom-demo</artifactId>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

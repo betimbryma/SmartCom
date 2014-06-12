@@ -11,5 +11,11 @@
 
     <artifactId>smartcom-messaging</artifactId>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>at.ac.tuwien.dsg</groupId>
+            <artifactId>smartcom-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

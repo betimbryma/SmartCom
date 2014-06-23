@@ -28,7 +28,7 @@ public class AdapterManagerFeedbackAdapterTest {
     @Before
     public void setUp() throws Exception {
         broker = new SimpleMessageBroker();
-        manager = new AdapterManagerImpl(new PMCallback(), broker);
+        manager = new AdapterManagerImpl(new SimpleAddressResolverDAO(), new PMCallback(), broker);
         pullAdapter = new TestFeedbackPullAdapter();
         pushAdapter = new TestFeedbackPushAdapter();
 
@@ -40,7 +40,7 @@ public class AdapterManagerFeedbackAdapterTest {
         manager.destroy();
 
         for (String id : feedbackAdapterIds) {
-            manager.removeAdapter(id);
+            manager.removeFeedbackAdapter(id);
         }
     }
 

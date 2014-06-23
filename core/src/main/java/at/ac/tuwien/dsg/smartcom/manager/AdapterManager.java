@@ -11,19 +11,60 @@ import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
  * @version 1.0
  */
 public interface AdapterManager {
+
+    /**
+     * Initializes the adapter manager
+     */
     void init();
 
+    /**
+     * Destroys the adapter manager and cleans up resources
+     */
     void destroy();
 
+    /**
+     * Add a push adapter to the adapter manager
+     * @param adapter the push adapter
+     * @return the id of the push adapter
+     */
     String addPushAdapter(FeedbackPushAdapter adapter);
 
+    /**
+     * Add a pull adapter to the adapter manager.
+     * @param adapter the pull adapter
+     * @return the id of the pull adapter
+     */
     String addPullAdapter(FeedbackPullAdapter adapter);
 
-    FeedbackAdapter removeAdapter(String adapterId);
+    /**
+     * Removes a feedback adapter from the execution. Note that after returning,
+     * the corresponding feedback adapter won't return any feedback anymore.
+     * @param adapterId the id of the adapter
+     * @return the adapter that has been removed or null if there is no such adapter
+     */
+    FeedbackAdapter removeFeedbackAdapter(String adapterId);
 
+    /**
+     * Register a new type of peer adapters in the adapter manager.
+     * @param adapter new type of peer adapters
+     * @return id for the peer adapter type
+     */
     String registerPeerAdapter(Class<? extends PeerAdapter> adapter);
 
+    /**
+     * Removes a peer adapter type and all instances from the execution. After the method
+     * returned no adapter of this type will handle messages anymore.
+     * @param adapterId id of the peer adapter type
+     */
     void removePeerAdapter(String adapterId);
 
+    /**
+     * Create a new endpoint (adapter) for a specific peer. If there is already an
+     * endpoint, a corresponding routing rule will be returned. If there is no such
+     * adapter available, a new one will be created (based on available contact information
+     * of the peer) and a corresponding routing rule will be returned.
+     * @param peerId id of the peer that requires a new endpoint
+     * @return routing rule for the peer and the endpoint
+     */
     public RoutingRule createEndpointForPeer(String peerId);
 }

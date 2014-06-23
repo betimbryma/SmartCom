@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -14,9 +15,9 @@ import java.util.List;
 public class PeerAddress {
     private String peerId;
     private String adapter;
-    private List<Object> contactParameters;
+    private List<Serializable> contactParameters;
 
-    public PeerAddress(String peerId, String adapter, List<Object> contactParameters) {
+    public PeerAddress(String peerId, String adapter, List<Serializable> contactParameters) {
         this.peerId = peerId;
         this.adapter = adapter;
         this.contactParameters = contactParameters;
@@ -38,11 +39,11 @@ public class PeerAddress {
         this.adapter = adapter;
     }
 
-    public List<Object> getContactParameters() {
+    public List<Serializable> getContactParameters() {
         return contactParameters;
     }
 
-    public void setContactParameters(List<Object> contactParameters) {
+    public void setContactParameters(List<Serializable> contactParameters) {
         this.contactParameters = contactParameters;
     }
 

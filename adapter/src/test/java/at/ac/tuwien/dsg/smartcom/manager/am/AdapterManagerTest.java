@@ -23,7 +23,7 @@ import java.util.concurrent.CyclicBarrier;
 
 import static org.junit.Assert.*;
 
-public class AdapterManagerImplTest {
+public class AdapterManagerTest {
 
     private AdapterManager manager;
     private MessageBroker broker;
@@ -34,7 +34,7 @@ public class AdapterManagerImplTest {
     @Before
     public void setUp() throws Exception {
         broker = new SimpleMessageBroker();
-        manager = new AdapterManagerImpl(new PMCallbackImpl(), broker);
+        manager = new AdapterManagerImpl(new SimpleAddressResolverDAO(), new PMCallbackImpl(), broker);
 
         manager.init();
     }
@@ -62,7 +62,7 @@ public class AdapterManagerImplTest {
         feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
 
         for (String feedbackAdapterId : feedbackAdapterIds) {
-            manager.removeAdapter(feedbackAdapterId);
+            manager.removeFeedbackAdapter(feedbackAdapterId);
         }
 
         barrier.await();
@@ -94,7 +94,7 @@ public class AdapterManagerImplTest {
         feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier)));
 
         for (String feedbackAdapterId : feedbackAdapterIds) {
-            manager.removeAdapter(feedbackAdapterId);
+            manager.removeFeedbackAdapter(feedbackAdapterId);
             broker.publishRequest(feedbackAdapterId, new Message());
         }
 
@@ -115,7 +115,7 @@ public class AdapterManagerImplTest {
 
     @Test(timeout = 1500)
     public void testRemovePeerAdapterWithStatefulAdapter() throws Exception {
-        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter("stateful."+peerId1);
+        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1+".stateful."+peerId1);
         String id1 = manager.addPullAdapter(pullAdapter1);
 
         String adapter = manager.registerPeerAdapter(StatefulAdapter.class);
@@ -159,7 +159,7 @@ public class AdapterManagerImplTest {
 
     @Test(timeout = 1500)
     public void testRemovePeerAdapterWithStatelessAdapter() throws Exception {
-        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter("stateless."+peerId1);
+        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1+".stateless");
         String id1 = manager.addPullAdapter(pullAdapter1);
 
         String adapter = manager.registerPeerAdapter(StatelessAdapter.class);
@@ -282,13 +282,13 @@ public class AdapterManagerImplTest {
             List<PeerAddress> addresses = new ArrayList<>();
 
             if (peerId1.equals(id)) {
-                addresses.add(new PeerAddress(peerId1, "stateless", Collections.emptyList()));
-                addresses.add(new PeerAddress(peerId1, "stateful", Collections.emptyList()));
+                addresses.add(new PeerAddress(peerId1, "stateless", Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId1, "stateful", Collections.EMPTY_LIST));
             }
 
             if (peerId2.equals(id)) {
-                addresses.add(new PeerAddress(peerId2, "stateless", Collections.emptyList()));
-                addresses.add(new PeerAddress(peerId2, "stateful", Collections.emptyList()));
+                addresses.add(new PeerAddress(peerId2, "stateless", Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId2, "stateful", Collections.EMPTY_LIST));
             }
 
             return addresses;

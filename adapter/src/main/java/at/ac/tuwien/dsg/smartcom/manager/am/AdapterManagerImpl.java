@@ -9,6 +9,7 @@ import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackAdapterFacade;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackPullAdapterFacade;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackPushAdapterFacade;
+import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 import org.slf4j.Logger;
@@ -37,10 +38,10 @@ public class AdapterManagerImpl implements AdapterManager {
 
     private final List<String> stateless = new ArrayList<>();
 
-    public AdapterManagerImpl(PMCallback peerManager, MessageBroker broker) {
+    AdapterManagerImpl(ResolverDAO dao, PMCallback peerManager, MessageBroker broker) {
         this.peerManager = peerManager;
         this.broker = broker;
-        addressResolver = new AddressResolver();
+        addressResolver = new AddressResolver(dao, 5000); //TODO
         executionEngine = new AdapterExecutionEngine(addressResolver, broker);
         executionEngine.init();
     }
@@ -84,7 +85,7 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public FeedbackAdapter removeAdapter(String adapterId) {
+    public FeedbackAdapter removeFeedbackAdapter(String adapterId) {
         return executionEngine.removeFeedbackAdapter(adapterId);
     }
 

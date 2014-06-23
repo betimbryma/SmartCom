@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom.manager.utils;
+package at.ac.tuwien.dsg.smartcom.manager.am.utils;
 
 import at.ac.tuwien.dsg.smartcom.model.Message;
 
@@ -16,7 +16,7 @@ public final class AdapterTestQueue {
     private AdapterTestQueue() {
     }
 
-    private static final Map<String,BlockingDeque<Message>> blockingQueue = new HashMap<String,BlockingDeque<Message>>();
+    private static final Map<String,BlockingDeque<Message>> blockingQueue = new HashMap<>();
 
     public static Message receive(String id) {
         try {
@@ -25,7 +25,7 @@ public final class AdapterTestQueue {
                 queue = blockingQueue.get(id);
 
                 if (queue == null) {
-                    queue = new LinkedBlockingDeque<Message>();
+                    queue = new LinkedBlockingDeque<>();
                     blockingQueue.put(id, queue);
                 }
             }
@@ -41,7 +41,7 @@ public final class AdapterTestQueue {
             queue = blockingQueue.get(id);
 
             if (queue == null) {
-                queue = new LinkedBlockingDeque<Message>();
+                queue = new LinkedBlockingDeque<>();
                 blockingQueue.put(id, queue);
             }
         }

@@ -1,14 +1,13 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
+import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapterImpl;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
-import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.AdapterManagerImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AdapterManagerFeedbackAdapterTest {
 
-    private List<String> feedbackAdapterIds = new ArrayList<String>();
+    private List<String> feedbackAdapterIds = new ArrayList<>();
     private FeedbackPullAdapter pullAdapter;
     private AdapterManager manager;
     private FeedbackPushAdapter pushAdapter;

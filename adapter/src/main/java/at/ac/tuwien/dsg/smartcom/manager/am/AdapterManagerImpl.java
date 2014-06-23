@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom.scm.manager.am;
+package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.adapter.*;
 import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
@@ -6,17 +6,18 @@ import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackAdapterFacade;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackPullAdapterFacade;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackPushAdapterFacade;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.adapter.FeedbackAdapterFacade;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.adapter.FeedbackPullAdapterFacade;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.adapter.FeedbackPushAdapterFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -24,14 +25,15 @@ import java.util.*;
  */
 public class AdapterManagerImpl implements AdapterManager {
     private static final Logger log = LoggerFactory.getLogger(AdapterManager.class);
+    public static final String ADAPTER_PREFIX = "adapter.";
 
     private final AdapterExecutionEngine executionEngine;
     private final PMCallback peerManager;
     private final MessageBroker broker;
     private final AddressResolver addressResolver;
 
-    private final Map<String, Class<? extends PeerAdapter>> statefulAdapters = new HashMap<>();
-    private final Map<String, List<String>> statefulInstances = new HashMap<>();
+    private final Map<String, Class<? extends PeerAdapter>> statefulAdapters = new ConcurrentHashMap<>();
+    private final Map<String, List<String>> statefulInstances = new ConcurrentHashMap<>();
 
     private final List<String> stateless = new ArrayList<>();
 
@@ -57,12 +59,12 @@ public class AdapterManagerImpl implements AdapterManager {
     public String addPushAdapter(FeedbackPushAdapter adapter) {
         String id = generateAdapterId(adapter);
 
-        //init the adapter
-        adapter.init();
         if (adapter instanceof FeedbackPushAdapterImpl) {
             ((FeedbackPushAdapterImpl) adapter).setFeedbackPublisher(broker);
-
         }
+
+        //init the adapter
+        adapter.init();
 
         FeedbackAdapterFacade facade = new FeedbackPushAdapterFacade(adapter);
         executionEngine.addFeedbackAdapter(facade, id);
@@ -89,6 +91,10 @@ public class AdapterManagerImpl implements AdapterManager {
     @Override
     public String registerPeerAdapter(Class<? extends PeerAdapter> adapter) {
         Adapter annotation = adapter.getAnnotation(Adapter.class);
+        if (annotation == null) {
+            log.error("Can't find annotation @Adapter in class ()", adapter.getSimpleName());
+            return null;
+        }
         boolean stateful = annotation.stateful();
         String name = annotation.name();
 
@@ -119,8 +125,9 @@ public class AdapterManagerImpl implements AdapterManager {
         return null;
     }
 
+    @Override
     public RoutingRule createEndpointForPeer(String peerId) {
-        String adapterId = "";
+        String adapterId = null;
         Collection<PeerAddress> peerAddress;
         try {
             peerAddress = peerManager.getPeerAddress(peerId);
@@ -129,16 +136,43 @@ public class AdapterManagerImpl implements AdapterManager {
             return null;
         }
         for (PeerAddress address : peerAddress) {
-            if(stateless.contains("adapter."+address.getAdapter())) {
+            if(stateless.contains(ADAPTER_PREFIX+address.getAdapter())) {
                 addressResolver.addPeerAddress(address);
-                adapterId = "adapter."+address.getAdapter();
+                adapterId = ADAPTER_PREFIX+address.getAdapter();
                 break;
-            } else if (statefulAdapters.containsKey("adapter."+address.getAdapter())) {
+            } else if (statefulAdapters.containsKey(ADAPTER_PREFIX+address.getAdapter())) {
                 try {
-                    adapterId = createStatefulAdapter(peerId, "adapter."+address.getAdapter());
+                    String adapter = ADAPTER_PREFIX+address.getAdapter();
+                    String newId = adapter+"."+peerId;
+
+                    //check if there is already such an instance
+                    synchronized (statefulInstances) {
+                        List<String> instances = statefulInstances.get(ADAPTER_PREFIX + address.getAdapter());
+                        if (instances != null) {
+                            if (instances.contains(newId)) {
+                                adapterId = newId;
+                                break;
+                            }
+                        } else {
+                            instances = new ArrayList<>();
+                            statefulInstances.put(adapter, instances);
+                        }
+
+                        Class<? extends PeerAdapter> peerAdapterClass = statefulAdapters.get(adapter);
+                        PeerAdapter peerAdapter;
+                        try {
+                            peerAdapter = instantiateClass(peerAdapterClass);
+                        } catch (InvocationTargetException e) {
+                            log.error("Could not instantiate class "+adapter, e);
+                            continue;
+                        }
+                        executionEngine.addPeerAdapter(peerAdapter, newId, true);
+                        adapterId = newId;
+                        instances.add(adapterId);
+                    }
                     addressResolver.addPeerAddress(address);
                 } catch (IllegalAccessException | InstantiationException e) {
-                    log.error("Could not instantiate class " + statefulAdapters.get("adapter."+address.getAdapter()).toString(), e);
+                    log.error("Could not instantiate class " + statefulAdapters.get(ADAPTER_PREFIX+address.getAdapter()).toString(), e);
                 }
                 break;
             } else {
@@ -146,26 +180,11 @@ public class AdapterManagerImpl implements AdapterManager {
             }
         }
 
-        if ("".equals(adapterId)) {
+        if (adapterId == null) {
             return null;
         }
 
         return new RoutingRule("", "", peerId, adapterId);
-    }
-
-    private String createStatefulAdapter(String peerId, String adapterId) throws IllegalAccessException, InstantiationException {
-        Class<? extends PeerAdapter> peerAdapterClass = statefulAdapters.get(adapterId);
-        PeerAdapter peerAdapter = peerAdapterClass.newInstance();
-        String id = adapterId+"."+peerId;
-        executionEngine.addPeerAdapter(peerAdapter, id, true);
-
-        List<String> instances = statefulInstances.get(adapterId);
-        if (instances == null) {
-            instances = new ArrayList<>();
-            statefulInstances.put(adapterId, instances);
-        }
-        instances.add(id);
-        return id;
     }
 
     @Override
@@ -176,16 +195,17 @@ public class AdapterManagerImpl implements AdapterManager {
             for (String id : statefulInstances.get(adapterId)) {
                 executionEngine.removePeerAdapter(id);
             }
+        } else {
+            executionEngine.removePeerAdapter(adapterId);
         }
-        executionEngine.removePeerAdapter(adapterId);
     }
 
     private String generateAdapterId(FeedbackAdapter adapter) {
-        return "adapter."+generateUniqueIdString();
+        return ADAPTER_PREFIX+generateUniqueIdString();
     }
 
     private String generateAdapterId(Class<? extends PeerAdapter> adapter, String name) {
-        return "adapter."+name;
+        return ADAPTER_PREFIX+name;
     }
 
     private String generateUniqueIdString() {

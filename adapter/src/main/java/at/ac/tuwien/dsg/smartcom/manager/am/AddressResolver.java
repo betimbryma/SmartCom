@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom.scm.manager.am;
+package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 
@@ -41,10 +41,7 @@ public class AddressResolver {
 
             AddressKey that = (AddressKey) o;
 
-            if (!adapterId.equals(that.adapterId)) return false;
-            if (!peerId.equals(that.peerId)) return false;
-
-            return true;
+            return adapterId.equals(that.adapterId) && peerId.equals(that.peerId);
         }
 
         @Override

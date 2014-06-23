@@ -2,7 +2,7 @@ package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 
 import at.ac.tuwien.dsg.smartcom.adapter.PeerAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
-import at.ac.tuwien.dsg.smartcom.manager.utils.AdapterTestQueue;
+import at.ac.tuwien.dsg.smartcom.manager.am.utils.AdapterTestQueue;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 

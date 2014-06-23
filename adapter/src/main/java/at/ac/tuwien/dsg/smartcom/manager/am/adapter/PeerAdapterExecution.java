@@ -1,10 +1,10 @@
-package at.ac.tuwien.dsg.smartcom.scm.manager.am.adapter;
+package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 
 import at.ac.tuwien.dsg.smartcom.adapter.PeerAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
+import at.ac.tuwien.dsg.smartcom.manager.am.AddressResolver;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.AddressResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

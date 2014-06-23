@@ -1,11 +1,11 @@
-package at.ac.tuwien.dsg.smartcom.scm.manager.am;
+package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.PeerAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.adapter.FeedbackAdapterExecution;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.adapter.FeedbackAdapterFacade;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.adapter.PeerAdapterExecution;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackAdapterExecution;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackAdapterFacade;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.PeerAdapterExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +53,6 @@ class AdapterExecutionEngine {
             executor.awaitTermination(1000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             log.error("Could not await termination of executor. forcing shutdown", e);
-
-
         }
 
         log.info("Executor shutdown complete!");

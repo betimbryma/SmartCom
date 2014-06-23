@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom.scm.manager.am.adapter;
+package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapter;

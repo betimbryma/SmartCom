@@ -1,17 +1,16 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
+import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
-import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
-import at.ac.tuwien.dsg.smartcom.manager.utils.AdapterTestQueue;
+import at.ac.tuwien.dsg.smartcom.manager.am.utils.AdapterTestQueue;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
-import at.ac.tuwien.dsg.smartcom.scm.manager.am.AdapterManagerImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +22,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
 
-public class AdapterManagerPeerAddressTest {
+public class AdapterManagerPeerAdapterTest {
 
     private AdapterManager manager;
     private MessageBroker broker;
@@ -51,7 +50,7 @@ public class AdapterManagerPeerAddressTest {
         FeedbackPullAdapter pullAdapter2 = new TestFeedbackPullAdapter("stateless."+peerId2);
         String id2 = manager.addPullAdapter(pullAdapter2);
 
-        String adapter = manager.registerPeerAdapter(StatelessAdapter.class);
+        manager.registerPeerAdapter(StatelessAdapter.class);
 
         RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
         RoutingRule routing2 = manager.createEndpointForPeer(peerId2);
@@ -82,7 +81,7 @@ public class AdapterManagerPeerAddressTest {
         FeedbackPullAdapter pullAdapter2 = new TestFeedbackPullAdapter("stateful."+peerId2);
         String id2 = manager.addPullAdapter(pullAdapter2);
 
-        String adapter = manager.registerPeerAdapter(StatefulAdapter.class);
+        manager.registerPeerAdapter(StatefulAdapter.class);
 
         RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
         RoutingRule routing2 = manager.createEndpointForPeer(peerId2);
@@ -122,12 +121,17 @@ public class AdapterManagerPeerAddressTest {
     private class PMCallbackImpl implements PMCallback {
         @Override
         public Collection<PeerAddress> getPeerAddress(String id) {
-            List<PeerAddress> addresses = new ArrayList<PeerAddress>();
-            addresses.add(new PeerAddress(peerId1, "stateless", Collections.emptyList()));
-            addresses.add(new PeerAddress(peerId1, "stateful", Collections.emptyList()));
+            List<PeerAddress> addresses = new ArrayList<>();
 
-            addresses.add(new PeerAddress(peerId2, "stateless", Collections.emptyList()));
-            addresses.add(new PeerAddress(peerId2, "stateful", Collections.emptyList()));
+            if (peerId1.equals(id)) {
+                addresses.add(new PeerAddress(peerId1, "stateless", Collections.emptyList()));
+                addresses.add(new PeerAddress(peerId1, "stateful", Collections.emptyList()));
+            }
+
+            if (peerId2.equals(id)) {
+                addresses.add(new PeerAddress(peerId2, "stateless", Collections.emptyList()));
+                addresses.add(new PeerAddress(peerId2, "stateful", Collections.emptyList()));
+            }
 
             return addresses;
         }

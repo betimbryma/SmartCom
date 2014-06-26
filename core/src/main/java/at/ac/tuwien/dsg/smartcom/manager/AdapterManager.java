@@ -32,9 +32,10 @@ public interface AdapterManager {
     /**
      * Add a pull adapter to the adapter manager.
      * @param adapter the pull adapter
+     * @param period defines the period between two pull attempts
      * @return the id of the pull adapter
      */
-    String addPullAdapter(FeedbackPullAdapter adapter);
+    String addPullAdapter(FeedbackPullAdapter adapter, int period);
 
     /**
      * Removes a feedback adapter from the execution. Note that after returning,

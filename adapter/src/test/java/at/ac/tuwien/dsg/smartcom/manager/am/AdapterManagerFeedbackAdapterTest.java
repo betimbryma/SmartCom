@@ -4,6 +4,7 @@ import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapterImpl;
+import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.model.Message;
@@ -12,7 +13,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -44,7 +47,7 @@ public class AdapterManagerFeedbackAdapterTest {
         }
     }
 
-    @Test(timeout = 1500)
+    @Test
     public void testAddPushAdapter() throws Exception {
         feedbackAdapterIds.add(manager.addPushAdapter(pushAdapter));
 
@@ -55,10 +58,20 @@ public class AdapterManagerFeedbackAdapterTest {
 
     @Test
     public void testAddPullAdapter() throws Exception {
-        String id = manager.addPullAdapter(pullAdapter);
+        String id = manager.addPullAdapter(pullAdapter, 0);
         feedbackAdapterIds.add(id);
 
         broker.publishRequest(id, new Message());
+
+        Message feedback = broker.receiveFeedback();
+
+        assertEquals("wrong feedback", "pull", feedback.getContent());
+    }
+
+    @Test(timeout = 2000)
+    public void testAddPullAdapterWithTimeout() throws Exception {
+        String id = manager.addPullAdapter(pullAdapter, 1000);
+        feedbackAdapterIds.add(id);
 
         Message feedback = broker.receiveFeedback();
 
@@ -83,20 +96,32 @@ public class AdapterManagerFeedbackAdapterTest {
         public void init() {
             text = "push";
 
-            TimerTask action = new TimerTask() {
+            schedule(new PushTask() {
+                @Override
                 public void run() {
+                    try {
+                        synchronized (this) {
+                            wait(1000);
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
                     Message msg = new Message();
                     msg.setContent(text);
                     publishMessage(msg);
                 }
-            };
-            Timer timer = new Timer();
-            timer.schedule(action, 1000);
+            });
         }
 
         @Override
         public void preDestroy() {
             text = "destroyed";
+        }
+
+        @Override
+        protected void cleanUp() {
+
         }
     }
 

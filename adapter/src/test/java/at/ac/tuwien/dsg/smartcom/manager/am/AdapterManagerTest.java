@@ -3,6 +3,7 @@ package at.ac.tuwien.dsg.smartcom.manager.am;
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapterImpl;
+import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
@@ -87,11 +88,11 @@ public class AdapterManagerTest {
         CyclicBarrier barrier = new CyclicBarrier(5);
         List<String> feedbackAdapterIds = new ArrayList<>();
 
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier)));
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier)));
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier)));
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier)));
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier)));
+        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
+        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
+        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
+        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
+        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
 
         for (String feedbackAdapterId : feedbackAdapterIds) {
             manager.removeFeedbackAdapter(feedbackAdapterId);
@@ -116,7 +117,7 @@ public class AdapterManagerTest {
     @Test(timeout = 1500)
     public void testRemovePeerAdapterWithStatefulAdapter() throws Exception {
         FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1+".stateful."+peerId1);
-        String id1 = manager.addPullAdapter(pullAdapter1);
+        String id1 = manager.addPullAdapter(pullAdapter1, 0);
 
         String adapter = manager.registerPeerAdapter(StatefulAdapter.class);
 
@@ -160,8 +161,7 @@ public class AdapterManagerTest {
     @Test(timeout = 1500)
     public void testRemovePeerAdapterWithStatelessAdapter() throws Exception {
         FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1+".stateless");
-        String id1 = manager.addPullAdapter(pullAdapter1);
-
+        String id1 = manager.addPullAdapter(pullAdapter1, 0);
         String adapter = manager.registerPeerAdapter(StatelessAdapter.class);
 
         RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
@@ -250,7 +250,8 @@ public class AdapterManagerTest {
         public void init() {
             text = "push";
 
-            TimerTask action = new TimerTask() {
+            schedule(new PushTask() {
+                @Override
                 public void run() {
                     try {
                         barrier.await();
@@ -265,14 +266,17 @@ public class AdapterManagerTest {
                         fail("Could not wait for barrier release!");
                     }
                 }
-            };
-            Timer timer = new Timer();
-            timer.schedule(action, 0);
+            });
         }
 
         @Override
         public void preDestroy() {
             publishMessage = false;
+        }
+
+        @Override
+        protected void cleanUp() {
+
         }
     }
 

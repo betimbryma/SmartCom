@@ -6,10 +6,8 @@ import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
-import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackAdapterFacade;
-import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackPullAdapterFacade;
-import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackPushAdapterFacade;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
+import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 import org.slf4j.Logger;
@@ -41,7 +39,7 @@ public class AdapterManagerImpl implements AdapterManager {
     AdapterManagerImpl(ResolverDAO dao, PMCallback peerManager, MessageBroker broker) {
         this.peerManager = peerManager;
         this.broker = broker;
-        addressResolver = new AddressResolver(dao, 5000); //TODO
+        addressResolver = new AddressResolver(dao, 5000); //TODO parametrize this
         executionEngine = new AdapterExecutionEngine(addressResolver, broker);
         executionEngine.init();
     }
@@ -62,24 +60,31 @@ public class AdapterManagerImpl implements AdapterManager {
 
         if (adapter instanceof FeedbackPushAdapterImpl) {
             ((FeedbackPushAdapterImpl) adapter).setFeedbackPublisher(broker);
+            ((FeedbackPushAdapterImpl) adapter).setScheduler(executionEngine);
         }
 
         //init the adapter
         adapter.init();
 
-        FeedbackAdapterFacade facade = new FeedbackPushAdapterFacade(adapter);
-        executionEngine.addFeedbackAdapter(facade, id);
+        executionEngine.addFeedbackAdapter(adapter, id);
 
         return id;
     }
 
     @Override
-    public String addPullAdapter(FeedbackPullAdapter adapter) {
-        String id = generateAdapterId(adapter);
+    public String addPullAdapter(FeedbackPullAdapter adapter, int period) {
+        final String id = generateAdapterId(adapter);
 
+        executionEngine.addFeedbackAdapter(adapter, id);
 
-        FeedbackAdapterFacade facade = new FeedbackPullAdapterFacade(adapter);
-        executionEngine.addFeedbackAdapter(facade, id);
+        if (period > 0) {
+            executionEngine.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    broker.publishRequest(id, new Message());
+                }
+            }, period, id);
+        }
 
         return id;
     }

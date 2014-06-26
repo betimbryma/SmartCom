@@ -46,9 +46,9 @@ public class AdapterManagerPeerAdapterTest {
     @Test(timeout = 2000l)
     public void testRegisterPeerAdapterWithStatelessAdapter() {
         FeedbackPullAdapter pullAdapter1 = new TestFeedbackPullAdapter(peerId1+".stateless");
-        String id1 = manager.addPullAdapter(pullAdapter1);
+        String id1 = manager.addPullAdapter(pullAdapter1, 0);
         FeedbackPullAdapter pullAdapter2 = new TestFeedbackPullAdapter(peerId2+".stateless");
-        String id2 = manager.addPullAdapter(pullAdapter2);
+        String id2 = manager.addPullAdapter(pullAdapter2, 0);
 
         manager.registerPeerAdapter(StatelessAdapter.class);
 
@@ -77,9 +77,9 @@ public class AdapterManagerPeerAdapterTest {
     @Test(timeout = 2000l)
     public void testRegisterPeerAdapterWithStatefulAdapter() {
         FeedbackPullAdapter pullAdapter1 = new TestFeedbackPullAdapter(peerId1+".stateful."+peerId1);
-        String id1 = manager.addPullAdapter(pullAdapter1);
+        String id1 = manager.addPullAdapter(pullAdapter1, 0);
         FeedbackPullAdapter pullAdapter2 = new TestFeedbackPullAdapter(peerId2+".stateful."+peerId2);
-        String id2 = manager.addPullAdapter(pullAdapter2);
+        String id2 = manager.addPullAdapter(pullAdapter2, 0);
 
         manager.registerPeerAdapter(StatefulAdapter.class);
 

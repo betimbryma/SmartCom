@@ -1,6 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.model.Message;
@@ -14,11 +15,11 @@ import org.slf4j.LoggerFactory;
 public class FeedbackAdapterExecution implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(FeedbackAdapterExecution.class);
 
-    private final FeedbackAdapterFacade adapter;
+    private final FeedbackPullAdapter adapter;
     private final String id;
     private final MessageBroker broker;
 
-    public FeedbackAdapterExecution(FeedbackAdapterFacade adapter, String id, MessageBroker broker) {
+    public FeedbackAdapterExecution(FeedbackPullAdapter adapter, String id, MessageBroker broker) {
         this.adapter = adapter;
         this.id = id;
         this.broker = broker;
@@ -28,12 +29,8 @@ public class FeedbackAdapterExecution implements Runnable {
         //nothing to do here yet
     }
 
-    public void preDestroy() {
-        this.adapter.preDestroy();
-    }
-
     public FeedbackAdapter getAdapter() {
-        return adapter.getAdapter();
+        return adapter;
     }
 
     @Override
@@ -47,7 +44,7 @@ public class FeedbackAdapterExecution implements Runnable {
             }
             Message response = null;
             try {
-                response = adapter.checkForResponse();
+                response = adapter.pull();
             } catch (AdapterException e) {
                 log.error("Error while checking response of adapter ()", id, e);
             }
@@ -57,9 +54,17 @@ public class FeedbackAdapterExecution implements Runnable {
 
                 broker.publishFeedback(response);
             } else {
-                //TODO
+                handleNoMessageReceived();
             }
         }
+    }
+
+    private void handleNoMessageReceived() {
+        //TODO what should we do here?
+        // proposal:
+        //      if message has a sender, create and send a feedback to the sender,
+        //          that there is no feedback available
+        //      otherwise: don't send a message
     }
 
     private void enhanceMessage(Message response) {

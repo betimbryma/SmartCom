@@ -71,7 +71,7 @@ public class AdapterManagerIT {
         for (String peer : peers) {
             RoutingRule route = manager.createEndpointForPeer(peer);
             rules.add(route);
-            adapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(peer+"."+route.getRoute().replaceFirst("adapter.",""))));
+            adapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(peer+"."+route.getRoute().replaceFirst("adapter.","")), 0));
         }
 
         FeedbackListener listener = new FeedbackListener();

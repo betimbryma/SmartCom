@@ -1,7 +1,11 @@
 package at.ac.tuwien.dsg.smartcom.adapter;
 
+import at.ac.tuwien.dsg.smartcom.adapter.util.TaskScheduler;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.queue.FeedbackPublisher;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementation of the FeedbackPushAdapter that provides a method
@@ -15,6 +19,7 @@ import at.ac.tuwien.dsg.smartcom.queue.FeedbackPublisher;
 public abstract class FeedbackPushAdapterImpl implements FeedbackPushAdapter {
 
     private FeedbackPublisher feedbackPublisher;
+    private List<PushTask> taskList = new ArrayList<PushTask>(1);
 
     /**
      * Publish a message that has been received. this method should only be
@@ -28,6 +33,39 @@ public abstract class FeedbackPushAdapterImpl implements FeedbackPushAdapter {
     }
 
     public final void setFeedbackPublisher(FeedbackPublisher feedbackPublisher) {
-        this.feedbackPublisher = feedbackPublisher;
+        if (this.feedbackPublisher == null)
+            this.feedbackPublisher = feedbackPublisher;
     }
+
+
+    private TaskScheduler scheduler;
+
+    /**
+     * Schedule a push task
+     *
+     * @param task that should be scheduled
+     */
+    protected final void schedule(PushTask task) {
+        taskList.add(scheduler.schedule(task));
+    }
+
+    public void setScheduler(TaskScheduler scheduler) {
+        if (this.scheduler == null)
+            this.scheduler = scheduler;
+    }
+
+    @Override
+    public void preDestroy() {
+        for (PushTask pushTask : taskList) {
+            pushTask.cancel();
+        }
+        cleanUp();
+    }
+
+    /**
+     * clean up resources that have been used by the adapter.
+     * Note that scheduled tasks have already been marked for cancellation,
+     * when this method has been called.
+     */
+    protected abstract void cleanUp();
 }

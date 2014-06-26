@@ -34,8 +34,12 @@
                 <artifactId>maven-license-plugin</artifactId>
                 <version>1.4.0</version>
                 <configuration>
-                    <header>COPYRIGHT</header>
+                    <header>license-notice</header>
                     <aggregate>true</aggregate>
+                    <properties>
+            <!--Change the following to change the copyright year-->
+                        <year>2014</year>
+                    </properties>
                 </configuration>
             </plugin>
             <plugin>

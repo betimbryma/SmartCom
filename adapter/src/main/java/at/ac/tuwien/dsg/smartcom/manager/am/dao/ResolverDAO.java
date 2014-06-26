@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.manager.am.dao;
 
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 
 /**
@@ -9,7 +10,7 @@ import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 public interface ResolverDAO {
     void insert(PeerAddress address);
 
-    PeerAddress find(String peerId, String adapterId);
+    PeerAddress find(Identifier peerId, Identifier adapterId);
 
-    void remove(String peerId, String adapterId);
+    void remove(Identifier peerId, Identifier adapterId);
 }

@@ -7,6 +7,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapterImpl;
 import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import org.junit.After;
@@ -21,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AdapterManagerFeedbackAdapterTest {
 
-    private List<String> feedbackAdapterIds = new ArrayList<>();
+    private List<Identifier> feedbackAdapterIds = new ArrayList<>();
     private FeedbackPullAdapter pullAdapter;
     private AdapterManager manager;
     private FeedbackPushAdapter pushAdapter;
@@ -42,12 +43,12 @@ public class AdapterManagerFeedbackAdapterTest {
     public void tearDown() throws Exception {
         manager.destroy();
 
-        for (String id : feedbackAdapterIds) {
+        for (Identifier id : feedbackAdapterIds) {
             manager.removeFeedbackAdapter(id);
         }
     }
 
-    @Test
+    @Test(timeout = 1500l)
     public void testAddPushAdapter() throws Exception {
         feedbackAdapterIds.add(manager.addPushAdapter(pushAdapter));
 
@@ -56,9 +57,9 @@ public class AdapterManagerFeedbackAdapterTest {
         assertEquals("wrong feedback", "push", feedback.getContent());
     }
 
-    @Test
+    @Test(timeout = 1500l)
     public void testAddPullAdapter() throws Exception {
-        String id = manager.addPullAdapter(pullAdapter, 0);
+        Identifier id = manager.addPullAdapter(pullAdapter, 0);
         feedbackAdapterIds.add(id);
 
         broker.publishRequest(id, new Message());
@@ -68,9 +69,9 @@ public class AdapterManagerFeedbackAdapterTest {
         assertEquals("wrong feedback", "pull", feedback.getContent());
     }
 
-    @Test(timeout = 2000)
+    @Test(timeout = 1500l)
     public void testAddPullAdapterWithTimeout() throws Exception {
-        String id = manager.addPullAdapter(pullAdapter, 1000);
+        Identifier id = manager.addPullAdapter(pullAdapter, 1000);
         feedbackAdapterIds.add(id);
 
         Message feedback = broker.receiveFeedback();
@@ -128,12 +129,12 @@ public class AdapterManagerFeedbackAdapterTest {
     private class PMCallback implements at.ac.tuwien.dsg.smartcom.callback.PMCallback {
 
         @Override
-        public Collection<PeerAddress> getPeerAddress(String id) {
+        public Collection<PeerAddress> getPeerAddress(Identifier id) {
             return null;
         }
 
         @Override
-        public boolean authenticate(String username, String password) {
+        public boolean authenticate(Identifier username, String password) {
             return false;
         }
     }

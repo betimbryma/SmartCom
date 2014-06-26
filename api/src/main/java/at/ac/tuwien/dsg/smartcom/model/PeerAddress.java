@@ -5,38 +5,38 @@ import java.util.List;
 
 /**
  * This class defines an address for a specific peer. It can provide several
- * parameters how to use an adapter to contact the peer (e.g., username, password etc.).
+ * parameters how to use an adapterId to contact the peer (e.g., username, password etc.).
  *
- * An address is always related to a specific peer and a specific adapter.
+ * An address is always related to a specific peer and a specific adapterId.
  *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
 public class PeerAddress {
-    private String peerId;
-    private String adapter;
+    private Identifier peerId;
+    private Identifier adapterId;
     private List<Serializable> contactParameters;
 
-    public PeerAddress(String peerId, String adapter, List<Serializable> contactParameters) {
+    public PeerAddress(Identifier peerId, Identifier adapterId, List<Serializable> contactParameters) {
         this.peerId = peerId;
-        this.adapter = adapter;
+        this.adapterId = adapterId;
         this.contactParameters = contactParameters;
     }
 
-    public String getPeerId() {
+    public Identifier getPeerId() {
         return peerId;
     }
 
-    public void setPeerId(String peerId) {
+    public void setPeerId(Identifier peerId) {
         this.peerId = peerId;
     }
 
-    public String getAdapter() {
-        return adapter;
+    public Identifier getAdapterId() {
+        return adapterId;
     }
 
-    public void setAdapter(String adapter) {
-        this.adapter = adapter;
+    public void setAdapterId(Identifier adapterId) {
+        this.adapterId = adapterId;
     }
 
     public List<Serializable> getContactParameters() {
@@ -51,7 +51,7 @@ public class PeerAddress {
     public String toString() {
         return "PeerAddress{" +
                 "peerId='" + peerId + '\'' +
-                ", adapter='" + adapter + '\'' +
+                ", adapterId='" + adapterId + '\'' +
                 ", contactParameters=" + contactParameters +
                 '}';
     }
@@ -63,7 +63,7 @@ public class PeerAddress {
 
         PeerAddress that = (PeerAddress) o;
 
-        if (adapter != null ? !adapter.equals(that.adapter) : that.adapter != null) return false;
+        if (adapterId != null ? !adapterId.equals(that.adapterId) : that.adapterId != null) return false;
         if (contactParameters != null ? !contactParameters.equals(that.contactParameters) : that.contactParameters != null)
             return false;
         if (peerId != null ? !peerId.equals(that.peerId) : that.peerId != null) return false;
@@ -74,7 +74,7 @@ public class PeerAddress {
     @Override
     public int hashCode() {
         int result = peerId != null ? peerId.hashCode() : 0;
-        result = 31 * result + (adapter != null ? adapter.hashCode() : 0);
+        result = 31 * result + (adapterId != null ? adapterId.hashCode() : 0);
         result = 31 * result + (contactParameters != null ? contactParameters.hashCode() : 0);
         return result;
     }

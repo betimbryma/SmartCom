@@ -15,6 +15,6 @@ public class StatefulAdapter implements PeerAdapter {
 
     @Override
     public void push(Message message, PeerAddress address) {
-        AdapterTestQueue.publish(address.getPeerId()+"."+address.getAdapter()+"."+address.getPeerId(), message);
+        AdapterTestQueue.publish(address.getPeerId().getId()+"."+address.getAdapterId().getId(), message);
     }
 }

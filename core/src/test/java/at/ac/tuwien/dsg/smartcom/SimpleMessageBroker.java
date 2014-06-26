@@ -2,6 +2,7 @@ package at.ac.tuwien.dsg.smartcom;
 
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 
 import java.util.HashMap;
@@ -21,13 +22,13 @@ public final class SimpleMessageBroker implements MessageBroker {
     private final static String LOG_QUEUE = "LOG_QUEUE";
 
     private final BlockingDeque<Message> feedbackQueue = new LinkedBlockingDeque<>();
-    private final Map<String,BlockingDeque<Message>> requestQueues = new HashMap<>();
-    private final Map<String,BlockingDeque<Message>> taskQueues = new HashMap<>();
+    private final Map<Identifier,BlockingDeque<Message>> requestQueues = new HashMap<>();
+    private final Map<Identifier,BlockingDeque<Message>> taskQueues = new HashMap<>();
     private final Map<String, BlockingDeque<Message>> specialQueues = new HashMap<>();
 
     private MessageListener feedbackListener = null;
-    private final Map<String,MessageListener> requestListeners = new HashMap<>();
-    private final Map<String,MessageListener> taskListeners = new HashMap<>();
+    private final Map<Identifier,MessageListener> requestListeners = new HashMap<>();
+    private final Map<Identifier,MessageListener> taskListeners = new HashMap<>();
     private final Map<String, MessageListener> specialListeners = new HashMap<>();
 
     public SimpleMessageBroker() {
@@ -66,7 +67,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public Message receiveRequests(String id) {
+    public Message receiveRequests(Identifier id) {
         try {
             BlockingDeque<Message> queue = requestQueues.get(id);
             if (queue == null) {
@@ -85,14 +86,14 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerRequestListener(String id, MessageListener listener) {
+    public void registerRequestListener(Identifier id, MessageListener listener) {
         synchronized (requestListeners) {
             requestListeners.put(id, listener);
         }
     }
 
     @Override
-    public void publishRequest(String id, Message message) {
+    public void publishRequest(Identifier id, Message message) {
         BlockingDeque<Message> queue = requestQueues.get(id);
         if (queue == null) {
             synchronized (requestQueues) {
@@ -113,7 +114,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public Message receiveTasks(String id) {
+    public Message receiveTasks(Identifier id) {
         try {
             BlockingDeque<Message> queue;
             synchronized (taskQueues) {
@@ -131,14 +132,14 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerTaskListener(String id, MessageListener listener) {
+    public void registerTaskListener(Identifier id, MessageListener listener) {
         synchronized (taskListeners) {
             taskListeners.put(id, listener);
         }
     }
 
     @Override
-    public void publishTask(String id, Message message) {
+    public void publishTask(Identifier id, Message message) {
         BlockingDeque<Message> queue = taskQueues.get(id);
         if (queue == null) {
             synchronized (taskQueues) {

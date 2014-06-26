@@ -1,6 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -43,13 +44,9 @@ public class AddressResolver {
                         });
     }
 
-    public PeerAddress getPeerAddress(String peerId, String adapterId) {
+    public PeerAddress getPeerAddress(Identifier peerId, Identifier adapterId) {
         try {
-            if (adapterId.startsWith("adapter.")) {
-                adapterId = adapterId.replaceFirst("adapter.", "");
-            }
-
-            return cache.get(new AddressKey(peerId, adapterId));
+            return cache.get(new AddressKey(peerId, Identifier.adapter(adapterId.getIdWithoutPostfix())));
         } catch (ExecutionException e) {
             if (e.getCause() instanceof AddressResolverException) {
                 log.debug("There is address for PeerId () and AdapterId ()", peerId, adapterId);
@@ -62,19 +59,19 @@ public class AddressResolver {
 
     public void addPeerAddress(PeerAddress address) {
         dao.insert(address);
-        cache.put(new AddressKey(address.getPeerId(), address.getAdapter()), address);
+        cache.put(new AddressKey(address.getPeerId(), address.getAdapterId()), address);
     }
 
-    public void removePeerAddress(String peerId, String adapterId) {
+    public void removePeerAddress(Identifier peerId, Identifier adapterId) {
         cache.invalidate(new AddressKey(peerId, adapterId));
         dao.remove(peerId, adapterId);
     }
 
     private class AddressKey {
-        final String peerId;
-        final String adapterId;
+        final Identifier peerId;
+        final Identifier adapterId;
 
-        private AddressKey(String peerId, String adapterId) {
+        private AddressKey(Identifier peerId, Identifier adapterId) {
             this.peerId = peerId;
             this.adapterId = adapterId;
         }

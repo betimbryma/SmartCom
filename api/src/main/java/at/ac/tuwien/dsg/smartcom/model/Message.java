@@ -11,22 +11,22 @@ package at.ac.tuwien.dsg.smartcom.model;
  */
 public class Message {
 
-    private String id;
+    private Identifier id;
     private String content;
     private String type;
     private String subtype;
-    private String senderId;
-    private String receiverId;
+    private Identifier senderId;
+    private Identifier receiverId;
     private String conversationId;
     private long ttl;
     private String language;
     private String securityToken;
 
-    public String getId() {
+    public Identifier getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Identifier id) {
         this.id = id;
     }
 
@@ -54,19 +54,19 @@ public class Message {
         this.subtype = subtype;
     }
 
-    public String getSenderId() {
+    public Identifier getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(String senderId) {
+    public void setSenderId(Identifier senderId) {
         this.senderId = senderId;
     }
 
-    public String getReceiverId() {
+    public Identifier getReceiverId() {
         return receiverId;
     }
 
-    public void setReceiverId(String receiverId) {
+    public void setReceiverId(Identifier receiverId) {
         this.receiverId = receiverId;
     }
 

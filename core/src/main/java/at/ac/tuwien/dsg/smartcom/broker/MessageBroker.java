@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.broker;
 
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.queue.FeedbackPublisher;
 
@@ -36,7 +37,7 @@ public interface MessageBroker extends FeedbackPublisher {
      * @param id that the request message is assigned to
      * @return the message
      */
-    public Message receiveRequests(String id);
+    public Message receiveRequests(Identifier id);
 
     /**
      * Register a message listener that will be notified on the arrival of
@@ -47,7 +48,7 @@ public interface MessageBroker extends FeedbackPublisher {
      * @param id the id of the request receiver
      * @param listener for request messages
      */
-    public void registerRequestListener(String id, MessageListener listener);
+    public void registerRequestListener(Identifier id, MessageListener listener);
 
     /**
      * Publish a new request message for a given id.
@@ -55,7 +56,7 @@ public interface MessageBroker extends FeedbackPublisher {
      * @param id that the messages is dedicated to
      * @param message that should be published
      */
-    public void publishRequest(String id, Message message);
+    public void publishRequest(Identifier id, Message message);
 
     /**
      * Receives task messages for a given id. Might block until there
@@ -64,7 +65,7 @@ public interface MessageBroker extends FeedbackPublisher {
      * @param id that the task message is assigned to
      * @return the message
      */
-    public Message receiveTasks(String id);
+    public Message receiveTasks(Identifier id);
 
     /**
      * Register a message listener that will be notified on the arrival of
@@ -75,7 +76,7 @@ public interface MessageBroker extends FeedbackPublisher {
      * @param id the id of the task receiver
      * @param listener for task messages
      */
-    public void registerTaskListener(String id, MessageListener listener);
+    public void registerTaskListener(Identifier id, MessageListener listener);
 
     /**
      * Publish a task message for a given receiver destination id (note that
@@ -85,7 +86,7 @@ public interface MessageBroker extends FeedbackPublisher {
      * @param id of the receiver destination
      * @param message that should be published
      */
-    public void publishTask(String id, Message message);
+    public void publishTask(Identifier id, Message message);
 
     /**
      * Publish a control message.

@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,64 +20,67 @@ public class AddressResolverTest {
         resolver = new AddressResolver(dao, 100);
     }
 
-    @Test
+    @Test(timeout = 5000l)
     public void testGetPeerAddress() throws Exception {
         for (int i = 0; i < 1000; i++) {
-            dao.insert(new PeerAddress("peer"+i, "adapter"+(i%2), Collections.EMPTY_LIST));
+            dao.insert(new PeerAddress(Identifier.peer("peer"+i), Identifier.adapter("adapter"+(i%2)), Collections.EMPTY_LIST));
         }
 
         for (int i = 0; i < 100; i++) {
-            assertNotNull("Resolver returns null!", resolver.getPeerAddress("peer" + i, "adapter" + (i % 2)));
+            assertNotNull("Resolver returns null!", resolver.getPeerAddress(Identifier.peer("peer" + i), Identifier.adapter("adapter" + (i % 2))));
         }
         assertEquals("Cache has not requested values correctly!", 100, dao.getRequests());
 
 
         for (int i = 0; i < 100; i++) {
-            assertNotNull("Resolver returns null!", resolver.getPeerAddress("peer"+i, "adapter"+(i%2)));
+            assertNotNull("Resolver returns null!", resolver.getPeerAddress(Identifier.peer("peer"+i), Identifier.adapter("adapter"+(i%2))));
         }
         int size = dao.getRequests();
         assertThat("Cache should not request items (they are in the cache)!", size, lessThan(200));
 
         for (int i = 0; i < 1000; i++) {
-            assertNotNull("Resolver returns null!", resolver.getPeerAddress("peer" + i, "adapter" + (i % 2)));
+            assertNotNull("Resolver returns null!", resolver.getPeerAddress(Identifier.peer("peer" + i), Identifier.adapter("adapter" + (i % 2))));
         }
         assertThat("Cache has not requested values correctly!", dao.getRequests(), lessThan(1000 + size));
     }
 
-    @Test
+    @Test(timeout = 500l)
     public void testAddPeerAddress() throws Exception {
-        assertNull("Resolver returns address that should not be available!", resolver.getPeerAddress("peer1", "adapter1"));
+        Identifier peer1 = Identifier.peer("peer1");
+        Identifier adapter1 = Identifier.adapter("adapter1");
 
-        PeerAddress address = new PeerAddress("peer1", "adapter1", Collections.EMPTY_LIST);
+        assertNull("Resolver returns address that should not be available!", resolver.getPeerAddress(peer1, adapter1));
+
+        PeerAddress address = new PeerAddress(peer1, adapter1, Collections.EMPTY_LIST);
         resolver.addPeerAddress(address);
 
-        int count = dao.getRequests();
-
-        PeerAddress peerAddress = resolver.getPeerAddress("peer1", "adapter1");
+        PeerAddress peerAddress = resolver.getPeerAddress(peer1, adapter1);
         assertNotNull("Address should not be null!", peerAddress);
         assertEquals("Address does not match the inserted address", address, peerAddress);
-        assertEquals("Request should be cached!", count, dao.getRequests());
 
-        peerAddress = dao.find("peer1", "adapter1");
+        peerAddress = dao.find(peer1, adapter1);
         assertNotNull("Address should be in the database!", peerAddress);
         assertEquals("Address does not match the inserted address", address, peerAddress);
     }
 
-    @Test
+    @Test(timeout = 5000l)
     public void testRemovePeerAddress() throws Exception {
-        PeerAddress address = new PeerAddress("peer1", "adapter1", Collections.EMPTY_LIST);
+        Identifier peer1 = Identifier.peer("peer1");
+        Identifier adapter1 = Identifier.adapter("adapter1");
+
+        PeerAddress address = new PeerAddress(peer1, adapter1, Collections.EMPTY_LIST);
         resolver.addPeerAddress(address);
 
-        PeerAddress peerAddress = resolver.getPeerAddress("peer1", "adapter1");
+        PeerAddress peerAddress = resolver.getPeerAddress(peer1, adapter1);
         assertNotNull("Address should not be null!", peerAddress);
         assertEquals("Address does not match the inserted address", address, peerAddress);
 
-        resolver.removePeerAddress("peer1", "adapter1");
+        resolver.removePeerAddress(peer1, adapter1);
 
-        peerAddress = resolver.getPeerAddress("peer1", "adapter1");
+        peerAddress = resolver.getPeerAddress(peer1, adapter1);
         assertNull("Address should not be present anymore!", peerAddress);
 
-        peerAddress = dao.find("peer1", "adapter1");
+        peerAddress = dao.find(peer1, adapter1);
         assertNull("Address should not be in the database!", peerAddress);
     }
 }

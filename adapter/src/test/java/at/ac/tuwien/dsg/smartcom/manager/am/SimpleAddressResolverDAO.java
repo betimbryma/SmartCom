@@ -1,6 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 
 import java.util.HashMap;
@@ -17,18 +18,18 @@ public class SimpleAddressResolverDAO implements ResolverDAO {
 
     @Override
     public synchronized void insert(PeerAddress address) {
-        addresses.put(address.getPeerId()+"."+address.getAdapter(), address);
+        addresses.put(address.getPeerId().getId()+"."+address.getAdapterId().getId(), address);
     }
 
     @Override
-    public synchronized PeerAddress find(String peerId, String adapterId) {
+    public synchronized PeerAddress find(Identifier peerId, Identifier adapterId) {
         requests++;
-        return addresses.get(peerId+"."+adapterId);
+        return addresses.get(peerId.getId()+"."+adapterId.getId());
     }
 
     @Override
-    public synchronized void remove(String peerId, String adapterId) {
-        addresses.remove(peerId+"."+adapterId);
+    public synchronized void remove(Identifier peerId, Identifier adapterId) {
+        addresses.remove(peerId.getId()+"."+adapterId.getId());
     }
 
     public synchronized int getRequests() {

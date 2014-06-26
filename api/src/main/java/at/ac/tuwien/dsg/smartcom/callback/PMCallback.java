@@ -2,6 +2,7 @@ package at.ac.tuwien.dsg.smartcom.callback;
 
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 
 import java.util.Collection;
@@ -29,7 +30,7 @@ public interface PMCallback {
      * @return Returns a collection of all addresses and methods/adapters which can be used to contact the peer.
      * @throws NoSuchPeerException if there exists no such peer.
      */
-    public Collection<PeerAddress> getPeerAddress(String id) throws NoSuchPeerException;
+    public Collection<PeerAddress> getPeerAddress(Identifier id) throws NoSuchPeerException;
 
     /**
      * Authenticates a peer, i.e. checks if the provided credentials match the peers credentials in the system.
@@ -39,5 +40,5 @@ public interface PMCallback {
      * @return Returns true if the credentials are valid, false otherwise
      * @throws PeerAuthenticationException if an authentication error occurs.
      */
-    public boolean authenticate(String peerId, String password) throws PeerAuthenticationException;
+    public boolean authenticate(Identifier peerId, String password) throws PeerAuthenticationException;
 }

@@ -11,6 +11,7 @@ import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestFeedbackPullAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
@@ -56,22 +57,22 @@ public class AdapterManagerIT {
         manager.destroy();
     }
 
-    @Test
+    @Test(timeout = 20000l)
     public void test() throws InterruptedException {
-        String statefulAdapterId = manager.registerPeerAdapter(StatefulAdapter.class);
-        String statelessAdapterId = manager.registerPeerAdapter(StatelessAdapter.class);
+        Identifier statefulAdapterId = manager.registerPeerAdapter(StatefulAdapter.class);
+        Identifier statelessAdapterId = manager.registerPeerAdapter(StatelessAdapter.class);
 
-        List<String> adapterIds = new ArrayList<>(AMOUNT_OF_PEERS);
+        List<Identifier> adapterIds = new ArrayList<>(AMOUNT_OF_PEERS);
         List<RoutingRule> rules = new ArrayList<>(AMOUNT_OF_PEERS);
-        List<String> peers = new ArrayList<>(AMOUNT_OF_PEERS);
+        List<Identifier> peers = new ArrayList<>(AMOUNT_OF_PEERS);
         for (int i = 0; i < AMOUNT_OF_PEERS; i++) {
-            peers.add("peer"+i);
+            peers.add(Identifier.peer("peer"+i));
         }
 
-        for (String peer : peers) {
+        for (Identifier peer : peers) {
             RoutingRule route = manager.createEndpointForPeer(peer);
             rules.add(route);
-            adapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(peer+"."+route.getRoute().replaceFirst("adapter.","")), 0));
+            adapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(peer.getId()+"."+route.getRoute().getIdWithoutPostfix()), 0));
         }
 
         FeedbackListener listener = new FeedbackListener();
@@ -84,17 +85,22 @@ public class AdapterManagerIT {
             broker.publishTask(rule.getRoute(), msg);
         }
 
-        for (String adapterId : adapterIds) {
+        for (Identifier adapterId : adapterIds) {
             broker.publishRequest(adapterId, new Message());
         }
 
-        synchronized (this) {
-            wait(20000l);
+        int counterOld = -1;
+        int counter;
+        while ((counter = listener.counter.get()) != counterOld) {
+            synchronized (this) {
+                wait(1000l);
+            }
+            counterOld = counter;
         }
 
-        int counter = listener.counter.get();
-
         assertEquals("Not enough feedback received!", AMOUNT_OF_PEERS, counter);
+
+        System.out.println("remove");
 
         manager.removePeerAdapter(statefulAdapterId);
 
@@ -104,12 +110,17 @@ public class AdapterManagerIT {
             broker.publishTask(rule.getRoute(), msg);
         }
 
-        for (String adapterId : adapterIds) {
+        for (Identifier adapterId : adapterIds) {
             broker.publishRequest(adapterId, new Message());
         }
 
-        synchronized (this) {
-            wait(20000l);
+        counterOld = -1;
+        int counter2;
+        while ((counter2 = listener.counter.get()) != counterOld) {
+            synchronized (this) {
+                wait(1000l);
+            }
+            counterOld = counter2;
         }
 
         assertThat("No more requests handled after removed one (of two) peer adapters!", listener.counter.get(), greaterThan(counter));
@@ -117,11 +128,11 @@ public class AdapterManagerIT {
     
     private class PMCallbackImpl implements PMCallback {
         @Override
-        public Collection<PeerAddress> getPeerAddress(String id) {
+        public Collection<PeerAddress> getPeerAddress(Identifier id) {
             List<PeerAddress> addresses = new ArrayList<>();
 
-            addresses.add(new PeerAddress(id, "stateless", Collections.EMPTY_LIST));
-            addresses.add(new PeerAddress(id, "stateful", Collections.EMPTY_LIST));
+            addresses.add(new PeerAddress(id, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
+            addresses.add(new PeerAddress(id, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
 
             Collections.shuffle(addresses);
 
@@ -129,7 +140,7 @@ public class AdapterManagerIT {
         }
 
         @Override
-        public boolean authenticate(String username, String password) {
+        public boolean authenticate(Identifier peerId, String password) {
             return false;
         }
     }

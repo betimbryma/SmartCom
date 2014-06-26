@@ -6,6 +6,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.PeerAdapter;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.exception.InvalidRuleException;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 
@@ -32,7 +33,7 @@ public interface Communication {
      * @throws CommunicationException a generic exception that will be thrown if something went wrong
      *              in the initial handling of the message.
      */
-    public String send(Message message) throws CommunicationException;
+    public Identifier send(Message message) throws CommunicationException;
 
     /**
      * Add a special route to the routing rules (e.g., route feedback from peer A
@@ -43,7 +44,7 @@ public interface Communication {
      * @return Returns the middleware internal ID of the rule
      * @throws InvalidRuleException if the routing rule is not valid.
      */
-    public String addRouting(RoutingRule rule) throws InvalidRuleException;
+    public Identifier addRouting(RoutingRule rule) throws InvalidRuleException;
 
     /**
      * Remove a previously defined routing rule identified by an ID.
@@ -51,7 +52,7 @@ public interface Communication {
      * @param routeId The ID of the routing rule that should be removed.
      * @return The removed routing rule or nothing if there is no such rule in the system.
      */
-    public RoutingRule removeRouting(String routeId);
+    public RoutingRule removeRouting(Identifier routeId);
 
     /**
      * Creates a feedback adapter that will wait for push notifications or will pull for updates in a
@@ -60,7 +61,7 @@ public interface Communication {
      * @param adapter Specifies the feedback push adapter.
      * @return Returns the middleware internal ID of the adapter.
      */
-    public String addPushAdapter(FeedbackPushAdapter adapter);
+    public Identifier addPushAdapter(FeedbackPushAdapter adapter);
 
     /**
      * Creates a feedback adapter that will pull for updates in a certain time interval.
@@ -71,7 +72,7 @@ public interface Communication {
      * @param interval Interval in milliseconds that specifies when to issue pull requests. Can’t be zero or negative.
      * @return Returns the middleware internal ID of the adapter.
      */
-    public String addPullAdapter(FeedbackPullAdapter adapter, long interval);
+    public Identifier addPullAdapter(FeedbackPullAdapter adapter, long interval);
 
     /**
      * Removes a feedback adapter from the execution.
@@ -79,7 +80,7 @@ public interface Communication {
      * @param adapterId The ID of the adapter that should be removed.
      * @return Returns the feedback adapter that has been removed or nothing if there is no such adapter.
      */
-    public FeedbackAdapter removeFeedbackAdapter(String adapterId);
+    public FeedbackAdapter removeFeedbackAdapter(Identifier adapterId);
 
     /**
      * Registers a new type of peer adapter that can be used by the middleware to get in contact with a peer.
@@ -88,7 +89,7 @@ public interface Communication {
      * @param adapter The peer adapter that can be used to contact peers.
      * @return Returns the middleware internal ID of the created adapter.
      */
-    public String registerPeerAdapter(Class<PeerAdapter> adapter);
+    public Identifier registerPeerAdapter(Class<PeerAdapter> adapter);
 
     /**
      * Removes a type of peer adapters. Adapters that are currently in use will be removed
@@ -97,5 +98,5 @@ public interface Communication {
      *
      * @param adapterId Specifies the adapter that should be removed.
      */
-    public void removePeerAdapter(String adapterId);
+    public void removePeerAdapter(Identifier adapterId);
 }

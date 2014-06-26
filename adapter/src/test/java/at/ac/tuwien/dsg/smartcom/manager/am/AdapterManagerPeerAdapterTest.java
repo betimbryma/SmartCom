@@ -8,6 +8,7 @@ import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestFeedbackPullAdapter;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
@@ -27,8 +28,8 @@ public class AdapterManagerPeerAdapterTest {
     private AdapterManager manager;
     private MessageBroker broker;
 
-    private String peerId1 = "peer1";
-    private String peerId2 = "peer1";
+    private Identifier peerId1 = Identifier.peer("peer1");
+    private Identifier peerId2 = Identifier.peer("peer1");
 
     @Before
     public void setUp() throws Exception {
@@ -43,12 +44,12 @@ public class AdapterManagerPeerAdapterTest {
         manager.destroy();
     }
 
-    @Test(timeout = 2000l)
+    @Test(timeout = 1500l)
     public void testRegisterPeerAdapterWithStatelessAdapter() {
-        FeedbackPullAdapter pullAdapter1 = new TestFeedbackPullAdapter(peerId1+".stateless");
-        String id1 = manager.addPullAdapter(pullAdapter1, 0);
-        FeedbackPullAdapter pullAdapter2 = new TestFeedbackPullAdapter(peerId2+".stateless");
-        String id2 = manager.addPullAdapter(pullAdapter2, 0);
+        FeedbackPullAdapter pullAdapter1 = new TestFeedbackPullAdapter(peerId1.getId()+".stateless");
+        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
+        FeedbackPullAdapter pullAdapter2 = new TestFeedbackPullAdapter(peerId2.getId()+".stateless");
+        Identifier id2 = manager.addPullAdapter(pullAdapter2, 0);
 
         manager.registerPeerAdapter(StatelessAdapter.class);
 
@@ -74,12 +75,12 @@ public class AdapterManagerPeerAdapterTest {
         assertNotNull("No feedback received!", feedback2);
     }
 
-    @Test(timeout = 2000l)
+    @Test(timeout = 1500l)
     public void testRegisterPeerAdapterWithStatefulAdapter() {
-        FeedbackPullAdapter pullAdapter1 = new TestFeedbackPullAdapter(peerId1+".stateful."+peerId1);
-        String id1 = manager.addPullAdapter(pullAdapter1, 0);
-        FeedbackPullAdapter pullAdapter2 = new TestFeedbackPullAdapter(peerId2+".stateful."+peerId2);
-        String id2 = manager.addPullAdapter(pullAdapter2, 0);
+        FeedbackPullAdapter pullAdapter1 = new TestFeedbackPullAdapter(peerId1.getId()+".stateful");
+        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
+        FeedbackPullAdapter pullAdapter2 = new TestFeedbackPullAdapter(peerId2.getId()+".stateful");
+        Identifier id2 = manager.addPullAdapter(pullAdapter2, 0);
 
         manager.registerPeerAdapter(StatefulAdapter.class);
 
@@ -107,24 +108,24 @@ public class AdapterManagerPeerAdapterTest {
 
     private class PMCallbackImpl implements PMCallback {
         @Override
-        public Collection<PeerAddress> getPeerAddress(String id) {
+        public Collection<PeerAddress> getPeerAddress(Identifier id) {
             List<PeerAddress> addresses = new ArrayList<>();
 
             if (peerId1.equals(id)) {
-                addresses.add(new PeerAddress(peerId1, "stateless", Collections.EMPTY_LIST));
-                addresses.add(new PeerAddress(peerId1, "stateful", Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId1, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId1, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
             }
 
             if (peerId2.equals(id)) {
-                addresses.add(new PeerAddress(peerId2, "stateless", Collections.EMPTY_LIST));
-                addresses.add(new PeerAddress(peerId2, "stateful", Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId2, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId2, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
             }
 
             return addresses;
         }
 
         @Override
-        public boolean authenticate(String username, String password) {
+        public boolean authenticate(Identifier username, String password) {
             return false;
         }
     }

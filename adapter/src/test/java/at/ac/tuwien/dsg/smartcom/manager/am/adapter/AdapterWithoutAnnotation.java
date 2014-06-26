@@ -13,6 +13,6 @@ public class AdapterWithoutAnnotation implements PeerAdapter {
 
     @Override
     public void push(Message message, PeerAddress address) {
-        AdapterTestQueue.publish("stateless." + address.getPeerId(), message);
+        AdapterTestQueue.publish("stateless." + address.getPeerId().getId(), message);
     }
 }

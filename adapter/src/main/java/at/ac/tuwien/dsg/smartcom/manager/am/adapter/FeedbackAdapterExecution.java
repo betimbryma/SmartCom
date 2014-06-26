@@ -4,6 +4,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.FeedbackAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +17,10 @@ public class FeedbackAdapterExecution implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(FeedbackAdapterExecution.class);
 
     private final FeedbackPullAdapter adapter;
-    private final String id;
+    private final Identifier id;
     private final MessageBroker broker;
 
-    public FeedbackAdapterExecution(FeedbackPullAdapter adapter, String id, MessageBroker broker) {
+    public FeedbackAdapterExecution(FeedbackPullAdapter adapter, Identifier id, MessageBroker broker) {
         this.adapter = adapter;
         this.id = id;
         this.broker = broker;
@@ -68,7 +69,7 @@ public class FeedbackAdapterExecution implements Runnable {
     }
 
     private void enhanceMessage(Message response) {
-        if (response.getSenderId() == null || response.getSenderId().isEmpty()) {
+        if (response.getSenderId() == null) {
             response.setSenderId(id);
         }
     }

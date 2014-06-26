@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.manager.am.dao;
 
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -45,17 +46,17 @@ public class MongoDBResolverDAO implements ResolverDAO {
         }
 
         BasicDBObject doc = new BasicDBObject()
-                .append("_id", address.getPeerId()+"."+address.getAdapter())
-                .append("peerId", address.getPeerId())
-                .append("adapterId", address.getAdapter())
+                .append("_id", address.getPeerId().getId()+"."+address.getAdapterId().getId())
+                .append("peerId", address.getPeerId().getId())
+                .append("adapterId", address.getAdapterId().getId())
                 .append("contactParameters", contactParams);
         log.debug("Saving peeraddress in mongoDB: ()", doc);
         return doc;
     }
 
     @Override
-    public PeerAddress find(String peerId, String adapterId) {
-        BasicDBObject query = new BasicDBObject("_id", peerId+"."+adapterId);
+    public PeerAddress find(Identifier peerId, Identifier adapterId) {
+        BasicDBObject query = new BasicDBObject("_id", peerId.getId()+"."+adapterId.getId());
 
         PeerAddress address = null;
         DBObject one = coll.findOne(query);
@@ -68,8 +69,8 @@ public class MongoDBResolverDAO implements ResolverDAO {
     }
 
     @Override
-    public void remove(String peerId, String adapterId) {
-        coll.remove(new BasicDBObject("_id", peerId+"."+adapterId));
+    public void remove(Identifier peerId, Identifier adapterId) {
+        coll.remove(new BasicDBObject("_id", peerId.getId()+"."+adapterId.getId()));
     }
 
     PeerAddress deserializePeerAddress(DBObject next) {
@@ -80,7 +81,7 @@ public class MongoDBResolverDAO implements ResolverDAO {
             list.add((Serializable) contactParameters.get((i++) + ""));
         }
 
-        address = new PeerAddress((String) next.get("peerId"), (String) next.get("adapterId"), list);
+        address = new PeerAddress(Identifier.peer((String) next.get("peerId")), Identifier.adapter((String) next.get("adapterId")), list);
         return address;
     }
 }

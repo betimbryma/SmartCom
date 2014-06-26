@@ -1,6 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.callback;
 
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchCollectiveException;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 
 import java.util.List;
 
@@ -25,5 +26,5 @@ public interface CollectiveInfoCallback {
      * @return List of peer ids that are part of the collective.
      * @throws NoSuchCollectiveException if there exists no such collective.
      */
-    public List<String> resolveCollective(String collective) throws NoSuchCollectiveException;
+    public List<Identifier> resolveCollective(Identifier collective) throws NoSuchCollectiveException;
 }

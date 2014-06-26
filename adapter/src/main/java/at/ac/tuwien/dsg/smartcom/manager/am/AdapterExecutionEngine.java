@@ -5,6 +5,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.util.TaskScheduler;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackAdapterExecution;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.PeerAdapterExecution;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,11 +29,11 @@ class AdapterExecutionEngine implements TaskScheduler{
     private final AddressResolver addressResolver;
     private final MessageBroker broker;
 
-    private final Map<String, FeedbackAdapterExecution> feedbackAdapterMap = new HashMap<>();
-    private final Map<String, FeedbackPushAdapter> pushAdapterFacadeMap = new HashMap<>();
-    private final Map<String, List<TimerTask>> taskMap = new HashMap<>();
-    private final Map<String, PeerAdapterExecution> peerAdapterMap = new HashMap<>();
-    private final Map<String, Future<?>> futureMap = new HashMap<>();
+    private final Map<Identifier, FeedbackAdapterExecution> feedbackAdapterMap = new HashMap<>();
+    private final Map<Identifier, FeedbackPushAdapter> pushAdapterFacadeMap = new HashMap<>();
+    private final Map<Identifier, List<TimerTask>> taskMap = new HashMap<>();
+    private final Map<Identifier, PeerAdapterExecution> peerAdapterMap = new HashMap<>();
+    private final Map<Identifier, Future<?>> futureMap = new HashMap<>();
 
     AdapterExecutionEngine(AddressResolver addressResolver, MessageBroker broker) {
         this.addressResolver = addressResolver;
@@ -75,12 +76,12 @@ class AdapterExecutionEngine implements TaskScheduler{
         log.info("Executor shutdown complete!");
     }
 
-    void addFeedbackAdapter(FeedbackPushAdapter adapter, String id) {
+    void addFeedbackAdapter(FeedbackPushAdapter adapter, Identifier id) {
         log.info("Adding push adapter with id ()", id);
         pushAdapterFacadeMap.put(id, adapter);
     }
 
-    void addFeedbackAdapter(FeedbackPullAdapter adapter, String id) {
+    void addFeedbackAdapter(FeedbackPullAdapter adapter, Identifier id) {
         log.info("Adding pull adapter with id ()", id);
         FeedbackAdapterExecution execution = new FeedbackAdapterExecution(adapter, id, broker);
 
@@ -92,7 +93,7 @@ class AdapterExecutionEngine implements TaskScheduler{
         feedbackAdapterMap.put(id, execution);
     }
 
-    FeedbackAdapter removeFeedbackAdapter(String id) {
+    FeedbackAdapter removeFeedbackAdapter(Identifier id) {
         log.info("Removing adapter with id "+id);
         FeedbackPushAdapter adapter = pushAdapterFacadeMap.get(id);
         if (adapter != null) {
@@ -108,7 +109,7 @@ class AdapterExecutionEngine implements TaskScheduler{
         }
     }
 
-    void addPeerAdapter(PeerAdapter adapter, String id, boolean stateful) {
+    void addPeerAdapter(PeerAdapter adapter, Identifier id, boolean stateful) {
         log.info("Adding adapter with id "+id);
         PeerAdapterExecution execution = new PeerAdapterExecution(adapter, addressResolver, id, stateful, broker);
         Future<?> submit = executor.submit(execution);
@@ -117,7 +118,7 @@ class AdapterExecutionEngine implements TaskScheduler{
         peerAdapterMap.put(id, execution);
     }
 
-    PeerAdapter removePeerAdapter(String id) {
+    PeerAdapter removePeerAdapter(Identifier id) {
         log.info("Removing adapter with id "+id);
         Future<?> remove = futureMap.remove(id);
         remove.cancel(true);
@@ -142,7 +143,7 @@ class AdapterExecutionEngine implements TaskScheduler{
         };
     }
 
-    public void schedule(TimerTask task, long period, String id) {
+    public void schedule(TimerTask task, long period, Identifier id) {
         timer.scheduleAtFixedRate(task, 0, period);
 
         List<TimerTask> timerTasks = taskMap.get(id);

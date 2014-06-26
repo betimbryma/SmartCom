@@ -7,6 +7,7 @@ import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
@@ -24,17 +25,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AdapterManagerImpl implements AdapterManager {
     private static final Logger log = LoggerFactory.getLogger(AdapterManager.class);
-    public static final String ADAPTER_PREFIX = "adapter.";
 
     private final AdapterExecutionEngine executionEngine;
     private final PMCallback peerManager;
     private final MessageBroker broker;
     private final AddressResolver addressResolver;
 
-    private final Map<String, Class<? extends PeerAdapter>> statefulAdapters = new ConcurrentHashMap<>();
-    private final Map<String, List<String>> statefulInstances = new ConcurrentHashMap<>();
+    private final Map<Identifier, Class<? extends PeerAdapter>> statefulAdapters = new ConcurrentHashMap<>();
+    private final Map<Identifier, List<Identifier>> statefulInstances = new ConcurrentHashMap<>();
 
-    private final List<String> stateless = new ArrayList<>();
+    private final List<Identifier> stateless = new ArrayList<>();
 
     AdapterManagerImpl(ResolverDAO dao, PMCallback peerManager, MessageBroker broker) {
         this.peerManager = peerManager;
@@ -55,8 +55,8 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public String addPushAdapter(FeedbackPushAdapter adapter) {
-        String id = generateAdapterId(adapter);
+    public Identifier addPushAdapter(FeedbackPushAdapter adapter) {
+        Identifier id = Identifier.adapter(generateAdapterId(adapter));
 
         if (adapter instanceof FeedbackPushAdapterImpl) {
             ((FeedbackPushAdapterImpl) adapter).setFeedbackPublisher(broker);
@@ -72,8 +72,8 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public String addPullAdapter(FeedbackPullAdapter adapter, int period) {
-        final String id = generateAdapterId(adapter);
+    public Identifier addPullAdapter(FeedbackPullAdapter adapter, int period) {
+        final Identifier id = Identifier.adapter(generateAdapterId(adapter));
 
         executionEngine.addFeedbackAdapter(adapter, id);
 
@@ -90,12 +90,12 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public FeedbackAdapter removeFeedbackAdapter(String adapterId) {
+    public FeedbackAdapter removeFeedbackAdapter(Identifier adapterId) {
         return executionEngine.removeFeedbackAdapter(adapterId);
     }
 
     @Override
-    public String registerPeerAdapter(Class<? extends PeerAdapter> adapter) {
+    public Identifier registerPeerAdapter(Class<? extends PeerAdapter> adapter) {
         Adapter annotation = adapter.getAnnotation(Adapter.class);
         if (annotation == null) {
             log.error("Can't find annotation @Adapter in class ()", adapter.getSimpleName());
@@ -104,7 +104,7 @@ public class AdapterManagerImpl implements AdapterManager {
         boolean stateful = annotation.stateful();
         String name = annotation.name();
 
-        String id = generateAdapterId(adapter, name);
+        Identifier id = Identifier.adapter(generateAdapterId(adapter, name));
 
         if (!stateful) {
             try {
@@ -132,28 +132,28 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public RoutingRule createEndpointForPeer(String peerId) {
-        String adapterId = null;
+    public RoutingRule createEndpointForPeer(Identifier peerId) {
+        Identifier adapterId = null;
         Collection<PeerAddress> peerAddress;
         try {
             peerAddress = peerManager.getPeerAddress(peerId);
         } catch (NoSuchPeerException e) {
-            log.warn("No such peer: '"+peerId);
+            log.warn("No such peer: ()", peerId);
             return null;
         }
         for (PeerAddress address : peerAddress) {
-            if(stateless.contains(ADAPTER_PREFIX+address.getAdapter())) {
+            if(stateless.contains(address.getAdapterId())) {
                 addressResolver.addPeerAddress(address);
-                adapterId = ADAPTER_PREFIX+address.getAdapter();
+                adapterId = address.getAdapterId();
                 break;
-            } else if (statefulAdapters.containsKey(ADAPTER_PREFIX+address.getAdapter())) {
+            } else if (statefulAdapters.containsKey(address.getAdapterId())) {
                 try {
-                    String adapter = ADAPTER_PREFIX+address.getAdapter();
-                    String newId = adapter+"."+peerId;
+                    Identifier adapter = address.getAdapterId();
+                    Identifier newId = Identifier.adapter(adapter, peerId);
 
                     //check if there is already such an instance
                     synchronized (statefulInstances) {
-                        List<String> instances = statefulInstances.get(ADAPTER_PREFIX + address.getAdapter());
+                        List<Identifier> instances = statefulInstances.get(address.getAdapterId());
                         if (instances != null) {
                             if (instances.contains(newId)) {
                                 adapterId = newId;
@@ -178,11 +178,11 @@ public class AdapterManagerImpl implements AdapterManager {
                     }
                     addressResolver.addPeerAddress(address);
                 } catch (IllegalAccessException | InstantiationException e) {
-                    log.error("Could not instantiate class " + statefulAdapters.get(ADAPTER_PREFIX+address.getAdapter()).toString(), e);
+                    log.error("Could not instantiate class " + statefulAdapters.get(address.getAdapterId()).toString(), e);
                 }
                 break;
             } else {
-                log.warn("Unknown adapter: "+address.getAdapter());
+                log.warn("Unknown adapter: "+address.getAdapterId());
             }
         }
 
@@ -194,11 +194,11 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public void removePeerAdapter(String adapterId) {
+    public void removePeerAdapter(Identifier adapterId) {
         stateless.remove(adapterId);
         Class<? extends PeerAdapter> remove = statefulAdapters.remove(adapterId);
         if (remove != null) {
-            for (String id : statefulInstances.get(adapterId)) {
+            for (Identifier id : statefulInstances.get(adapterId)) {
                 executionEngine.removePeerAdapter(id);
             }
         } else {
@@ -207,11 +207,11 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     private String generateAdapterId(FeedbackAdapter adapter) {
-        return ADAPTER_PREFIX+generateUniqueIdString();
+        return generateUniqueIdString();
     }
 
     private String generateAdapterId(Class<? extends PeerAdapter> adapter, String name) {
-        return ADAPTER_PREFIX+name;
+        return name;
     }
 
     private String generateUniqueIdString() {

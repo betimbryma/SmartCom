@@ -10,11 +10,11 @@ package at.ac.tuwien.dsg.smartcom.model;
 public class RoutingRule {
     private final String type;
     private final String subtype;
-    private final String receiver;
+    private final Identifier receiver;
 
-    private final String route;
+    private final Identifier route;
 
-    public RoutingRule(String type, String subtype, String receiver, String route) {
+    public RoutingRule(String type, String subtype, Identifier receiver, Identifier route) {
         this.type = type;
         this.subtype = subtype;
         this.receiver = receiver;
@@ -29,11 +29,11 @@ public class RoutingRule {
         return subtype;
     }
 
-    public String getReceiver() {
+    public Identifier getReceiver() {
         return receiver;
     }
 
-    public String getRoute() {
+    public Identifier getRoute() {
         return route;
     }
 

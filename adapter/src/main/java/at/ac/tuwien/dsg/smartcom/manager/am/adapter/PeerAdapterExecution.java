@@ -3,6 +3,7 @@ package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 import at.ac.tuwien.dsg.smartcom.adapter.PeerAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.am.AddressResolver;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import org.slf4j.Logger;
@@ -17,11 +18,11 @@ public class PeerAdapterExecution implements Runnable {
 
     private final PeerAdapter adapter;
     private final AddressResolver address;
-    private final String id;
+    private final Identifier id;
     private final boolean stateful;
     private final MessageBroker broker;
 
-    public PeerAdapterExecution(PeerAdapter adapter, AddressResolver address, String id, boolean stateful, MessageBroker broker) {
+    public PeerAdapterExecution(PeerAdapter adapter, AddressResolver address, Identifier id, boolean stateful, MessageBroker broker) {
         this.adapter = adapter;
         this.address = address;
         this.id = id;
@@ -43,7 +44,7 @@ public class PeerAdapterExecution implements Runnable {
                 break;
             }
             log.info("Received task {}", message);
-            PeerAddress peerAddress = address.getPeerAddress(message.getReceiverId(), (stateful ? id.substring(0, id.lastIndexOf(".")) : id));
+            PeerAddress peerAddress = address.getPeerAddress(message.getReceiverId(), id);
 
             log.info("Sending message {} to peer {}", message, peerAddress);
             adapter.push(message, peerAddress);

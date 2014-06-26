@@ -11,6 +11,7 @@ import at.ac.tuwien.dsg.smartcom.manager.am.adapter.AdapterWithoutAnnotation;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.utils.AdapterTestQueue;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
@@ -29,8 +30,8 @@ public class AdapterManagerTest {
     private AdapterManager manager;
     private MessageBroker broker;
 
-    String peerId1 = "peer1";
-    String peerId2 = "peer2";
+    Identifier peerId1 = Identifier.peer("peer1");
+    Identifier peerId2 = Identifier.peer("peer2");
 
     @Before
     public void setUp() throws Exception {
@@ -45,16 +46,16 @@ public class AdapterManagerTest {
         manager.destroy();
     }
 
-    @Test(timeout = 1500)
+    @Test(timeout = 1500l)
     public void testRegisterPeerAdapterWithoutAnnotation() throws Exception {
-        String id = manager.registerPeerAdapter(AdapterWithoutAnnotation.class);
+        Identifier id = manager.registerPeerAdapter(AdapterWithoutAnnotation.class);
         assertNull("Adapter should not have an id because it should not have been registered!", id);
     }
 
-    @Test(timeout = 2000)
+    @Test(timeout = 1500l)
     public void testRemoveAdapterWithPushAdapter() throws Exception {
         CyclicBarrier barrier = new CyclicBarrier(6);
-        List<String> feedbackAdapterIds = new ArrayList<>();
+        List<Identifier> feedbackAdapterIds = new ArrayList<>();
 
         feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
         feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
@@ -62,7 +63,7 @@ public class AdapterManagerTest {
         feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
         feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
 
-        for (String feedbackAdapterId : feedbackAdapterIds) {
+        for (Identifier feedbackAdapterId : feedbackAdapterIds) {
             manager.removeFeedbackAdapter(feedbackAdapterId);
         }
 
@@ -83,10 +84,10 @@ public class AdapterManagerTest {
         }
     }
 
-    @Test(timeout = 1500)
+    @Test(timeout = 1500l)
     public void testRemoveAdapterWithPullAdapter() throws Exception {
         CyclicBarrier barrier = new CyclicBarrier(5);
-        List<String> feedbackAdapterIds = new ArrayList<>();
+        List<Identifier> feedbackAdapterIds = new ArrayList<>();
 
         feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
         feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
@@ -94,7 +95,7 @@ public class AdapterManagerTest {
         feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
         feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
 
-        for (String feedbackAdapterId : feedbackAdapterIds) {
+        for (Identifier feedbackAdapterId : feedbackAdapterIds) {
             manager.removeFeedbackAdapter(feedbackAdapterId);
             broker.publishRequest(feedbackAdapterId, new Message());
         }
@@ -114,12 +115,12 @@ public class AdapterManagerTest {
         }
     }
 
-    @Test(timeout = 1500)
+    @Test(timeout = 1500l)
     public void testRemovePeerAdapterWithStatefulAdapter() throws Exception {
-        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1+".stateful."+peerId1);
-        String id1 = manager.addPullAdapter(pullAdapter1, 0);
+        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1.getId()+".stateful");
+        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
 
-        String adapter = manager.registerPeerAdapter(StatefulAdapter.class);
+        Identifier adapter = manager.registerPeerAdapter(StatefulAdapter.class);
 
         RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
 
@@ -158,11 +159,11 @@ public class AdapterManagerTest {
         }
     }
 
-    @Test(timeout = 1500)
+    @Test(timeout = 1500l)
     public void testRemovePeerAdapterWithStatelessAdapter() throws Exception {
-        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1+".stateless");
-        String id1 = manager.addPullAdapter(pullAdapter1, 0);
-        String adapter = manager.registerPeerAdapter(StatelessAdapter.class);
+        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1.getId()+".stateless");
+        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
+        Identifier adapter = manager.registerPeerAdapter(StatelessAdapter.class);
 
         RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
 
@@ -282,24 +283,24 @@ public class AdapterManagerTest {
 
     private class PMCallbackImpl implements PMCallback {
         @Override
-        public Collection<PeerAddress> getPeerAddress(String id) {
+        public Collection<PeerAddress> getPeerAddress(Identifier id) {
             List<PeerAddress> addresses = new ArrayList<>();
 
             if (peerId1.equals(id)) {
-                addresses.add(new PeerAddress(peerId1, "stateless", Collections.EMPTY_LIST));
-                addresses.add(new PeerAddress(peerId1, "stateful", Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId1, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId1, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
             }
 
             if (peerId2.equals(id)) {
-                addresses.add(new PeerAddress(peerId2, "stateless", Collections.EMPTY_LIST));
-                addresses.add(new PeerAddress(peerId2, "stateful", Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId2, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId2, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
             }
 
             return addresses;
         }
 
         @Override
-        public boolean authenticate(String username, String password) {
+        public boolean authenticate(Identifier username, String password) {
             return false;
         }
     }

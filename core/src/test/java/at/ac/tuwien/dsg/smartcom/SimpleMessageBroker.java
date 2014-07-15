@@ -21,12 +21,12 @@ public final class SimpleMessageBroker implements MessageBroker {
     private final static String CONTROL_QUEUE = "CONTROL_QUEUE";
     private final static String LOG_QUEUE = "LOG_QUEUE";
 
-    private final BlockingDeque<Message> feedbackQueue = new LinkedBlockingDeque<>();
+    private final BlockingDeque<Message> inputQueue = new LinkedBlockingDeque<>();
     private final Map<Identifier,BlockingDeque<Message>> requestQueues = new HashMap<>();
     private final Map<Identifier,BlockingDeque<Message>> taskQueues = new HashMap<>();
     private final Map<String, BlockingDeque<Message>> specialQueues = new HashMap<>();
 
-    private MessageListener feedbackListener = null;
+    private MessageListener inputListener = null;
     private final Map<Identifier,MessageListener> requestListeners = new HashMap<>();
     private final Map<Identifier,MessageListener> taskListeners = new HashMap<>();
     private final Map<String, MessageListener> specialListeners = new HashMap<>();
@@ -40,29 +40,29 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void publishFeedback(Message message) {
-        synchronized (feedbackQueue) {
-            if (feedbackListener == null) {
-                feedbackQueue.add(message);
+    public void publishInput(Message message) {
+        synchronized (inputQueue) {
+            if (inputListener == null) {
+                inputQueue.add(message);
             } else {
-                feedbackListener.onMessage(message);
+                inputListener.onMessage(message);
             }
         }
     }
 
     @Override
-    public Message receiveFeedback() {
+    public Message receiveInput() {
         try {
-            return feedbackQueue.take();
+            return inputQueue.take();
         } catch (InterruptedException e) {
             return null;
         }
     }
 
     @Override
-    public void registerFeedbackListener(MessageListener listener) {
-        synchronized (feedbackQueue) {
-            feedbackListener = listener;
+    public void registerInputListener(MessageListener listener) {
+        synchronized (inputQueue) {
+            inputListener = listener;
         }
     }
 

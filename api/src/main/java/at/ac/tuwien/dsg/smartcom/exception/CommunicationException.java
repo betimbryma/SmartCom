@@ -68,4 +68,11 @@ public class CommunicationException extends Exception {
         properties.put(name, value);
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "CommunicationException{" +
+                "errorCode=" + errorCode +
+                '}';
+    }
 }

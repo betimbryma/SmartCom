@@ -15,7 +15,7 @@ import java.util.Collection;
  *
  * This API is also used to check the user credentials with the PM. This allows the Middleware
  * to issue authentication tokens that will get embedded within the messages exchanged subsequently
- * between peer applications and peer/feedback adapters and enable message authentication, and
+ * between peer applications and output/input adapters and enable message authentication, and
  * possibly encryption.
  *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)

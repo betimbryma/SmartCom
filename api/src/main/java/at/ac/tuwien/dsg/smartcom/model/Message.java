@@ -1,5 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.model;
 
+import java.io.Serializable;
+
 /**
  * This class represents a message that will be sent to peers
  * or has been received from external communication channels.
@@ -9,7 +11,7 @@ package at.ac.tuwien.dsg.smartcom.model;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public class Message {
+public class Message implements Serializable {
 
     private Identifier id;
     private String content;

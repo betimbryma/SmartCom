@@ -1,6 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 
-import at.ac.tuwien.dsg.smartcom.adapter.PeerAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.am.AddressResolver;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
@@ -13,16 +13,16 @@ import org.slf4j.LoggerFactory;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public class PeerAdapterExecution implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(PeerAdapterExecution.class);
+public class OutputAdapterExecution implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(OutputAdapterExecution.class);
 
-    private final PeerAdapter adapter;
+    private final OutputAdapter adapter;
     private final AddressResolver address;
     private final Identifier id;
     private final boolean stateful;
     private final MessageBroker broker;
 
-    public PeerAdapterExecution(PeerAdapter adapter, AddressResolver address, Identifier id, boolean stateful, MessageBroker broker) {
+    public OutputAdapterExecution(OutputAdapter adapter, AddressResolver address, Identifier id, boolean stateful, MessageBroker broker) {
         this.adapter = adapter;
         this.address = address;
         this.id = id;
@@ -30,7 +30,7 @@ public class PeerAdapterExecution implements Runnable {
         this.broker = broker;
     }
 
-    public PeerAdapter getAdapter() {
+    public OutputAdapter getAdapter() {
         return adapter;
     }
 

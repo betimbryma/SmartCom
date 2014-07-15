@@ -1,8 +1,8 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapterImpl;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapterImpl;
 import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
@@ -47,24 +47,24 @@ public class AdapterManagerTest {
     }
 
     @Test(timeout = 1500l)
-    public void testRegisterPeerAdapterWithoutAnnotation() throws Exception {
-        Identifier id = manager.registerPeerAdapter(AdapterWithoutAnnotation.class);
+    public void testRegisterOutputAdapterWithoutAnnotation() throws Exception {
+        Identifier id = manager.registerOutputAdapter(AdapterWithoutAnnotation.class);
         assertNull("Adapter should not have an id because it should not have been registered!", id);
     }
 
     @Test(timeout = 1500l)
     public void testRemoveAdapterWithPushAdapter() throws Exception {
         CyclicBarrier barrier = new CyclicBarrier(6);
-        List<Identifier> feedbackAdapterIds = new ArrayList<>();
+        List<Identifier> inputAdapterIds = new ArrayList<>();
 
-        feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
-        feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
-        feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
-        feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
-        feedbackAdapterIds.add(manager.addPushAdapter(new TestFeedbackPushAdapter(barrier)));
+        inputAdapterIds.add(manager.addPushAdapter(new TestInputPushAdapter(barrier)));
+        inputAdapterIds.add(manager.addPushAdapter(new TestInputPushAdapter(barrier)));
+        inputAdapterIds.add(manager.addPushAdapter(new TestInputPushAdapter(barrier)));
+        inputAdapterIds.add(manager.addPushAdapter(new TestInputPushAdapter(barrier)));
+        inputAdapterIds.add(manager.addPushAdapter(new TestInputPushAdapter(barrier)));
 
-        for (Identifier feedbackAdapterId : feedbackAdapterIds) {
-            manager.removeFeedbackAdapter(feedbackAdapterId);
+        for (Identifier inputAdapterId : inputAdapterIds) {
+            manager.removeInputAdapter(inputAdapterId);
         }
 
         barrier.await();
@@ -78,8 +78,8 @@ public class AdapterManagerTest {
         Timer timer = new Timer();
         timer.schedule(action, 1000);
 
-        Message feedback = broker.receiveFeedback();
-        if (feedback != null) {
+        Message input = broker.receiveInput();
+        if (input != null) {
             fail("There should be no message!");
         }
     }
@@ -87,17 +87,17 @@ public class AdapterManagerTest {
     @Test(timeout = 1500l)
     public void testRemoveAdapterWithPullAdapter() throws Exception {
         CyclicBarrier barrier = new CyclicBarrier(5);
-        List<Identifier> feedbackAdapterIds = new ArrayList<>();
+        List<Identifier> inputAdapterIds = new ArrayList<>();
 
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
-        feedbackAdapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(barrier), 0));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
 
-        for (Identifier feedbackAdapterId : feedbackAdapterIds) {
-            manager.removeFeedbackAdapter(feedbackAdapterId);
-            broker.publishRequest(feedbackAdapterId, new Message());
+        for (Identifier inputAdapterId : inputAdapterIds) {
+            manager.removeInputAdapter(inputAdapterId);
+            broker.publishRequest(inputAdapterId, new Message());
         }
 
         final Thread thisThread = Thread.currentThread();
@@ -109,18 +109,18 @@ public class AdapterManagerTest {
         Timer timer = new Timer();
         timer.schedule(action, 1000);
 
-        Message feedback = broker.receiveFeedback();
-        if (feedback != null) {
+        Message input = broker.receiveInput();
+        if (input != null) {
             fail("There should be no message!");
         }
     }
 
     @Test(timeout = 1500l)
-    public void testRemovePeerAdapterWithStatefulAdapter() throws Exception {
-        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1.getId()+".stateful");
+    public void testRemoveOutputAdapterWithStatefulAdapter() throws Exception {
+        InputPullAdapter pullAdapter1 = new TestSimpleInputPullAdapter(peerId1.getId()+".stateful");
         Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
 
-        Identifier adapter = manager.registerPeerAdapter(StatefulAdapter.class);
+        Identifier adapter = manager.registerOutputAdapter(StatefulAdapter.class);
 
         RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
 
@@ -129,13 +129,13 @@ public class AdapterManagerTest {
         broker.publishTask(routing1.getRoute(), msg);
 
         broker.publishRequest(id1, new Message());
-        Message feedback1 = broker.receiveFeedback();
-        assertNotNull("First feedback should not be null!", feedback1);
+        Message input1 = broker.receiveInput();
+        assertNotNull("First input should not be null!", input1);
 
         //remove the adapter
         //adapter for peerId1 should not work anymore
         //no new adapter should be created for peerId2
-        manager.removePeerAdapter(adapter);
+        manager.removeOutputAdapter(adapter);
 
         RoutingRule routing2 = manager.createEndpointForPeer(peerId2);
         assertNull("There should be no routing for peerId2", routing2);
@@ -153,17 +153,17 @@ public class AdapterManagerTest {
         Timer timer = new Timer();
         timer.schedule(action, 1000);
 
-        Message feedback = broker.receiveFeedback();
-        if (feedback != null) {
+        Message input = broker.receiveInput();
+        if (input != null) {
             fail("There should be no message!");
         }
     }
 
     @Test(timeout = 1500l)
-    public void testRemovePeerAdapterWithStatelessAdapter() throws Exception {
-        FeedbackPullAdapter pullAdapter1 = new TestSimpleFeedbackPullAdapter(peerId1.getId()+".stateless");
+    public void testRemoveOutputAdapterWithStatelessAdapter() throws Exception {
+        InputPullAdapter pullAdapter1 = new TestSimpleInputPullAdapter(peerId1.getId()+".stateless");
         Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
-        Identifier adapter = manager.registerPeerAdapter(StatelessAdapter.class);
+        Identifier adapter = manager.registerOutputAdapter(StatelessAdapter.class);
 
         RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
 
@@ -172,13 +172,13 @@ public class AdapterManagerTest {
         broker.publishTask(routing1.getRoute(), msg);
 
         broker.publishRequest(id1, new Message());
-        Message feedback1 = broker.receiveFeedback();
-        assertNotNull("First feedback should not be null!", feedback1);
+        Message input1 = broker.receiveInput();
+        assertNotNull("First input should not be null!", input1);
 
         //remove the adapter
         //adapter for peerId1 should not work anymore
         //no new adapter should be created for peerId2
-        manager.removePeerAdapter(adapter);
+        manager.removeOutputAdapter(adapter);
 
         RoutingRule routing2 = manager.createEndpointForPeer(peerId2);
         assertNull("There should be no routing for peerId2", routing2);
@@ -196,16 +196,16 @@ public class AdapterManagerTest {
         Timer timer = new Timer();
         timer.schedule(action, 1000);
 
-        Message feedback = broker.receiveFeedback();
-        if (feedback != null) {
+        Message input = broker.receiveInput();
+        if (input != null) {
             fail("There should be no message!");
         }
     }
 
-    private class TestSimpleFeedbackPullAdapter implements FeedbackPullAdapter {
+    private class TestSimpleInputPullAdapter implements InputPullAdapter {
         private final String pullAddress;
 
-        private TestSimpleFeedbackPullAdapter(String pullAddress) {
+        private TestSimpleInputPullAdapter(String pullAddress) {
             this.pullAddress = pullAddress;
         }
 
@@ -215,11 +215,11 @@ public class AdapterManagerTest {
         }
     }
 
-    private class TestFeedbackPullAdapter implements FeedbackPullAdapter {
+    private class TestInputPullAdapter implements InputPullAdapter {
 
         final CyclicBarrier barrier;
 
-        private TestFeedbackPullAdapter(CyclicBarrier barrier) {
+        private TestInputPullAdapter(CyclicBarrier barrier) {
             this.barrier = barrier;
         }
 
@@ -237,13 +237,13 @@ public class AdapterManagerTest {
         }
     }
 
-    private class TestFeedbackPushAdapter extends FeedbackPushAdapterImpl {
+    private class TestInputPushAdapter extends InputPushAdapterImpl {
 
         String text = "uninitialized";
         final CyclicBarrier barrier;
         boolean publishMessage = true;
 
-        private TestFeedbackPushAdapter(CyclicBarrier barrier) {
+        private TestInputPushAdapter(CyclicBarrier barrier) {
             this.barrier = barrier;
         }
 

@@ -1,7 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
@@ -13,14 +13,14 @@ import org.slf4j.LoggerFactory;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public class FeedbackAdapterExecution implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(FeedbackAdapterExecution.class);
+public class InputAdapterExecution implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(InputAdapterExecution.class);
 
-    private final FeedbackPullAdapter adapter;
+    private final InputPullAdapter adapter;
     private final Identifier id;
     private final MessageBroker broker;
 
-    public FeedbackAdapterExecution(FeedbackPullAdapter adapter, Identifier id, MessageBroker broker) {
+    public InputAdapterExecution(InputPullAdapter adapter, Identifier id, MessageBroker broker) {
         this.adapter = adapter;
         this.id = id;
         this.broker = broker;
@@ -30,7 +30,7 @@ public class FeedbackAdapterExecution implements Runnable {
         //nothing to do here yet
     }
 
-    public FeedbackAdapter getAdapter() {
+    public InputAdapter getAdapter() {
         return adapter;
     }
 
@@ -53,7 +53,7 @@ public class FeedbackAdapterExecution implements Runnable {
                 enhanceMessage(response);
                 log.info("Received response {}", response);
 
-                broker.publishFeedback(response);
+                broker.publishInput(response);
             } else {
                 handleNoMessageReceived();
             }
@@ -63,8 +63,8 @@ public class FeedbackAdapterExecution implements Runnable {
     private void handleNoMessageReceived() {
         //TODO what should we do here?
         // proposal:
-        //      if message has a sender, create and send a feedback to the sender,
-        //          that there is no feedback available
+        //      if message has a sender, create and send a input to the sender,
+        //          that there is no input available
         //      otherwise: don't send a message
     }
 

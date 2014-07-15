@@ -9,7 +9,7 @@ import at.ac.tuwien.dsg.smartcom.model.Message;
  *
  * As multiple SmartSociety components may expose this API, the Middleware will try to
  * determine the exact recipient components by reading the message fields and checking
- * the routing rules. However, in some cases (e.g., asynchronous feedback messages from
+ * the routing rules. However, in some cases (e.g., asynchronous input messages from
  * peers) the Middleware may not be able to determine the exact recipient components, and
  * will forward the message to all the SmartSociety platform components implementing the
  * API. There, a requirement for those components is that they be capable of handling

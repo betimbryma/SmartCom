@@ -7,7 +7,7 @@ import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
-import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestFeedbackPullAdapter;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
@@ -59,8 +59,8 @@ public class AdapterManagerIT {
 
     @Test(timeout = 20000l)
     public void test() throws InterruptedException {
-        Identifier statefulAdapterId = manager.registerPeerAdapter(StatefulAdapter.class);
-        Identifier statelessAdapterId = manager.registerPeerAdapter(StatelessAdapter.class);
+        Identifier statefulAdapterId = manager.registerOutputAdapter(StatefulAdapter.class);
+        Identifier statelessAdapterId = manager.registerOutputAdapter(StatelessAdapter.class);
 
         List<Identifier> adapterIds = new ArrayList<>(AMOUNT_OF_PEERS);
         List<RoutingRule> rules = new ArrayList<>(AMOUNT_OF_PEERS);
@@ -72,12 +72,12 @@ public class AdapterManagerIT {
         for (Identifier peer : peers) {
             RoutingRule route = manager.createEndpointForPeer(peer);
             rules.add(route);
-            adapterIds.add(manager.addPullAdapter(new TestFeedbackPullAdapter(peer.getId()+"."+route.getRoute().getIdWithoutPostfix()), 0));
+            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId()+"."+route.getRoute().getIdWithoutPostfix()), 0));
         }
 
-        FeedbackListener listener = new FeedbackListener();
+        InputListener listener = new InputListener();
 
-        broker.registerFeedbackListener(listener);
+        broker.registerInputListener(listener);
 
         for (RoutingRule rule : rules) {
             Message msg = new Message();
@@ -98,11 +98,11 @@ public class AdapterManagerIT {
             counterOld = counter;
         }
 
-        assertEquals("Not enough feedback received!", AMOUNT_OF_PEERS, counter);
+        assertEquals("Not enough input received!", AMOUNT_OF_PEERS, counter);
 
         System.out.println("remove");
 
-        manager.removePeerAdapter(statefulAdapterId);
+        manager.removeOutputAdapter(statefulAdapterId);
 
         for (RoutingRule rule : rules) {
             Message msg = new Message();
@@ -123,7 +123,7 @@ public class AdapterManagerIT {
             counterOld = counter2;
         }
 
-        assertThat("No more requests handled after removed one (of two) peer adapters!", listener.counter.get(), greaterThan(counter));
+        assertThat("No more requests handled after removed one (of two) output adapters!", listener.counter.get(), greaterThan(counter));
     }
     
     private class PMCallbackImpl implements PMCallback {
@@ -145,7 +145,7 @@ public class AdapterManagerIT {
         }
     }
 
-    private class FeedbackListener implements MessageListener {
+    private class InputListener implements MessageListener {
         AtomicInteger counter = new AtomicInteger(0);
 
         @Override

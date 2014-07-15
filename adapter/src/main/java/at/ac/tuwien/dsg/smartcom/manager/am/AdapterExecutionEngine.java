@@ -3,8 +3,8 @@ package at.ac.tuwien.dsg.smartcom.manager.am;
 import at.ac.tuwien.dsg.smartcom.adapter.*;
 import at.ac.tuwien.dsg.smartcom.adapter.util.TaskScheduler;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
-import at.ac.tuwien.dsg.smartcom.manager.am.adapter.FeedbackAdapterExecution;
-import at.ac.tuwien.dsg.smartcom.manager.am.adapter.PeerAdapterExecution;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.InputAdapterExecution;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.OutputAdapterExecution;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +29,10 @@ class AdapterExecutionEngine implements TaskScheduler{
     private final AddressResolver addressResolver;
     private final MessageBroker broker;
 
-    private final Map<Identifier, FeedbackAdapterExecution> feedbackAdapterMap = new HashMap<>();
-    private final Map<Identifier, FeedbackPushAdapter> pushAdapterFacadeMap = new HashMap<>();
+    private final Map<Identifier, InputAdapterExecution> inputAdapterMap = new HashMap<>();
+    private final Map<Identifier, InputPushAdapter> pushAdapterFacadeMap = new HashMap<>();
     private final Map<Identifier, List<TimerTask>> taskMap = new HashMap<>();
-    private final Map<Identifier, PeerAdapterExecution> peerAdapterMap = new HashMap<>();
+    private final Map<Identifier, OutputAdapterExecution> outputAdapterMap = new HashMap<>();
     private final Map<Identifier, Future<?>> futureMap = new HashMap<>();
 
     AdapterExecutionEngine(AddressResolver addressResolver, MessageBroker broker) {
@@ -76,26 +76,26 @@ class AdapterExecutionEngine implements TaskScheduler{
         log.info("Executor shutdown complete!");
     }
 
-    void addFeedbackAdapter(FeedbackPushAdapter adapter, Identifier id) {
+    void addInputAdapter(InputPushAdapter adapter, Identifier id) {
         log.info("Adding push adapter with id ()", id);
         pushAdapterFacadeMap.put(id, adapter);
     }
 
-    void addFeedbackAdapter(FeedbackPullAdapter adapter, Identifier id) {
+    void addInputAdapter(InputPullAdapter adapter, Identifier id) {
         log.info("Adding pull adapter with id ()", id);
-        FeedbackAdapterExecution execution = new FeedbackAdapterExecution(adapter, id, broker);
+        InputAdapterExecution execution = new InputAdapterExecution(adapter, id, broker);
 
         execution.init();
 
         Future<?> submit = executor.submit(execution);
 
         futureMap.put(id, submit);
-        feedbackAdapterMap.put(id, execution);
+        inputAdapterMap.put(id, execution);
     }
 
-    FeedbackAdapter removeFeedbackAdapter(Identifier id) {
+    InputAdapter removeInputAdapter(Identifier id) {
         log.info("Removing adapter with id "+id);
-        FeedbackPushAdapter adapter = pushAdapterFacadeMap.get(id);
+        InputPushAdapter adapter = pushAdapterFacadeMap.get(id);
         if (adapter != null) {
             adapter.preDestroy();
             return adapter;
@@ -103,27 +103,27 @@ class AdapterExecutionEngine implements TaskScheduler{
             Future<?> remove = futureMap.remove(id);
             remove.cancel(true);
 
-            FeedbackAdapterExecution execution = feedbackAdapterMap.get(id);
+            InputAdapterExecution execution = inputAdapterMap.get(id);
 
             return execution.getAdapter();
         }
     }
 
-    void addPeerAdapter(PeerAdapter adapter, Identifier id, boolean stateful) {
+    void addOutputAdapter(OutputAdapter adapter, Identifier id, boolean stateful) {
         log.info("Adding adapter with id "+id);
-        PeerAdapterExecution execution = new PeerAdapterExecution(adapter, addressResolver, id, stateful, broker);
+        OutputAdapterExecution execution = new OutputAdapterExecution(adapter, addressResolver, id, stateful, broker);
         Future<?> submit = executor.submit(execution);
 
         futureMap.put(id, submit);
-        peerAdapterMap.put(id, execution);
+        outputAdapterMap.put(id, execution);
     }
 
-    PeerAdapter removePeerAdapter(Identifier id) {
+    OutputAdapter removeOutputAdapter(Identifier id) {
         log.info("Removing adapter with id "+id);
         Future<?> remove = futureMap.remove(id);
         remove.cancel(true);
 
-        return peerAdapterMap.get(id).getAdapter();
+        return outputAdapterMap.get(id).getAdapter();
     }
 
     @Override

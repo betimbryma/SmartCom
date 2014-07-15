@@ -2,7 +2,7 @@ package at.ac.tuwien.dsg.smartcom.broker;
 
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.queue.FeedbackPublisher;
+import at.ac.tuwien.dsg.smartcom.queue.InputPublisher;
 
 /**
  * A broker that will be used to send messages using a queue or a
@@ -11,24 +11,24 @@ import at.ac.tuwien.dsg.smartcom.queue.FeedbackPublisher;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public interface MessageBroker extends FeedbackPublisher {
+public interface MessageBroker extends InputPublisher {
 
     /**
-     * Receives feedback from the underlying communication channel.
-     * Might block until there is feedback available.
+     * Receives input from the underlying communication channel.
+     * Might block until there is input available.
      *
-     * @return feedback
+     * @return input
      */
-    public Message receiveFeedback();
+    public Message receiveInput();
 
     /**
      * Register a message listener that will be notified on the arrival of
-     * new feedback messages. Note that a message listener will consume the message
+     * new input messages. Note that a message listener will consume the message
      * and that there can only be one listener at a time.
      *
-     * @param listener for feedback messages
+     * @param listener for input messages
      */
-    public void registerFeedbackListener(MessageListener listener);
+    public void registerInputListener(MessageListener listener);
 
     /**
      * Receives request messages for a given id. Might block until there

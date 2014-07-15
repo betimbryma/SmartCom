@@ -1,9 +1,9 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapterImpl;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapterImpl;
 import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
@@ -20,12 +20,12 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class AdapterManagerFeedbackAdapterTest {
+public class AdapterManagerInputAdapterTest {
 
-    private List<Identifier> feedbackAdapterIds = new ArrayList<>();
-    private FeedbackPullAdapter pullAdapter;
+    private List<Identifier> inputAdapterIds = new ArrayList<>();
+    private InputPullAdapter pullAdapter;
     private AdapterManager manager;
-    private FeedbackPushAdapter pushAdapter;
+    private InputPushAdapter pushAdapter;
     private MessageBroker broker;
 
 
@@ -33,8 +33,8 @@ public class AdapterManagerFeedbackAdapterTest {
     public void setUp() throws Exception {
         broker = new SimpleMessageBroker();
         manager = new AdapterManagerImpl(new SimpleAddressResolverDAO(), new PMCallback(), broker);
-        pullAdapter = new TestFeedbackPullAdapter();
-        pushAdapter = new TestFeedbackPushAdapter();
+        pullAdapter = new TestInputPullAdapter();
+        pushAdapter = new TestInputPushAdapter();
 
         manager.init();
     }
@@ -43,43 +43,43 @@ public class AdapterManagerFeedbackAdapterTest {
     public void tearDown() throws Exception {
         manager.destroy();
 
-        for (Identifier id : feedbackAdapterIds) {
-            manager.removeFeedbackAdapter(id);
+        for (Identifier id : inputAdapterIds) {
+            manager.removeInputAdapter(id);
         }
     }
 
     @Test(timeout = 1500l)
     public void testAddPushAdapter() throws Exception {
-        feedbackAdapterIds.add(manager.addPushAdapter(pushAdapter));
+        inputAdapterIds.add(manager.addPushAdapter(pushAdapter));
 
-        Message feedback = broker.receiveFeedback();
+        Message input = broker.receiveInput();
 
-        assertEquals("wrong feedback", "push", feedback.getContent());
+        assertEquals("wrong input", "push", input.getContent());
     }
 
     @Test(timeout = 1500l)
     public void testAddPullAdapter() throws Exception {
         Identifier id = manager.addPullAdapter(pullAdapter, 0);
-        feedbackAdapterIds.add(id);
+        inputAdapterIds.add(id);
 
         broker.publishRequest(id, new Message());
 
-        Message feedback = broker.receiveFeedback();
+        Message input = broker.receiveInput();
 
-        assertEquals("wrong feedback", "pull", feedback.getContent());
+        assertEquals("wrong input", "pull", input.getContent());
     }
 
     @Test(timeout = 1500l)
     public void testAddPullAdapterWithTimeout() throws Exception {
         Identifier id = manager.addPullAdapter(pullAdapter, 1000);
-        feedbackAdapterIds.add(id);
+        inputAdapterIds.add(id);
 
-        Message feedback = broker.receiveFeedback();
+        Message input = broker.receiveInput();
 
-        assertEquals("wrong feedback", "pull", feedback.getContent());
+        assertEquals("wrong input", "pull", input.getContent());
     }
 
-    private class TestFeedbackPullAdapter implements FeedbackPullAdapter {
+    private class TestInputPullAdapter implements InputPullAdapter {
 
         @Override
         public Message pull() {
@@ -89,7 +89,7 @@ public class AdapterManagerFeedbackAdapterTest {
         }
     }
 
-    private class TestFeedbackPushAdapter extends FeedbackPushAdapterImpl {
+    private class TestInputPushAdapter extends InputPushAdapterImpl {
 
         String text = "uninitialized";
 

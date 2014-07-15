@@ -2,23 +2,23 @@ package at.ac.tuwien.dsg.smartcom.adapter;
 
 import at.ac.tuwien.dsg.smartcom.adapter.util.TaskScheduler;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.queue.FeedbackPublisher;
+import at.ac.tuwien.dsg.smartcom.queue.InputPublisher;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Implementation of the FeedbackPushAdapter that provides a method
- * to inform the system of newly arrived feedback. This class should be
- * implemented instead of the FeedbackPushAdapter interface for adapters
+ * Implementation of the InputPushAdapter that provides a method
+ * to inform the system of newly arrived input. This class should be
+ * implemented instead of the InputPushAdapter interface for adapters
  * that use push to communicate with external communication channels.
  *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public abstract class FeedbackPushAdapterImpl implements FeedbackPushAdapter {
+public abstract class InputPushAdapterImpl implements InputPushAdapter {
 
-    private FeedbackPublisher feedbackPublisher;
+    private InputPublisher inputPublisher;
     private List<PushTask> taskList = new ArrayList<PushTask>(1);
 
     /**
@@ -29,12 +29,12 @@ public abstract class FeedbackPushAdapterImpl implements FeedbackPushAdapter {
      * @param message Message that has been received.
      */
     protected final void publishMessage(Message message) {
-        feedbackPublisher.publishFeedback(message);
+        inputPublisher.publishInput(message);
     }
 
-    public final void setFeedbackPublisher(FeedbackPublisher feedbackPublisher) {
-        if (this.feedbackPublisher == null)
-            this.feedbackPublisher = feedbackPublisher;
+    public final void setInputPublisher(InputPublisher inputPublisher) {
+        if (this.inputPublisher == null)
+            this.inputPublisher = inputPublisher;
     }
 
 

@@ -3,12 +3,12 @@ package at.ac.tuwien.dsg.smartcom.queue;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 
 /**
- * This class will be used to publish feedback received from the push adapter.
+ * This class will be used to publish input received from the push adapter.
  *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public interface FeedbackPublisher {
+public interface InputPublisher {
 
     /**
      * Publish (inform the system) a new message that
@@ -16,5 +16,5 @@ public interface FeedbackPublisher {
      *
      * @param message that has been received
      */
-    public void publishFeedback(Message message);
+    public void publishInput(Message message);
 }

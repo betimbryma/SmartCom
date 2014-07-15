@@ -1,9 +1,9 @@
 package at.ac.tuwien.dsg.smartcom;
 
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPullAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.FeedbackPushAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.PeerAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.exception.InvalidRuleException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
@@ -36,7 +36,7 @@ public interface Communication {
     public Identifier send(Message message) throws CommunicationException;
 
     /**
-     * Add a special route to the routing rules (e.g., route feedback from peer A
+     * Add a special route to the routing rules (e.g., route input from peer A
      * always to peer B). Returns the ID of the routing rule (can be used to delete it).
      * The middleware will check if the rule is valid and throw an exception otherwise.
      *
@@ -55,48 +55,48 @@ public interface Communication {
     public RoutingRule removeRouting(Identifier routeId);
 
     /**
-     * Creates a feedback adapter that will wait for push notifications or will pull for updates in a
+     * Creates a input adapter that will wait for push notifications or will pull for updates in a
      * certain time interval. Returns the ID of the adapter.
      *
-     * @param adapter Specifies the feedback push adapter.
+     * @param adapter Specifies the input push adapter.
      * @return Returns the middleware internal ID of the adapter.
      */
-    public Identifier addPushAdapter(FeedbackPushAdapter adapter);
+    public Identifier addPushAdapter(InputPushAdapter adapter);
 
     /**
-     * Creates a feedback adapter that will pull for updates in a certain time interval.
+     * Creates a input adapter that will pull for updates in a certain time interval.
      * Returns the ID of the adapter. The pull requests will be issued in the specified
      * interval until the adapter is explicitly removed from the system.
      *
-     * @param adapter Specifies the feedback pull adapter
+     * @param adapter Specifies the input pull adapter
      * @param interval Interval in milliseconds that specifies when to issue pull requests. Can’t be zero or negative.
      * @return Returns the middleware internal ID of the adapter.
      */
-    public Identifier addPullAdapter(FeedbackPullAdapter adapter, long interval);
+    public Identifier addPullAdapter(InputPullAdapter adapter, long interval);
 
     /**
-     * Removes a feedback adapter from the execution.
+     * Removes a input adapter from the execution.
      *
      * @param adapterId The ID of the adapter that should be removed.
-     * @return Returns the feedback adapter that has been removed or nothing if there is no such adapter.
+     * @return Returns the input adapter that has been removed or nothing if there is no such adapter.
      */
-    public FeedbackAdapter removeFeedbackAdapter(Identifier adapterId);
+    public InputAdapter removeInputAdapter(Identifier adapterId);
 
     /**
-     * Registers a new type of peer adapter that can be used by the middleware to get in contact with a peer.
-     * The peer adapters will be instantiated by the middleware on demand.
+     * Registers a new type of output adapter that can be used by the middleware to get in contact with a peer.
+     * The output adapters will be instantiated by the middleware on demand.
      *
-     * @param adapter The peer adapter that can be used to contact peers.
+     * @param adapter The output adapter that can be used to contact peers.
      * @return Returns the middleware internal ID of the created adapter.
      */
-    public Identifier registerPeerAdapter(Class<PeerAdapter> adapter);
+    public Identifier registerOutputAdapter(Class<OutputAdapter> adapter);
 
     /**
-     * Removes a type of peer adapters. Adapters that are currently in use will be removed
+     * Removes a type of output adapters. Adapters that are currently in use will be removed
      * as soon as possible (i.e., current communication won’t be aborted and waiting messages
      * in the adapter queue will be transmitted).
      *
      * @param adapterId Specifies the adapter that should be removed.
      */
-    public void removePeerAdapter(Identifier adapterId);
+    public void removeOutputAdapter(Identifier adapterId);
 }

@@ -31,7 +31,7 @@ public class AdapterManagerImpl implements AdapterManager {
     private final MessageBroker broker;
     private final AddressResolver addressResolver;
 
-    private final Map<Identifier, Class<? extends PeerAdapter>> statefulAdapters = new ConcurrentHashMap<>();
+    private final Map<Identifier, Class<? extends OutputAdapter>> statefulAdapters = new ConcurrentHashMap<>();
     private final Map<Identifier, List<Identifier>> statefulInstances = new ConcurrentHashMap<>();
 
     private final List<Identifier> stateless = new ArrayList<>();
@@ -55,27 +55,27 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public Identifier addPushAdapter(FeedbackPushAdapter adapter) {
+    public Identifier addPushAdapter(InputPushAdapter adapter) {
         Identifier id = Identifier.adapter(generateAdapterId(adapter));
 
-        if (adapter instanceof FeedbackPushAdapterImpl) {
-            ((FeedbackPushAdapterImpl) adapter).setFeedbackPublisher(broker);
-            ((FeedbackPushAdapterImpl) adapter).setScheduler(executionEngine);
+        if (adapter instanceof InputPushAdapterImpl) {
+            ((InputPushAdapterImpl) adapter).setInputPublisher(broker);
+            ((InputPushAdapterImpl) adapter).setScheduler(executionEngine);
         }
 
         //init the adapter
         adapter.init();
 
-        executionEngine.addFeedbackAdapter(adapter, id);
+        executionEngine.addInputAdapter(adapter, id);
 
         return id;
     }
 
     @Override
-    public Identifier addPullAdapter(FeedbackPullAdapter adapter, int period) {
+    public Identifier addPullAdapter(InputPullAdapter adapter, int period) {
         final Identifier id = Identifier.adapter(generateAdapterId(adapter));
 
-        executionEngine.addFeedbackAdapter(adapter, id);
+        executionEngine.addInputAdapter(adapter, id);
 
         if (period > 0) {
             executionEngine.schedule(new TimerTask() {
@@ -90,12 +90,12 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public FeedbackAdapter removeFeedbackAdapter(Identifier adapterId) {
-        return executionEngine.removeFeedbackAdapter(adapterId);
+    public InputAdapter removeInputAdapter(Identifier adapterId) {
+        return executionEngine.removeInputAdapter(adapterId);
     }
 
     @Override
-    public Identifier registerPeerAdapter(Class<? extends PeerAdapter> adapter) {
+    public Identifier registerOutputAdapter(Class<? extends OutputAdapter> adapter) {
         Adapter annotation = adapter.getAnnotation(Adapter.class);
         if (annotation == null) {
             log.error("Can't find annotation @Adapter in class ()", adapter.getSimpleName());
@@ -108,8 +108,8 @@ public class AdapterManagerImpl implements AdapterManager {
 
         if (!stateful) {
             try {
-                PeerAdapter instance = instantiateClass(adapter);
-                executionEngine.addPeerAdapter(instance, id, false);
+                OutputAdapter instance = instantiateClass(adapter);
+                executionEngine.addOutputAdapter(instance, id, false);
                 stateless.add(id);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 log.error("Could not instantiate class "+adapter.toString(), e);
@@ -121,10 +121,10 @@ public class AdapterManagerImpl implements AdapterManager {
         return id;
     }
 
-    private PeerAdapter instantiateClass(Class<? extends PeerAdapter> adapter) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+    private OutputAdapter instantiateClass(Class<? extends OutputAdapter> adapter) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         for (Constructor<?> declaredConstructor : adapter.getDeclaredConstructors()) {
             if (declaredConstructor.getParameterTypes().length == 0) {
-                return (PeerAdapter) declaredConstructor.newInstance();
+                return (OutputAdapter) declaredConstructor.newInstance();
             }
         }
 
@@ -164,15 +164,15 @@ public class AdapterManagerImpl implements AdapterManager {
                             statefulInstances.put(adapter, instances);
                         }
 
-                        Class<? extends PeerAdapter> peerAdapterClass = statefulAdapters.get(adapter);
-                        PeerAdapter peerAdapter;
+                        Class<? extends OutputAdapter> outputAdapterClass = statefulAdapters.get(adapter);
+                        OutputAdapter outputAdapter;
                         try {
-                            peerAdapter = instantiateClass(peerAdapterClass);
+                            outputAdapter = instantiateClass(outputAdapterClass);
                         } catch (InvocationTargetException e) {
                             log.error("Could not instantiate class "+adapter, e);
                             continue;
                         }
-                        executionEngine.addPeerAdapter(peerAdapter, newId, true);
+                        executionEngine.addOutputAdapter(outputAdapter, newId, true);
                         adapterId = newId;
                         instances.add(adapterId);
                     }
@@ -194,23 +194,23 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public void removePeerAdapter(Identifier adapterId) {
+    public void removeOutputAdapter(Identifier adapterId) {
         stateless.remove(adapterId);
-        Class<? extends PeerAdapter> remove = statefulAdapters.remove(adapterId);
+        Class<? extends OutputAdapter> remove = statefulAdapters.remove(adapterId);
         if (remove != null) {
             for (Identifier id : statefulInstances.get(adapterId)) {
-                executionEngine.removePeerAdapter(id);
+                executionEngine.removeOutputAdapter(id);
             }
         } else {
-            executionEngine.removePeerAdapter(adapterId);
+            executionEngine.removeOutputAdapter(adapterId);
         }
     }
 
-    private String generateAdapterId(FeedbackAdapter adapter) {
+    private String generateAdapterId(InputAdapter adapter) {
         return generateUniqueIdString();
     }
 
-    private String generateAdapterId(Class<? extends PeerAdapter> adapter, String name) {
+    private String generateAdapterId(Class<? extends OutputAdapter> adapter, String name) {
         return name;
     }
 

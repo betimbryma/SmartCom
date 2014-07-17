@@ -13,7 +13,7 @@ public class Identifier implements Serializable {
 
     private final IdentifierType type;
     private final String id;
-    private final String postfix;
+    private final String postfix; //for stateful output adapters
 
     private Identifier(IdentifierType type, String id) {
         this(type, id, "");

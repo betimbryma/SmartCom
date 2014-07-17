@@ -52,13 +52,11 @@ public final class SimpleMessageBroker implements MessageBroker {
 
     @Override
     public Message receiveInput() {
-        synchronized (inputQueue) {
             try {
                 return inputQueue.take();
             } catch (InterruptedException e) {
                 return null;
             }
-        }
     }
 
     @Override

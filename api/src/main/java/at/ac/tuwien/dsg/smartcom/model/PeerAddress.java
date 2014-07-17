@@ -13,9 +13,9 @@ import java.util.List;
  * @version 1.0
  */
 public class PeerAddress {
-    private Identifier peerId;
-    private Identifier adapterId;
-    private List<Serializable> contactParameters;
+    private Identifier peerId; //id in the PM database
+    private Identifier adapterId; //internal id of the adapter
+    private List<Serializable> contactParameters; //adapter specific contact/access parameters
 
     public PeerAddress(Identifier peerId, Identifier adapterId, List<Serializable> contactParameters) {
         this.peerId = peerId;

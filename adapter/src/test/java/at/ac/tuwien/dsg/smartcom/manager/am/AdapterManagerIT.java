@@ -13,7 +13,6 @@ import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
-import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 import com.mongodb.MongoClient;
 import org.junit.After;
 import org.junit.Before;
@@ -79,26 +78,29 @@ public class AdapterManagerIT {
         Identifier statelessAdapterId = manager.registerOutputAdapter(StatelessAdapter.class);
 
         List<Identifier> adapterIds = new ArrayList<>(AMOUNT_OF_PEERS);
-        List<RoutingRule> rules = new ArrayList<>(AMOUNT_OF_PEERS);
+        List<Identifier[]> rules = new ArrayList<>(AMOUNT_OF_PEERS);
         List<Identifier> peers = new ArrayList<>(AMOUNT_OF_PEERS);
         for (int i = 0; i < AMOUNT_OF_PEERS; i++) {
             peers.add(Identifier.peer("peer"+i));
         }
 
         for (Identifier peer : peers) {
-            RoutingRule route = manager.createEndpointForPeer(peer);
-            rules.add(route);
-            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId()+"."+route.getRoute().getIdWithoutPostfix()), 0));
+            Identifier route = manager.createEndpointForPeer(peer);
+            Identifier[] array = new Identifier[2];
+            array[0] = route;
+            array[1] = peer;
+            rules.add(array);
+            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId()+"."+route.getIdWithoutPostfix()), 0));
         }
 
         InputListener listener = new InputListener();
 
         broker.registerInputListener(listener);
 
-        for (RoutingRule rule : rules) {
+        for (Identifier[] rule : rules) {
             Message msg = new Message();
-            msg.setReceiverId(rule.getReceiver());
-            broker.publishTask(rule.getRoute(), msg);
+            msg.setReceiverId(rule[1]);
+            broker.publishTask(rule[0], msg);
         }
 
         for (Identifier adapterId : adapterIds) {
@@ -120,10 +122,10 @@ public class AdapterManagerIT {
 
         manager.removeOutputAdapter(statefulAdapterId);
 
-        for (RoutingRule rule : rules) {
+        for (Identifier[] rule : rules) {
             Message msg = new Message();
-            msg.setReceiverId(rule.getReceiver());
-            broker.publishTask(rule.getRoute(), msg);
+            msg.setReceiverId(rule[1]);
+            broker.publishTask(rule[0], msg);
         }
 
         for (Identifier adapterId : adapterIds) {

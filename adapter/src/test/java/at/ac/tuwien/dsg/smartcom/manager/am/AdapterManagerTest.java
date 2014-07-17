@@ -14,7 +14,6 @@ import at.ac.tuwien.dsg.smartcom.manager.am.utils.AdapterTestQueue;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
-import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -138,11 +137,11 @@ public class AdapterManagerTest {
 
         Identifier adapter = manager.registerOutputAdapter(StatefulAdapter.class);
 
-        RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
+        Identifier routing1 = manager.createEndpointForPeer(peerId1);
 
         Message msg = new Message();
         msg.setReceiverId(peerId1);
-        broker.publishTask(routing1.getRoute(), msg);
+        broker.publishTask(routing1, msg);
 
         broker.publishRequest(id1, new Message());
         Message input1 = broker.receiveInput();
@@ -153,12 +152,12 @@ public class AdapterManagerTest {
         //no new adapter should be created for peerId2
         manager.removeOutputAdapter(adapter);
 
-        RoutingRule routing2 = manager.createEndpointForPeer(peerId2);
+        Identifier routing2 = manager.createEndpointForPeer(peerId2);
         assertNull("There should be no routing for peerId2", routing2);
 
         msg = new Message();
         msg.setReceiverId(peerId1);
-        broker.publishTask(routing1.getRoute(), msg);
+        broker.publishTask(routing1, msg);
 
         final Thread thisThread = Thread.currentThread();
         TimerTask action = new TimerTask() {
@@ -181,11 +180,11 @@ public class AdapterManagerTest {
         Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
         Identifier adapter = manager.registerOutputAdapter(StatelessAdapter.class);
 
-        RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
+        Identifier routing1 = manager.createEndpointForPeer(peerId1);
 
         Message msg = new Message();
         msg.setReceiverId(peerId1);
-        broker.publishTask(routing1.getRoute(), msg);
+        broker.publishTask(routing1, msg);
 
         broker.publishRequest(id1, new Message());
         Message input1 = broker.receiveInput();
@@ -196,12 +195,12 @@ public class AdapterManagerTest {
         //no new adapter should be created for peerId2
         manager.removeOutputAdapter(adapter);
 
-        RoutingRule routing2 = manager.createEndpointForPeer(peerId2);
+        Identifier routing2 = manager.createEndpointForPeer(peerId2);
         assertNull("There should be no routing for peerId2", routing2);
 
         msg = new Message();
         msg.setReceiverId(peerId1);
-        broker.publishTask(routing1.getRoute(), msg);
+        broker.publishTask(routing1, msg);
 
         final Thread thisThread = Thread.currentThread();
         TimerTask action = new TimerTask() {

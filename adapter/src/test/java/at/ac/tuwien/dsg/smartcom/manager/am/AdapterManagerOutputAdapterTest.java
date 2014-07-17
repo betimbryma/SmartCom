@@ -11,7 +11,6 @@ import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
-import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,8 +69,8 @@ public class AdapterManagerOutputAdapterTest {
 
         manager.registerOutputAdapter(StatelessAdapter.class);
 
-        RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
-        RoutingRule routing2 = manager.createEndpointForPeer(peerId2);
+        Identifier routing1 = manager.createEndpointForPeer(peerId1);
+        Identifier routing2 = manager.createEndpointForPeer(peerId2);
 
         Message msg1 = new Message();
         msg1.setReceiverId(peerId1);
@@ -79,8 +78,8 @@ public class AdapterManagerOutputAdapterTest {
         Message msg2 = new Message();
         msg2.setReceiverId(peerId2);
 
-        broker.publishTask(routing1.getRoute(), msg1);
-        broker.publishTask(routing2.getRoute(), msg2);
+        broker.publishTask(routing1, msg1);
+        broker.publishTask(routing2, msg2);
 
         broker.publishRequest(id1, new Message());
         broker.publishRequest(id2, new Message());
@@ -101,8 +100,8 @@ public class AdapterManagerOutputAdapterTest {
 
         manager.registerOutputAdapter(StatefulAdapter.class);
 
-        RoutingRule routing1 = manager.createEndpointForPeer(peerId1);
-        RoutingRule routing2 = manager.createEndpointForPeer(peerId2);
+        Identifier routing1 = manager.createEndpointForPeer(peerId1);
+        Identifier routing2 = manager.createEndpointForPeer(peerId2);
 
         Message msg1 = new Message();
         msg1.setReceiverId(peerId1);
@@ -110,8 +109,8 @@ public class AdapterManagerOutputAdapterTest {
         Message msg2 = new Message();
         msg2.setReceiverId(peerId2);
 
-        broker.publishTask(routing1.getRoute(), msg1);
-        broker.publishTask(routing2.getRoute(), msg2);
+        broker.publishTask(routing1, msg1);
+        broker.publishTask(routing2, msg2);
 
         broker.publishRequest(id1, new Message());
         broker.publishRequest(id2, new Message());

@@ -4,6 +4,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.InputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
+import at.ac.tuwien.dsg.smartcom.callback.NotificationCallback;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.exception.InvalidRuleException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
@@ -99,4 +100,12 @@ public interface Communication {
      * @param adapterId Specifies the adapter that should be removed.
      */
     public void removeOutputAdapter(Identifier adapterId);
+
+    /**
+     * Register a notification callback that will be called if there are new input messages
+     * available.
+     *
+     * @param callback
+     */
+    public void registerNotificationCallback(NotificationCallback callback);
 }

@@ -9,7 +9,6 @@ import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
-import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,7 +134,7 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public RoutingRule createEndpointForPeer(Identifier peerId) {
+    public Identifier createEndpointForPeer(Identifier peerId) {
         Identifier adapterId = null;
         Collection<PeerAddress> peerAddress;
         try {
@@ -193,7 +192,7 @@ public class AdapterManagerImpl implements AdapterManager {
             return null;
         }
 
-        return new RoutingRule("", "", peerId, adapterId);
+        return adapterId;
     }
 
     @Override

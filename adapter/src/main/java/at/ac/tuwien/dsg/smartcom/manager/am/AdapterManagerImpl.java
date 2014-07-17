@@ -6,14 +6,16 @@ import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
-import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
+import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -26,30 +28,31 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AdapterManagerImpl implements AdapterManager {
     private static final Logger log = LoggerFactory.getLogger(AdapterManager.class);
 
-    private final AdapterExecutionEngine executionEngine;
-    private final PMCallback peerManager;
-    private final MessageBroker broker;
-    private final AddressResolver addressResolver;
+    @Inject
+    private AdapterExecutionEngine executionEngine;
+
+    @Inject
+    private PMCallback peerManager;
+
+    @Inject
+    private MessageBroker broker;
+
+    @Inject
+    private AddressResolver addressResolver;
 
     private final Map<Identifier, Class<? extends OutputAdapter>> statefulAdapters = new ConcurrentHashMap<>();
     private final Map<Identifier, List<Identifier>> statefulInstances = new ConcurrentHashMap<>();
 
     private final List<Identifier> stateless = new ArrayList<>();
 
-    AdapterManagerImpl(ResolverDAO dao, PMCallback peerManager, MessageBroker broker) {
-        this.peerManager = peerManager;
-        this.broker = broker;
-        addressResolver = new AddressResolver(dao, 5000); //TODO parametrize this
-        executionEngine = new AdapterExecutionEngine(addressResolver, broker);
-        executionEngine.init();
-    }
-
     @Override
+    @PostConstruct
     public void init() {
         executionEngine.init();
     }
 
     @Override
+    @PreDestroy
     public void destroy() {
         executionEngine.destroy();
     }

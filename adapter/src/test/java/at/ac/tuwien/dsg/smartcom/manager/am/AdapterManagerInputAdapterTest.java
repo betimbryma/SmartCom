@@ -1,6 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
+import at.ac.tuwien.dsg.smartcom.SimplePeerManager;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapterImpl;
@@ -13,6 +14,9 @@ import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.picocontainer.Characteristics;
+import org.picocontainer.MutablePicoContainer;
+import org.picocontainer.PicoBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,21 +31,34 @@ public class AdapterManagerInputAdapterTest {
     private AdapterManager manager;
     private InputPushAdapter pushAdapter;
     private MessageBroker broker;
+    private MutablePicoContainer pico;
 
 
     @Before
     public void setUp() throws Exception {
-        broker = new SimpleMessageBroker();
-        manager = new AdapterManagerImpl(new SimpleAddressResolverDAO(), new PMCallback(), broker);
+        pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
+        //mocks
+        pico.as(Characteristics.CACHE).addComponent(SimpleMessageBroker.class);
+        pico.as(Characteristics.CACHE).addComponent(SimplePeerManager.class);
+        pico.as(Characteristics.CACHE).addComponent(SimpleAddressResolverDAO.class);
+
+        //real implementations
+        pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
+        pico.as(Characteristics.CACHE).addComponent(AdapterExecutionEngine.class);
+        pico.as(Characteristics.CACHE).addComponent(AddressResolver.class);
+
+        broker = pico.getComponent(SimpleMessageBroker.class);
+        manager = pico.getComponent(AdapterManagerImpl.class);
+
+        pico.start();
+
         pullAdapter = new TestInputPullAdapter();
         pushAdapter = new TestInputPushAdapter();
-
-        manager.init();
     }
 
     @After
     public void tearDown() throws Exception {
-        manager.destroy();
+        pico.stop();
 
         for (Identifier id : inputAdapterIds) {
             manager.removeInputAdapter(id);

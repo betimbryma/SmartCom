@@ -9,7 +9,6 @@ import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
-import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
@@ -19,6 +18,9 @@ import com.mongodb.MongoClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.picocontainer.Characteristics;
+import org.picocontainer.MutablePicoContainer;
+import org.picocontainer.PicoBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,27 +39,41 @@ public class AdapterManagerIT {
     private AdapterManager manager;
     private MessageBroker broker;
 
+    private MutablePicoContainer pico;
+
     @Before
     public void setUp() throws Exception {
         mongoDB = new MongoDBInstance();
         mongoDB.setUp();
-
-        broker = new SimpleMessageBroker();
-
         MongoClient mongo = new MongoClient("localhost", 12345);
-        ResolverDAO dao = new MongoDBResolverDAO(mongo, "test-resolver", "resolver");
 
-        manager = new AdapterManagerImpl(dao, new PMCallbackImpl(), broker);
-        manager.init();
+        pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
+        //mocks
+        pico.as(Characteristics.CACHE).addComponent(SimpleMessageBroker.class);
+        pico.as(Characteristics.CACHE).addComponent(new PMCallbackImpl());
+
+        //mongodb resolver dao
+        pico.as(Characteristics.CACHE).addComponent(new MongoDBResolverDAO(mongo, "test-resolver", "resolver"));
+
+        //real implementations
+        pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
+        pico.as(Characteristics.CACHE).addComponent(AdapterExecutionEngine.class);
+        pico.as(Characteristics.CACHE).addComponent(AddressResolver.class);
+
+        broker = pico.getComponent(SimpleMessageBroker.class);
+        manager = pico.getComponent(AdapterManagerImpl.class);
+
+        pico.start();
     }
 
     @After
     public void tearDown() throws Exception {
         mongoDB.tearDown();
-        manager.destroy();
+
+        pico.stop();
     }
 
-    @Test(timeout = 20000l)
+    @Test(timeout = 30000l)
     public void test() throws InterruptedException {
         Identifier statefulAdapterId = manager.registerOutputAdapter(StatefulAdapter.class);
         Identifier statelessAdapterId = manager.registerOutputAdapter(StatelessAdapter.class);

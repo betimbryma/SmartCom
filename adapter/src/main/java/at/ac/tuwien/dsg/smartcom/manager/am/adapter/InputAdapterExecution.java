@@ -39,6 +39,7 @@ public class InputAdapterExecution implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             log.info("Waiting for requests...");
             Message message = broker.receiveRequests(id);
+            log.info("Received request ()", message);
             if (message == null) {
                 log.info("Received interrupted!");
                 break;

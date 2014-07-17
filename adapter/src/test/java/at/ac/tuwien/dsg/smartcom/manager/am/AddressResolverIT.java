@@ -1,6 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
+import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
@@ -9,6 +10,9 @@ import com.mongodb.MongoClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.picocontainer.Characteristics;
+import org.picocontainer.MutablePicoContainer;
+import org.picocontainer.PicoBuilder;
 
 import java.util.Collections;
 
@@ -19,8 +23,10 @@ public class AddressResolverIT {
 
     private MongoDBInstance mongoDB;
 
-    MongoDBResolverDAO dao;
-    DBCollection collection;
+    private MongoDBResolverDAO dao;
+    private DBCollection collection;
+
+    private MutablePicoContainer pico;
 
     @Before
     public void setUp() throws Exception {
@@ -29,13 +35,21 @@ public class AddressResolverIT {
 
         MongoClient mongo = new MongoClient("localhost", 12345);
         collection = mongo.getDB("test-resolver").getCollection("resolver");
-        dao = new MongoDBResolverDAO(mongo, "test-resolver", "resolver");
-        resolver = new AddressResolver(dao, 100);
+
+        pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
+        pico.as(Characteristics.CACHE).addComponent(ResolverDAO.class, new MongoDBResolverDAO(mongo, "test-resolver", "resolver"));
+        pico.as(Characteristics.CACHE).addComponent(AddressResolver.class, AddressResolver.class);
+
+        pico.start();
+
+        resolver = pico.getComponent(AddressResolver.class);
+        dao = pico.getComponent(MongoDBResolverDAO.class);
     }
 
     @After
     public void tearDown() throws Exception {
         mongoDB.tearDown();
+        pico.stop();
     }
 
     @Test(timeout = 5000l)

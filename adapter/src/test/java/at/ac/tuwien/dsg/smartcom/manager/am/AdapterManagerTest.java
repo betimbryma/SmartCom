@@ -18,6 +18,9 @@ import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.picocontainer.Characteristics;
+import org.picocontainer.MutablePicoContainer;
+import org.picocontainer.PicoBuilder;
 
 import java.util.*;
 import java.util.concurrent.BrokenBarrierException;
@@ -33,17 +36,30 @@ public class AdapterManagerTest {
     Identifier peerId1 = Identifier.peer("peer1");
     Identifier peerId2 = Identifier.peer("peer2");
 
+    private MutablePicoContainer pico;
+
     @Before
     public void setUp() throws Exception {
-        broker = new SimpleMessageBroker();
-        manager = new AdapterManagerImpl(new SimpleAddressResolverDAO(), new PMCallbackImpl(), broker);
+        pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
+        //mocks
+        pico.as(Characteristics.CACHE).addComponent(SimpleMessageBroker.class);
+        pico.as(Characteristics.CACHE).addComponent(new PMCallbackImpl());
+        pico.as(Characteristics.CACHE).addComponent(SimpleAddressResolverDAO.class);
 
-        manager.init();
+        //real implementations
+        pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
+        pico.as(Characteristics.CACHE).addComponent(AdapterExecutionEngine.class);
+        pico.as(Characteristics.CACHE).addComponent(AddressResolver.class);
+
+        broker = pico.getComponent(SimpleMessageBroker.class);
+        manager = pico.getComponent(AdapterManagerImpl.class);
+
+        pico.start();
     }
 
     @After
     public void tearDown() throws Exception {
-        manager.destroy();
+        pico.stop();
     }
 
     @Test(timeout = 1500l)
@@ -115,7 +131,7 @@ public class AdapterManagerTest {
         }
     }
 
-    @Test(timeout = 1500l)
+    @Test(timeout = 3000l)
     public void testRemoveOutputAdapterWithStatefulAdapter() throws Exception {
         InputPullAdapter pullAdapter1 = new TestSimpleInputPullAdapter(peerId1.getId()+".stateful");
         Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);

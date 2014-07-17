@@ -6,6 +6,7 @@ import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +21,15 @@ public class AddressResolver {
     private static final Logger log = LoggerFactory.getLogger(AddressResolver.class);
 
     private final LoadingCache<AddressKey, PeerAddress> cache;
-    private final ResolverDAO dao;
 
-    AddressResolver(ResolverDAO dao, int cacheSize) {
-        this.dao = dao;
+    @Inject
+    private ResolverDAO dao;
 
+    public AddressResolver() {
+        this(1000);
+    }
+
+    public AddressResolver(int cacheSize) {
         cache = CacheBuilder.newBuilder()
                 .maximumSize(cacheSize)
                 .expireAfterWrite(10, TimeUnit.MINUTES)

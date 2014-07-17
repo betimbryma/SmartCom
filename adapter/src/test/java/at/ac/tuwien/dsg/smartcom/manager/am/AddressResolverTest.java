@@ -1,9 +1,13 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
+import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import org.junit.Before;
 import org.junit.Test;
+import org.picocontainer.Characteristics;
+import org.picocontainer.MutablePicoContainer;
+import org.picocontainer.PicoBuilder;
 
 import java.util.Collections;
 
@@ -14,10 +18,18 @@ public class AddressResolverTest {
     private SimpleAddressResolverDAO dao;
     private AddressResolver resolver;
 
+    private MutablePicoContainer pico;
+
     @Before
     public void setUp() throws Exception {
-        dao = new SimpleAddressResolverDAO();
-        resolver = new AddressResolver(dao, 100);
+        pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
+        pico.as(Characteristics.CACHE).addComponent(ResolverDAO.class, SimpleAddressResolverDAO.class);
+        pico.as(Characteristics.CACHE).addComponent(AddressResolver.class, AddressResolver.class);
+
+        pico.start();
+
+        dao = pico.getComponent(SimpleAddressResolverDAO.class);
+        resolver = pico.getComponent(AddressResolver.class);
     }
 
     @Test(timeout = 5000l)

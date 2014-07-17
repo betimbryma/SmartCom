@@ -71,6 +71,13 @@
     </modules>
 
     <dependencies>
+        <!-- IoC Container -->
+        <dependency>
+            <groupId>org.picocontainer</groupId>
+            <artifactId>picocontainer</artifactId>
+            <version>2.14.3</version>
+        </dependency>
+
         <!--Testing framework -->
         <dependency>
             <groupId>junit</groupId>

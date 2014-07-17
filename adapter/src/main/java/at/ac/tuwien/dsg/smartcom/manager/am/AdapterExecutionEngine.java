@@ -6,6 +6,7 @@ import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.InputAdapterExecution;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.OutputAdapterExecution;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
+import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,15 +20,18 @@ import java.util.concurrent.TimeUnit;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-class AdapterExecutionEngine implements TaskScheduler{
+public class AdapterExecutionEngine implements TaskScheduler{
     private static final Logger log = LoggerFactory.getLogger(AdapterExecutionEngine.class);
 
     private ExecutorService executor;
     private ExecutorService pushExecutor;
     private Timer timer;
 
-    private final AddressResolver addressResolver;
-    private final MessageBroker broker;
+    @Inject
+    private AddressResolver addressResolver;
+
+    @Inject
+    private MessageBroker broker;
 
     private final Map<Identifier, InputAdapterExecution> inputAdapterMap = new HashMap<>();
     private final Map<Identifier, InputPushAdapter> pushAdapterFacadeMap = new HashMap<>();
@@ -35,10 +39,8 @@ class AdapterExecutionEngine implements TaskScheduler{
     private final Map<Identifier, OutputAdapterExecution> outputAdapterMap = new HashMap<>();
     private final Map<Identifier, Future<?>> futureMap = new HashMap<>();
 
-    AdapterExecutionEngine(AddressResolver addressResolver, MessageBroker broker) {
-        this.addressResolver = addressResolver;
-        this.broker = broker;
-    }
+
+    public AdapterExecutionEngine() {}
 
     void init() {
         executor = Executors.newCachedThreadPool();

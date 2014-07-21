@@ -37,16 +37,16 @@ public class OutputAdapterExecution implements Runnable {
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            log.info("Waiting for new task ...");
+            log.debug("Adapter {}: Waiting for new task ...", id);
             Message message = broker.receiveTasks(id);
             if (message == null) {
-                log.info("Received interrupted!");
+                log.debug("Adapter {}: Received interrupted!", id);
                 break;
             }
-            log.info("Received task {}", message);
+            log.debug("Adapter {}: Received task {}", id, message);
             PeerAddress peerAddress = address.getPeerAddress(message.getReceiverId(), id);
 
-            log.info("Sending message {} to peer {}", message, peerAddress);
+            log.debug("Adapter {}: Sending message {} to peer {}", id, message, peerAddress);
             adapter.push(message, peerAddress);
         }
     }

@@ -4,6 +4,8 @@ import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +17,8 @@ import java.util.concurrent.LinkedBlockingDeque;
  * @version 1.0
  */
 public final class SimpleMessageBroker implements MessageBroker {
+    private static final Logger log = LoggerFactory.getLogger(SimpleMessageBroker.class);
+
     private final static String AUTH_QUEUE = "AUTH_QUEUE";
     private final static String MIS_QUEUE = "MIS_QUEUE";
     private final static String MPS_QUEUE = "MPS_QUEUE";
@@ -44,8 +48,10 @@ public final class SimpleMessageBroker implements MessageBroker {
         synchronized (inputQueue) {
             if (inputListener == null) {
                 inputQueue.add(message);
+                log.trace("Published input {}", message);
             } else {
                 inputListener.onMessage(message);
+                log.trace("Called listener on input {}", message);
             }
         }
     }
@@ -53,6 +59,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     @Override
     public Message receiveInput() {
         try {
+            log.trace("Receiving input...");
             return inputQueue.take();
         } catch (InterruptedException e) {
             return null;
@@ -62,6 +69,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     @Override
     public void registerInputListener(MessageListener listener) {
         synchronized (inputQueue) {
+            log.trace("added input listener");
             inputListener = listener;
         }
     }
@@ -79,6 +87,7 @@ public final class SimpleMessageBroker implements MessageBroker {
                     }
                 }
             }
+            log.trace("Receiving requests with id {}", id);
             return queue.take();
         } catch (InterruptedException e) {
             return null;
@@ -88,6 +97,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     @Override
     public void registerRequestListener(Identifier id, MessageListener listener) {
         synchronized (requestListeners) {
+            log.trace("registered request listener");
             requestListeners.put(id, listener);
         }
     }
@@ -107,8 +117,10 @@ public final class SimpleMessageBroker implements MessageBroker {
         }
         MessageListener listener = requestListeners.get(id);
         if (listener != null) {
+            log.trace("called listener on request {} and id {}", message, id);
             listener.onMessage(message);
         } else {
+            log.trace("Published request {} and id {}", message, id);
             queue.add(message);
         }
     }
@@ -125,6 +137,7 @@ public final class SimpleMessageBroker implements MessageBroker {
                     taskQueues.put(id, queue);
                 }
             }
+            log.trace("Receiving task with id {}", id);
             return queue.take();
         } catch (InterruptedException e) {
             return null;
@@ -134,6 +147,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     @Override
     public void registerTaskListener(Identifier id, MessageListener listener) {
         synchronized (taskListeners) {
+            log.trace("Registered task listener with id {}", id);
             taskListeners.put(id, listener);
         }
     }
@@ -153,8 +167,10 @@ public final class SimpleMessageBroker implements MessageBroker {
         }
         MessageListener listener = taskListeners.get(id);
         if (listener != null) {
+            log.trace("Called listener on task {} and id {}", message, id);
             listener.onMessage(message);
         } else {
+            log.trace("Published task {} and id {}", message, id);
             queue.add(message);
         }
     }
@@ -238,13 +254,16 @@ public final class SimpleMessageBroker implements MessageBroker {
         BlockingDeque<Message> messages = specialQueues.get(id);
         MessageListener listener = specialListeners.get(id);
         if (listener != null) {
+            log.trace("Called listener for {} on {}", id, message);
             listener.onMessage(message);
         } else {
+            log.trace("Published {} {}", id, message);
             messages.add(message);
         }
     }
 
     private Message receiveSpecial(String id) {
+        log.trace("Receiving {}", id);
         return specialQueues.get(id).poll();
     }
 }

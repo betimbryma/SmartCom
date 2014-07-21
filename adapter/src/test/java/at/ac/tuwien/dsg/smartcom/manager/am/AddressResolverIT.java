@@ -50,6 +50,7 @@ public class AddressResolverIT {
     public void tearDown() throws Exception {
         mongoDB.tearDown();
         pico.stop();
+        pico.dispose();
     }
 
     @Test(timeout = 5000l)

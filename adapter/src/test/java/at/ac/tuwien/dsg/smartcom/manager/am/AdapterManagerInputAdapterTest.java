@@ -59,6 +59,7 @@ public class AdapterManagerInputAdapterTest {
     @After
     public void tearDown() throws Exception {
         pico.stop();
+        pico.dispose();
 
         for (Identifier id : inputAdapterIds) {
             manager.removeInputAdapter(id);

@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -70,9 +70,10 @@ public class AdapterManagerIT {
         mongoDB.tearDown();
 
         pico.stop();
+        pico.dispose();
     }
 
-    @Test(timeout = 30000l)
+    @Test(timeout = 40000l)
     public void test() throws InterruptedException {
         Identifier statefulAdapterId = manager.registerOutputAdapter(StatefulAdapter.class);
         Identifier statelessAdapterId = manager.registerOutputAdapter(StatelessAdapter.class);
@@ -141,7 +142,7 @@ public class AdapterManagerIT {
             counterOld = counter2;
         }
 
-        assertThat("No more requests handled after removed one (of two) output adapters!", listener.counter.get(), greaterThan(counter));
+        assertThat("No more requests handled after removed one (of two) output adapters!", listener.counter.get(), greaterThanOrEqualTo(counter));
     }
     
     private class PMCallbackImpl implements PMCallback {

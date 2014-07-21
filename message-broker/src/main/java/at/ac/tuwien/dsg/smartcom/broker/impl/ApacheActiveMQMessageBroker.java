@@ -112,7 +112,7 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
      * @return the received message
      */
     private Message receiveMessage(Destination destination) {
-        log.debug("Waiting for message in queue {}", destination);
+        log.trace("Waiting for message in queue {}", destination);
         MessageConsumer consumer = null;
         try {
             consumer = session.createConsumer(destination);
@@ -142,6 +142,7 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
      */
     private void setListener(final MessageListener listener, final Destination destination) {
         try {
+            log.trace("Setting listener for destination {}", destination);
             MessageConsumer consumer = session.createConsumer(destination);
 
             consumer.setMessageListener(new javax.jms.MessageListener() {
@@ -169,7 +170,7 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
      * @param destination of the message
      */
     private void sendMessage(Message message, Destination destination) {
-        log.debug("Sending message {} to queue {}", message, destination);
+        log.trace("Sending message {} to queue {}", message, destination);
         try {
             initLocalSessionAndProducer();
 

@@ -3,6 +3,7 @@ package at.ac.tuwien.dsg.smartcom.manager.am;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.picocontainer.Characteristics;
@@ -30,6 +31,12 @@ public class AddressResolverTest {
 
         dao = pico.getComponent(SimpleAddressResolverDAO.class);
         resolver = pico.getComponent(AddressResolver.class);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        pico.stop();
+        pico.dispose();
     }
 
     @Test(timeout = 5000l)

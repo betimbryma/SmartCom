@@ -79,12 +79,12 @@ public class AdapterExecutionEngine implements TaskScheduler{
     }
 
     void addInputAdapter(InputPushAdapter adapter, Identifier id) {
-        log.info("Adding push adapter with id ()", id);
+        log.info("Adding push adapter with id {}", id);
         pushAdapterFacadeMap.put(id, adapter);
     }
 
     void addInputAdapter(InputPullAdapter adapter, Identifier id) {
-        log.info("Adding pull adapter with id ()", id);
+        log.info("Adding pull adapter with id {}", id);
         InputAdapterExecution execution = new InputAdapterExecution(adapter, id, broker);
 
         execution.init();
@@ -96,7 +96,7 @@ public class AdapterExecutionEngine implements TaskScheduler{
     }
 
     InputAdapter removeInputAdapter(Identifier id) {
-        log.info("Removing adapter with id "+id);
+        log.debug("Removing adapter with id {}", id);
         InputPushAdapter adapter = pushAdapterFacadeMap.get(id);
         if (adapter != null) {
             adapter.preDestroy();
@@ -112,7 +112,7 @@ public class AdapterExecutionEngine implements TaskScheduler{
     }
 
     void addOutputAdapter(OutputAdapter adapter, Identifier id, boolean stateful) {
-        log.info("Adding adapter with id "+id);
+        log.debug("Adding adapter with id {}", id);
         OutputAdapterExecution execution = new OutputAdapterExecution(adapter, addressResolver, id, stateful, broker);
         Future<?> submit = executor.submit(execution);
 
@@ -121,7 +121,7 @@ public class AdapterExecutionEngine implements TaskScheduler{
     }
 
     OutputAdapter removeOutputAdapter(Identifier id) {
-        log.info("Removing adapter with id "+id);
+        log.debug("Removing adapter with id {}", id);
         Future<?> remove = futureMap.remove(id);
         remove.cancel(true);
 

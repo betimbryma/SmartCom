@@ -58,6 +58,7 @@ public class AdapterManagerOutputAdapterTest {
     @After
     public void tearDown() throws Exception {
         pico.stop();
+        pico.dispose();
     }
 
     @Test(timeout = 1500l)
@@ -104,16 +105,18 @@ public class AdapterManagerOutputAdapterTest {
         Identifier routing2 = manager.createEndpointForPeer(peerId2);
 
         Message msg1 = new Message();
+        msg1.setId(Identifier.message("1"));
         msg1.setReceiverId(peerId1);
 
         Message msg2 = new Message();
+        msg2.setId(Identifier.message("2"));
         msg2.setReceiverId(peerId2);
 
         broker.publishTask(routing1, msg1);
         broker.publishTask(routing2, msg2);
 
-        broker.publishRequest(id1, new Message());
-        broker.publishRequest(id2, new Message());
+        broker.publishRequest(id1, new Message.MessageBuilder().setId(Identifier.message("3")).create());
+        broker.publishRequest(id2, new Message.MessageBuilder().setId(Identifier.message("4")).create());
 
         Message input1 = broker.receiveInput();
         Message input2 = broker.receiveInput();

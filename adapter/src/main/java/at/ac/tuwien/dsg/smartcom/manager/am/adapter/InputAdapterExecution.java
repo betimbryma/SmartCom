@@ -37,22 +37,22 @@ public class InputAdapterExecution implements Runnable {
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            log.info("Waiting for requests...");
+            log.debug("Adapter {}: Waiting for requests...", id.getId());
             Message message = broker.receiveRequests(id);
-            log.info("Received request ()", message);
+            log.debug("Adapter {}: Received request {}", id.getId(), message);
             if (message == null) {
-                log.info("Received interrupted!");
+                log.debug("Adapter {}: Received interrupted!", id.getId());
                 break;
             }
             Message response = null;
             try {
                 response = adapter.pull();
             } catch (AdapterException e) {
-                log.error("Error while checking response of adapter ()", id, e);
+                log.error("Adapter {}: Error while checking response", id.getId(), e);
             }
             if (response != null) {
                 enhanceMessage(response);
-                log.info("Received response {}", response);
+                log.debug("Adapter {}: Received response {}", id.getId(), response);
 
                 broker.publishInput(response);
             } else {
@@ -62,6 +62,7 @@ public class InputAdapterExecution implements Runnable {
     }
 
     private void handleNoMessageReceived() {
+        log.error("Adapter {}: No message received!", id.getId());
         //TODO what should we do here?
         // proposal:
         //      if message has a sender, create and send a input to the sender,

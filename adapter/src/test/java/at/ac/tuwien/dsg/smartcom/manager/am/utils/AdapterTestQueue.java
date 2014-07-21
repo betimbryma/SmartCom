@@ -33,7 +33,7 @@ public final class AdapterTestQueue {
                 }
             }
             Message msg = queue.take();
-            log.info("Received message {}", msg);
+            log.trace("Received message {}", msg);
             return msg;
         } catch (InterruptedException e) {
             return null;
@@ -51,6 +51,6 @@ public final class AdapterTestQueue {
             }
         }
         queue.add(message);
-        log.info("Published message {}", message);
+        log.trace("Published message {}", message);
     }
 }

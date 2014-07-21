@@ -59,6 +59,7 @@ public class AdapterManagerTest {
     @After
     public void tearDown() throws Exception {
         pico.stop();
+        pico.dispose();
     }
 
     @Test(timeout = 1500l)
@@ -140,10 +141,11 @@ public class AdapterManagerTest {
         Identifier routing1 = manager.createEndpointForPeer(peerId1);
 
         Message msg = new Message();
+        msg.setId(Identifier.message("1"));
         msg.setReceiverId(peerId1);
         broker.publishTask(routing1, msg);
 
-        broker.publishRequest(id1, new Message());
+        broker.publishRequest(id1, new Message.MessageBuilder().setId(Identifier.message("2")).create());
         Message input1 = broker.receiveInput();
         assertNotNull("First input should not be null!", input1);
 
@@ -156,6 +158,7 @@ public class AdapterManagerTest {
         assertNull("There should be no routing for peerId2", routing2);
 
         msg = new Message();
+        msg.setId(Identifier.message("3"));
         msg.setReceiverId(peerId1);
         broker.publishTask(routing1, msg);
 
@@ -183,10 +186,11 @@ public class AdapterManagerTest {
         Identifier routing1 = manager.createEndpointForPeer(peerId1);
 
         Message msg = new Message();
+        msg.setId(Identifier.message("1"));
         msg.setReceiverId(peerId1);
         broker.publishTask(routing1, msg);
 
-        broker.publishRequest(id1, new Message());
+        broker.publishRequest(id1, new Message.MessageBuilder().setId(Identifier.message("2")).create());
         Message input1 = broker.receiveInput();
         assertNotNull("First input should not be null!", input1);
 
@@ -199,6 +203,7 @@ public class AdapterManagerTest {
         assertNull("There should be no routing for peerId2", routing2);
 
         msg = new Message();
+        msg.setId(Identifier.message("3"));
         msg.setReceiverId(peerId1);
         broker.publishTask(routing1, msg);
 

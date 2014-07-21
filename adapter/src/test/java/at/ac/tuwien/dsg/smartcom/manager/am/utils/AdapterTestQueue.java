@@ -1,6 +1,8 @@
 package at.ac.tuwien.dsg.smartcom.manager.am.utils;
 
 import at.ac.tuwien.dsg.smartcom.model.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +14,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * @version 1.0
  */
 public final class AdapterTestQueue {
+    private static final Logger log = LoggerFactory.getLogger(AdapterTestQueue.class);
 
     private AdapterTestQueue() {
     }
@@ -29,7 +32,9 @@ public final class AdapterTestQueue {
                     blockingQueue.put(id, queue);
                 }
             }
-            return queue.take();
+            Message msg = queue.take();
+            log.info("Received message {}", msg);
+            return msg;
         } catch (InterruptedException e) {
             return null;
         }
@@ -46,5 +51,6 @@ public final class AdapterTestQueue {
             }
         }
         queue.add(message);
+        log.info("Published message {}", message);
     }
 }

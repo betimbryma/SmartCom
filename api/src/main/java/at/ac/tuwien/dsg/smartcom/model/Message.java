@@ -141,4 +141,64 @@ public class Message implements Serializable {
         result = 31 * result + (subtype != null ? subtype.hashCode() : 0);
         return result;
     }
+
+    public static class MessageBuilder {
+        private Message msg = new Message();
+
+        public MessageBuilder setId(Identifier id) {
+            msg.id = id;
+            return this;
+        }
+
+        public MessageBuilder setContent(String content) {
+            msg.content = content;
+            return this;
+        }
+
+        public MessageBuilder setType(String type) {
+            msg.type = type;
+            return this;
+        }
+
+        public MessageBuilder setSubtype(String subtype) {
+            msg.subtype = subtype;
+            return this;
+        }
+
+        public MessageBuilder setSenderId(Identifier senderId) {
+            msg.senderId = senderId;
+            return this;
+        }
+
+        public MessageBuilder setReceiverId(Identifier receiverId) {
+            msg.receiverId = receiverId;
+            return this;
+        }
+
+        public MessageBuilder setConversationId(String conversationId) {
+            msg.conversationId = conversationId;
+            return this;
+        }
+
+        public MessageBuilder setTtl(long ttl) {
+            msg.ttl = ttl;
+            return this;
+        }
+
+        public MessageBuilder setLanguage(String language) {
+            msg.language = language;
+            return this;
+        }
+
+        public MessageBuilder setSecurityToken(String securityToken) {
+            msg.securityToken = securityToken;
+            return this;
+        }
+
+        public Message create() {
+            Message message = msg;
+            msg = new Message();
+            return message;
+        }
+    }
 }

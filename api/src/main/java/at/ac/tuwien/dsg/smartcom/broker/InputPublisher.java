@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom.queue;
+package at.ac.tuwien.dsg.smartcom.broker;
 
 import at.ac.tuwien.dsg.smartcom.model.Message;
 

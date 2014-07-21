@@ -35,7 +35,7 @@ public interface AdapterManager {
      * @param period defines the period between two pull attempts
      * @return the id of the pull adapter
      */
-    Identifier addPullAdapter(InputPullAdapter adapter, int period);
+    Identifier addPullAdapter(InputPullAdapter adapter, long period);
 
     /**
      * Removes a input adapter from the execution. Note that after returning,

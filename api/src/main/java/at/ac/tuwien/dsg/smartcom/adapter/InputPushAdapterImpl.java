@@ -1,8 +1,8 @@
 package at.ac.tuwien.dsg.smartcom.adapter;
 
 import at.ac.tuwien.dsg.smartcom.adapter.util.TaskScheduler;
+import at.ac.tuwien.dsg.smartcom.broker.InputPublisher;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.queue.InputPublisher;
 
 import java.util.ArrayList;
 import java.util.List;

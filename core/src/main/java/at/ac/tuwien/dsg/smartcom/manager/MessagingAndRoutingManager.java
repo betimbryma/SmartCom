@@ -1,5 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.manager;
 
+import at.ac.tuwien.dsg.smartcom.callback.NotificationCallback;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 
@@ -9,9 +11,11 @@ import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
  */
 public interface MessagingAndRoutingManager {
 
-    public String send(Message message);
+    public Identifier send(Message message);
 
-    public String addRouting(RoutingRule rule);
+    public Identifier addRouting(RoutingRule rule);
 
-    public RoutingRule removeRouting(String routeId);
+    public RoutingRule removeRouting(Identifier routeId);
+
+    public void registerNotificationCallback(NotificationCallback callback);
 }

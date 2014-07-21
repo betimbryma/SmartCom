@@ -2,7 +2,6 @@ package at.ac.tuwien.dsg.smartcom.broker;
 
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.queue.InputPublisher;
 
 /**
  * A broker that will be used to send messages using a queue or a

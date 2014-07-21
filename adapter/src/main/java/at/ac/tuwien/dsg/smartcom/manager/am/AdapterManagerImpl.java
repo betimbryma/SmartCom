@@ -74,7 +74,7 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public Identifier addPullAdapter(InputPullAdapter adapter, int period) {
+    public Identifier addPullAdapter(InputPullAdapter adapter, long period) {
         final Identifier id = Identifier.adapter(generateAdapterId(adapter));
 
         executionEngine.addInputAdapter(adapter, id);

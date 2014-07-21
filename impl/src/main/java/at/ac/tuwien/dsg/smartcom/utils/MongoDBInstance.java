@@ -1,5 +1,6 @@
-package at.ac.tuwien.dsg.smartcom.manager.am.utils;
+package at.ac.tuwien.dsg.smartcom.utils;
 
+import com.mongodb.MongoClient;
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
@@ -14,24 +15,32 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
 public class MongoDBInstance {
-    private static final MongodStarter starter;
-    private static final int port = 12345;
+    private final int port;
 
-    //do this statically otherwise tests might behave unexpectedly
-    static {
+    private MongodExecutable mongodExe;
+    private MongodProcess mongod;
+
+    public MongoDBInstance(int port) {
+        if (port <= 0) {
+            this.port = 12345;
+        } else {
+            this.port = port;
+        }
+    }
+
+    public void setUp() throws IOException {
         Command command = Command.MongoD;
 
         File file = new File("mongo");
         if (file.exists()) {
-            try {
-                FileUtils.forceDelete(file);
-            } catch (IOException e) {/* nothing to do */}
+            FileUtils.forceDelete(file);
         }
         file.mkdir();
 
@@ -45,13 +54,8 @@ public class MongoDBInstance {
                         .executableNaming(new UserTempNaming()))
                 .build();
 
-        starter = MongodStarter.getInstance(runtimeConfig);
-    }
+        MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
 
-    private MongodExecutable mongodExe;
-    private MongodProcess mongod;
-
-    public void setUp() throws IOException {
         IMongodConfig mongodConfig = new MongodConfigBuilder()
                 .version(Version.Main.PRODUCTION)
                 .net(new Net(port, Network.localhostIsIPv6()))
@@ -64,5 +68,13 @@ public class MongoDBInstance {
     public void tearDown() {
         mongod.stop();
         mongodExe.stop();
+    }
+
+    public MongoClient getMongoClient() {
+        try {
+            return new MongoClient("localhost", port);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

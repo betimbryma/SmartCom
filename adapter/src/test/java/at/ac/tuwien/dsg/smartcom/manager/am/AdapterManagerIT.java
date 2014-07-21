@@ -39,12 +39,13 @@ public class AdapterManagerIT {
     private MessageBroker broker;
 
     private MutablePicoContainer pico;
+    private MongoClient mongo;
 
     @Before
     public void setUp() throws Exception {
         mongoDB = new MongoDBInstance();
         mongoDB.setUp();
-        MongoClient mongo = new MongoClient("localhost", 12345);
+        mongo = new MongoClient("localhost", 12345);
 
         pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
         //mocks
@@ -68,6 +69,7 @@ public class AdapterManagerIT {
     @After
     public void tearDown() throws Exception {
         mongoDB.tearDown();
+        mongo.close();
 
         pico.stop();
         pico.dispose();

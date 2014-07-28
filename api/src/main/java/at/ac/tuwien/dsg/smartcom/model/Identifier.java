@@ -15,6 +15,15 @@ public class Identifier implements Serializable {
     private final String id;
     private final String postfix; //for stateful output adapters
 
+    /**
+     * @deprecated Should only be used by frameworks that require a default constructor
+     */
+    public Identifier() {
+        type = null;
+        id = null;
+        postfix = null;
+    }
+
     private Identifier(IdentifierType type, String id) {
         this(type, id, "");
     }
@@ -33,7 +42,7 @@ public class Identifier implements Serializable {
         return id+(postfix.isEmpty() ? "" : "."+postfix);
     }
 
-    public String getIdWithoutPostfix() {
+    public String returnIdWithoutPostfix() {
         return id;
     }
 

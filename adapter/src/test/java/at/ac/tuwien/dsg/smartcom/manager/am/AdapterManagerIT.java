@@ -93,7 +93,7 @@ public class AdapterManagerIT {
             array[0] = route;
             array[1] = peer;
             rules.add(array);
-            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId()+"."+route.getIdWithoutPostfix()), 0));
+            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId()+"."+route.returnIdWithoutPostfix()), 0));
         }
 
         InputListener listener = new InputListener();

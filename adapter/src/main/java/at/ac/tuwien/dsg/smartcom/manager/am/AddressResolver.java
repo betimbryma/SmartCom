@@ -51,7 +51,7 @@ public class AddressResolver {
 
     public PeerAddress getPeerAddress(Identifier peerId, Identifier adapterId) {
         try {
-            return cache.get(new AddressKey(peerId, Identifier.adapter(adapterId.getIdWithoutPostfix())));
+            return cache.get(new AddressKey(peerId, Identifier.adapter(adapterId.returnIdWithoutPostfix())));
         } catch (ExecutionException e) {
             if (e.getCause() instanceof AddressResolverException) {
                 log.debug("There is address for PeerId () and AdapterId ()", peerId, adapterId);

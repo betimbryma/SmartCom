@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.demo.adapters.rest;
 
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 
 import java.io.Serializable;
@@ -31,6 +32,20 @@ public class JsonMessageDTO implements Serializable {
         this.conversation = message.getConversationId();
         this.language = message.getLanguage();
         this.securityToken = message.getSecurityToken();
+    }
+
+    public Message createMessage() {
+        Message.MessageBuilder builder = new Message.MessageBuilder()
+                .setId(Identifier.message(id))
+                .setContent(content)
+                .setType(type)
+                .setSubtype(subtype)
+                .setSenderId(Identifier.peer(sender))
+                .setConversationId(conversation)
+                .setLanguage(language)
+                .setSecurityToken(securityToken);
+
+        return builder.create();
     }
 
     public String getId() {

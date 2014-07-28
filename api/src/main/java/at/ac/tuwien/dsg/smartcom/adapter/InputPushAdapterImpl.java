@@ -18,7 +18,7 @@ import java.util.List;
  */
 public abstract class InputPushAdapterImpl implements InputPushAdapter {
 
-    private InputPublisher inputPublisher;
+    protected InputPublisher inputPublisher;
     private List<PushTask> taskList = new ArrayList<PushTask>(1);
 
     /**
@@ -38,7 +38,7 @@ public abstract class InputPushAdapterImpl implements InputPushAdapter {
     }
 
 
-    private TaskScheduler scheduler;
+    protected TaskScheduler scheduler;
 
     /**
      * Schedule a push task

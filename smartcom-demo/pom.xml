@@ -18,6 +18,7 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- REST -->
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
@@ -37,6 +38,13 @@
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-grizzly2-http</artifactId>
             <version>2.11</version>
+        </dependency>
+
+        <!-- Dropbox -->
+        <dependency>
+            <groupId>com.dropbox.core</groupId>
+            <artifactId>dropbox-core-sdk</artifactId>
+            <version>[1.7,1.8)</version>
         </dependency>
     </dependencies>
 </project>

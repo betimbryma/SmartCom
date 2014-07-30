@@ -133,6 +133,19 @@ public class AdapterManagerImpl implements AdapterManager {
         return null;
     }
 
+    private OutputAdapter instantiateClass(Class<? extends OutputAdapter> adapter, PeerAddress address) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+        try {
+            Constructor<? extends OutputAdapter> constructor = adapter.getDeclaredConstructor(PeerAddress.class);
+            if (constructor != null) {
+                return constructor.newInstance(address);
+            }
+        } catch (NoSuchMethodException e) {
+            log.debug("Adapter class {} has no constructor that accepts a peer address, using default constructor", adapter);
+        }
+
+        return instantiateClass(adapter);
+    }
+
     @Override
     public Identifier createEndpointForPeer(Identifier peerId) {
         Identifier adapterId = null;
@@ -169,7 +182,7 @@ public class AdapterManagerImpl implements AdapterManager {
                         Class<? extends OutputAdapter> outputAdapterClass = statefulAdapters.get(adapter);
                         OutputAdapter outputAdapter;
                         try {
-                            outputAdapter = instantiateClass(outputAdapterClass);
+                            outputAdapter = instantiateClass(outputAdapterClass, address);
                         } catch (InvocationTargetException e) {
                             log.error("Could not instantiate class "+adapter, e);
                             continue;

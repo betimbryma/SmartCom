@@ -22,11 +22,15 @@ import java.net.UnknownHostException;
  * @version 1.0
  */
 public class MongoDBInstance {
-    private static final MongodStarter starter;
+    private static MongodStarter starter;
     private static final int port = 12345;
 
     //do this statically otherwise tests might behave unexpectedly
     static {
+        setUpStatic();
+    }
+
+    private static void setUpStatic() {
         Command command = Command.MongoD;
 
         File file = new File("mongo");
@@ -60,7 +64,14 @@ public class MongoDBInstance {
                 .build();
 
         mongodExe = starter.prepare(mongodConfig);
-        mongod = mongodExe.start();
+        try {
+            mongod = mongodExe.start();
+        } catch (IOException e) {
+            System.err.println("MongoDB failed to start ("+e.getLocalizedMessage()+")... retrying");
+            setUpStatic();
+            mongodExe = starter.prepare(mongodConfig);
+            mongod = mongodExe.start();
+        }
     }
 
     public MongoClient getClient() throws UnknownHostException {

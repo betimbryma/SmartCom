@@ -1,10 +1,10 @@
-package at.ac.tuwien.dsg.smartcom.demo.adapters;
+package at.ac.tuwien.dsg.smartcom.adapters;
 
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapterImpl;
 import at.ac.tuwien.dsg.smartcom.adapter.util.TaskScheduler;
+import at.ac.tuwien.dsg.smartcom.adapters.rest.JsonMessageDTO;
+import at.ac.tuwien.dsg.smartcom.adapters.rest.ObjectMapperProvider;
 import at.ac.tuwien.dsg.smartcom.broker.InputPublisher;
-import at.ac.tuwien.dsg.smartcom.demo.adapters.rest.JsonMessageDTO;
-import at.ac.tuwien.dsg.smartcom.demo.adapters.rest.ObjectMapperProvider;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;

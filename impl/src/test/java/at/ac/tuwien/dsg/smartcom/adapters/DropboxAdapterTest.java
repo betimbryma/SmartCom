@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom.demo.adapters;
+package at.ac.tuwien.dsg.smartcom.adapters;
 
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;

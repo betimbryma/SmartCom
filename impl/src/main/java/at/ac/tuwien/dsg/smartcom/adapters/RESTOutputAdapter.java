@@ -1,8 +1,8 @@
-package at.ac.tuwien.dsg.smartcom.demo.adapters;
+package at.ac.tuwien.dsg.smartcom.adapters;
 
 import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
-import at.ac.tuwien.dsg.smartcom.demo.adapters.rest.JsonMessageDTO;
+import at.ac.tuwien.dsg.smartcom.adapters.rest.JsonMessageDTO;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import org.glassfish.jersey.jackson.JacksonFeature;

@@ -1,9 +1,9 @@
-package at.ac.tuwien.dsg.smartcom.demo.adapters;
+package at.ac.tuwien.dsg.smartcom.adapters;
 
 import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.adapter.util.TaskScheduler;
+import at.ac.tuwien.dsg.smartcom.adapters.rest.JsonMessageDTO;
 import at.ac.tuwien.dsg.smartcom.broker.InputPublisher;
-import at.ac.tuwien.dsg.smartcom.demo.adapters.rest.JsonMessageDTO;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;

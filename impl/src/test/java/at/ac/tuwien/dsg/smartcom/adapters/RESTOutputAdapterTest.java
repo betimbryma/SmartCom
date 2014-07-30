@@ -1,8 +1,8 @@
-package at.ac.tuwien.dsg.smartcom.demo.adapters;
+package at.ac.tuwien.dsg.smartcom.adapters;
 
-import at.ac.tuwien.dsg.smartcom.demo.adapters.rest.ObjectMapperProvider;
-import at.ac.tuwien.dsg.smartcom.demo.adapters.rest.RESTResource;
-import at.ac.tuwien.dsg.smartcom.demo.adapters.rest.TestSynchronizer;
+import at.ac.tuwien.dsg.smartcom.adapters.rest.ObjectMapperProvider;
+import at.ac.tuwien.dsg.smartcom.adapters.rest.RESTResource;
+import at.ac.tuwien.dsg.smartcom.adapters.rest.TestSynchronizer;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;

@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom.demo.adapters.rest;
+package at.ac.tuwien.dsg.smartcom.adapters.rest;
 
 import java.util.concurrent.CountDownLatch;
 

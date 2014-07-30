@@ -18,7 +18,7 @@ import java.util.Locale;
  * @version 1.0
  */
 public class DropboxInputAdapter implements InputPullAdapter {
-    private static final Logger log = LoggerFactory.getLogger(RESTOutputAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(DropboxInputAdapter.class);
 
     private final DbxClient client;
     private final String folder;

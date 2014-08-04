@@ -2,10 +2,11 @@ package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapterImpl;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
+import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.AdapterWithoutAnnotation;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
@@ -32,8 +33,8 @@ public class AdapterManagerTest {
     private AdapterManager manager;
     private MessageBroker broker;
 
-    Identifier peerId1 = Identifier.peer("peer1");
-    Identifier peerId2 = Identifier.peer("peer2");
+    private Identifier peerId1 = Identifier.peer("peer1");
+    private Identifier peerId2 = Identifier.peer("peer2");
 
     private MutablePicoContainer pico;
 
@@ -62,7 +63,7 @@ public class AdapterManagerTest {
         pico.dispose();
     }
 
-    @Test(timeout = 1500l)
+    @Test(timeout = 1500l, expected = CommunicationException.class)
     public void testRegisterOutputAdapterWithoutAnnotation() throws Exception {
         Identifier id = manager.registerOutputAdapter(AdapterWithoutAnnotation.class);
         assertNull("Adapter should not have an id because it should not have been registered!", id);
@@ -257,7 +258,7 @@ public class AdapterManagerTest {
         }
     }
 
-    private class TestInputPushAdapter extends InputPushAdapterImpl {
+    private class TestInputPushAdapter extends InputPushAdapter {
 
         String text = "uninitialized";
         final CyclicBarrier barrier;

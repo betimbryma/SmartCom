@@ -4,6 +4,7 @@ import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
+import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
@@ -62,7 +63,7 @@ public class AdapterManagerOutputAdapterTest {
     }
 
     @Test(timeout = 1500l)
-    public void testRegisterOutputAdapterWithStatelessAdapter() {
+    public void testRegisterOutputAdapterWithStatelessAdapter() throws CommunicationException {
         InputPullAdapter pullAdapter1 = new TestInputPullAdapter(peerId1.getId()+".stateless");
         Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
         InputPullAdapter pullAdapter2 = new TestInputPullAdapter(peerId2.getId()+".stateless");
@@ -93,7 +94,7 @@ public class AdapterManagerOutputAdapterTest {
     }
 
     @Test(timeout = 2000l)
-    public void testRegisterOutputAdapterWithStatefulAdapter() {
+    public void testRegisterOutputAdapterWithStatefulAdapter() throws CommunicationException {
         InputPullAdapter pullAdapter1 = new TestInputPullAdapter(peerId1.getId()+".stateful");
         Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
         InputPullAdapter pullAdapter2 = new TestInputPullAdapter(peerId2.getId()+".stateful");

@@ -1,6 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.adapters;
 
-import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapterImpl;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.util.TaskScheduler;
 import at.ac.tuwien.dsg.smartcom.adapters.rest.JsonMessageDTO;
 import at.ac.tuwien.dsg.smartcom.adapters.rest.ObjectMapperProvider;
@@ -30,7 +30,7 @@ import java.net.URI;
  */
 @Path("/")
 @Singleton
-public class RESTInputAdapter extends InputPushAdapterImpl {
+public class RESTInputAdapter extends InputPushAdapter {
     private static final Logger log = LoggerFactory.getLogger(RESTOutputAdapter.class);
 
     private HttpServer server;

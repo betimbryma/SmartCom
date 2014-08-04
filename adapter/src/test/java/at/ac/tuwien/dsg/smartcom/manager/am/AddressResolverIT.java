@@ -5,7 +5,6 @@ import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
-import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
 import org.junit.After;
 import org.junit.Before;
@@ -24,7 +23,6 @@ public class AddressResolverIT {
     private MongoDBInstance mongoDB;
 
     private MongoDBResolverDAO dao;
-    private DBCollection collection;
 
     private MutablePicoContainer pico;
 
@@ -34,7 +32,6 @@ public class AddressResolverIT {
         mongoDB.setUp();
 
         MongoClient mongo = new MongoClient("localhost", 12345);
-        collection = mongo.getDB("test-resolver").getCollection("resolver");
 
         pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
         pico.as(Characteristics.CACHE).addComponent(ResolverDAO.class, new MongoDBResolverDAO(mongo, "test-resolver", "resolver"));

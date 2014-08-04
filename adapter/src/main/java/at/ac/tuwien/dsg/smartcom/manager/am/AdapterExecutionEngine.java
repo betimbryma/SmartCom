@@ -23,31 +23,36 @@ import java.util.concurrent.TimeUnit;
 public class AdapterExecutionEngine implements TaskScheduler{
     private static final Logger log = LoggerFactory.getLogger(AdapterExecutionEngine.class);
 
-    private ExecutorService executor;
-    private ExecutorService pushExecutor;
-    private Timer timer;
+    private ExecutorService executor; //executor for adapters
+    private ExecutorService pushExecutor; //executor for push tasks
+    private Timer timer; //timer for timed tasks
 
     @Inject
-    private AddressResolver addressResolver;
+    private AddressResolver addressResolver; //used to resolve addresses
 
     @Inject
-    private MessageBroker broker;
+    private MessageBroker broker; //used to send and receive messages
 
-    private final Map<Identifier, InputAdapterExecution> inputAdapterMap = new HashMap<>();
-    private final Map<Identifier, InputPushAdapter> pushAdapterFacadeMap = new HashMap<>();
+    private final Map<Identifier, InputAdapterExecution> inputAdapterMap = new HashMap<>(); //map of identifiers of adapters and the corresponding adapter executions
+    private final Map<Identifier, IInputPushAdapter> pushAdapterFacadeMap = new HashMap<>();
     private final Map<Identifier, List<TimerTask>> taskMap = new HashMap<>();
     private final Map<Identifier, OutputAdapterExecution> outputAdapterMap = new HashMap<>();
     private final Map<Identifier, Future<?>> futureMap = new HashMap<>();
 
-
-    public AdapterExecutionEngine() {}
-
+    /**
+     * Initialises the Adapter Execution Engine
+     * i.e., initialises the executors for tasks and adapters.
+     */
     void init() {
         executor = Executors.newCachedThreadPool();
         pushExecutor = Executors.newCachedThreadPool();
         timer = new Timer();
     }
 
+    /**
+     * Destroys the Adapter Execution Engine
+     * i.e., stops the executors for tasks and adapters and cancels all active tasks.
+     */
     void destroy() {
         log.info("Executor will be shut down");
 
@@ -55,8 +60,8 @@ public class AdapterExecutionEngine implements TaskScheduler{
             future.cancel(true);
         }
 
+        //shut down the executor that handles the adapters
         executor.shutdown();
-
         try {
             executor.awaitTermination(1000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -64,8 +69,8 @@ public class AdapterExecutionEngine implements TaskScheduler{
             executor.shutdownNow();
         }
 
+        //shut down the executor that handles the push tasks
         pushExecutor.shutdown();
-
         try {
             pushExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -73,59 +78,106 @@ public class AdapterExecutionEngine implements TaskScheduler{
             pushExecutor.shutdownNow();
         }
 
+        //cancel all handled timer tasks
+        for (List<TimerTask> timerTasks : taskMap.values()) {
+            for (TimerTask timerTask : timerTasks) {
+                timerTask.cancel();
+            }
+        }
+        timer.purge();
+
+        //cancel the timer that handles timed tasks
         timer.cancel();
 
         log.info("Executor shutdown complete!");
     }
 
-    void addInputAdapter(InputPushAdapter adapter, Identifier id) {
+    /**
+     * Add an input push adapter instance with the given id to the adapter execution engine
+     * @param adapter instance of a input push adapter
+     * @param id of the adapter
+     */
+    void addInputAdapter(IInputPushAdapter adapter, Identifier id) {
         log.info("Adding push adapter with id {}", id);
+        //just add it to the managed adapters because they will organize their execution on their own
         pushAdapterFacadeMap.put(id, adapter);
     }
 
+    /**
+     * Add an input pull adapter instance with the given id to the adapter execution engine
+     * @param adapter instance of the input pull adapter
+     * @param id of the adapter
+     */
     void addInputAdapter(InputPullAdapter adapter, Identifier id) {
         log.info("Adding pull adapter with id {}", id);
         InputAdapterExecution execution = new InputAdapterExecution(adapter, id, broker);
 
-        execution.init();
-
+        //start executing the pull adapter within an adapter execution
         Future<?> submit = executor.submit(execution);
 
+        //add the created execution task (the future object) and the adapter execution
         futureMap.put(id, submit);
         inputAdapterMap.put(id, execution);
     }
 
+    /**
+     * Remove an input adapter with a given identifier from the execution. If the adapter
+     * is a push adapter, it will simply destroyed (behaviour is implemented by adapter),
+     * otherwise the regarding adapter execution will be cancelled.
+     *
+     * @param id of the input adapter (pull or push)
+     * @return the stopped adapter
+     */
     InputAdapter removeInputAdapter(Identifier id) {
         log.debug("Removing adapter with id {}", id);
-        InputPushAdapter adapter = pushAdapterFacadeMap.get(id);
+        //check if it is a push adapter
+        IInputPushAdapter adapter = pushAdapterFacadeMap.get(id);
         if (adapter != null) {
+            //simply destroy the adapter itself if it's a push adapter
             adapter.preDestroy();
             return adapter;
         } else {
+            //remove the adapter from the execution otherwise
             Future<?> remove = futureMap.remove(id);
             remove.cancel(true);
 
-            InputAdapterExecution execution = inputAdapterMap.get(id);
+            InputAdapterExecution execution = inputAdapterMap.remove(id);
 
             return execution.getAdapter();
         }
     }
 
-    void addOutputAdapter(OutputAdapter adapter, Identifier id, boolean stateful) {
+    /**
+     * Add a new output adapter instance with the given id to the execution engine. A new adapter execution
+     * will be created for the adapter and it will be handled appropriately.
+     *
+     * @param adapter instance of the output adapter
+     * @param id of the output adapter
+     */
+    void addOutputAdapter(OutputAdapter adapter, Identifier id) {
         log.debug("Adding adapter with id {}", id);
-        OutputAdapterExecution execution = new OutputAdapterExecution(adapter, addressResolver, id, stateful, broker);
+        //create execution and start executing it
+        OutputAdapterExecution execution = new OutputAdapterExecution(adapter, addressResolver, id, broker);
         Future<?> submit = executor.submit(execution);
 
+        //add the execution and the task (future object) to the engine
         futureMap.put(id, submit);
         outputAdapterMap.put(id, execution);
     }
 
+    /**
+     * remove an output adapter instance with a given id from the execution of the execution engine.
+     *
+     * @param id of the adapter instance
+     * @return the removed output adapter instance
+     */
     OutputAdapter removeOutputAdapter(Identifier id) {
         log.debug("Removing adapter with id {}", id);
+        //cancel the task
         Future<?> remove = futureMap.remove(id);
         remove.cancel(true);
 
-        return outputAdapterMap.get(id).getAdapter();
+        return outputAdapterMap.remove(id).getAdapter();
     }
 
     @Override
@@ -145,8 +197,16 @@ public class AdapterExecutionEngine implements TaskScheduler{
         };
     }
 
-    public void schedule(TimerTask task, long period, Identifier id) {
-        timer.scheduleAtFixedRate(task, 0, period);
+    /**
+     * Schedule a timer task with a given id at a fixed rate. The task will run as long as it is
+     * not cancelled or the execution engine is shut down.
+     *
+     * @param task that should be scheduled
+     * @param rate at which the task will be scheduled
+     * @param id of the task
+     */
+    public void schedule(TimerTask task, long rate, Identifier id) {
+        timer.scheduleAtFixedRate(task, 0, rate);
 
         List<TimerTask> timerTasks = taskMap.get(id);
         if (timerTasks == null) {

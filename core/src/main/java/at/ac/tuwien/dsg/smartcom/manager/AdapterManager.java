@@ -4,6 +4,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.InputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
+import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 
 /**
@@ -11,16 +12,6 @@ import at.ac.tuwien.dsg.smartcom.model.Identifier;
  * @version 1.0
  */
 public interface AdapterManager {
-
-    /**
-     * Initializes the adapter manager
-     */
-    void init();
-
-    /**
-     * Destroys the adapter manager and cleans up resources
-     */
-    void destroy();
 
     /**
      * Add a push adapter to the adapter manager
@@ -49,8 +40,9 @@ public interface AdapterManager {
      * Register a new type of output adapters in the adapter manager.
      * @param adapter new type of output adapters
      * @return id for the output adapter type
+     * @throws CommunicationException if the adapter is not implemented correctly (e.g., annotation missing, constructor not valid)
      */
-    Identifier registerOutputAdapter(Class<? extends OutputAdapter> adapter);
+    Identifier registerOutputAdapter(Class<? extends OutputAdapter> adapter) throws CommunicationException;
 
     /**
      * Removes a output adapter type and all instances from the execution. After the method

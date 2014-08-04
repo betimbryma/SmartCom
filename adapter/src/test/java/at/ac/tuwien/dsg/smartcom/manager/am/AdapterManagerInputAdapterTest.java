@@ -4,13 +4,11 @@ import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.SimplePeerManager;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
-import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapterImpl;
 import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +17,6 @@ import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -107,7 +104,7 @@ public class AdapterManagerInputAdapterTest {
         }
     }
 
-    private class TestInputPushAdapter extends InputPushAdapterImpl {
+    private class TestInputPushAdapter extends InputPushAdapter {
 
         String text = "uninitialized";
 
@@ -141,19 +138,6 @@ public class AdapterManagerInputAdapterTest {
         @Override
         protected void cleanUp() {
 
-        }
-    }
-
-    private class PMCallback implements at.ac.tuwien.dsg.smartcom.callback.PMCallback {
-
-        @Override
-        public Collection<PeerAddress> getPeerAddress(Identifier id) {
-            return null;
-        }
-
-        @Override
-        public boolean authenticate(Identifier username, String password) {
-            return false;
         }
     }
 }

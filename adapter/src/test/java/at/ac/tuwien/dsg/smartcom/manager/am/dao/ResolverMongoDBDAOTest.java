@@ -22,8 +22,8 @@ public class ResolverMongoDBDAOTest {
     private final Identifier adapter2 = Identifier.adapter("adapter2");
     private MongoDBInstance mongoDB;
 
-    MongoDBResolverDAO resolver;
-    DBCollection collection;
+    private MongoDBResolverDAO resolver;
+    private DBCollection collection;
 
     @Before
     public void setUp() throws Exception {

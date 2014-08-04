@@ -4,9 +4,9 @@ import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
+import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
-import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class AdapterManagerIT {
-    public static final int AMOUNT_OF_PEERS = 1000;
+    private static final int AMOUNT_OF_PEERS = 1000;
     private MongoDBInstance mongoDB;
 
     private AdapterManager manager;
@@ -76,9 +76,8 @@ public class AdapterManagerIT {
     }
 
     @Test(timeout = 40000l)
-    public void test() throws InterruptedException {
+    public void test() throws InterruptedException, CommunicationException {
         Identifier statefulAdapterId = manager.registerOutputAdapter(StatefulAdapter.class);
-        Identifier statelessAdapterId = manager.registerOutputAdapter(StatelessAdapter.class);
 
         List<Identifier> adapterIds = new ArrayList<>(AMOUNT_OF_PEERS);
         List<Identifier[]> rules = new ArrayList<>(AMOUNT_OF_PEERS);

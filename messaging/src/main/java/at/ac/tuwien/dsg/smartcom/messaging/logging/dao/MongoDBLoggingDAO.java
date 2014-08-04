@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.UnknownHostException;
+import java.util.Date;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -47,7 +48,8 @@ public class MongoDBLoggingDAO implements LoggingDAO {
                 .append("conversationId", message.getConversationId())
                 .append("ttl", message.getTtl())
                 .append("language", message.getLanguage())
-                .append("securityToken", message.getSecurityToken()); //TODO should we log the security token too?
+                .append("securityToken", message.getSecurityToken()) //TODO should we log the security token too?
+                .append("created", new Date());
     }
 
     private BasicDBObject serializeIdentifier(Identifier identifier) {

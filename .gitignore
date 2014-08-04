@@ -14,7 +14,10 @@
 # Maven
 log/
 target/
+
+# others
 mongo/
+activemq-data/
 
 #Java
 *.class

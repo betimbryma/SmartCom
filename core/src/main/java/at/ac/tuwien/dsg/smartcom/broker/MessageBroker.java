@@ -27,7 +27,7 @@ public interface MessageBroker extends InputPublisher {
      *
      * @param listener for input messages
      */
-    public void registerInputListener(MessageListener listener);
+    public CancelableListener registerInputListener(MessageListener listener);
 
     /**
      * Receives request messages for a given id. Might block until there
@@ -43,11 +43,10 @@ public interface MessageBroker extends InputPublisher {
      * new request messages for a given receiver. Note that a message listener
      * will consume the message and that there can only be one listener at a
      * time for each id.
-     *
-     * @param id the id of the request receiver
+     *  @param id the id of the request receiver
      * @param listener for request messages
      */
-    public void registerRequestListener(Identifier id, MessageListener listener);
+    public CancelableListener registerRequestListener(Identifier id, MessageListener listener);
 
     /**
      * Publish a new request message for a given id.
@@ -71,11 +70,10 @@ public interface MessageBroker extends InputPublisher {
      * new task messages for a given receiver. Note that a message listener
      * will consume the message and that there can only be one listener at a
      * time for each id.
-     *
-     * @param id the id of the task receiver
+     *  @param id the id of the task receiver
      * @param listener for task messages
      */
-    public void registerTaskListener(Identifier id, MessageListener listener);
+    public CancelableListener registerTaskListener(Identifier id, MessageListener listener);
 
     /**
      * Publish a task message for a given receiver destination id (note that
@@ -109,7 +107,7 @@ public interface MessageBroker extends InputPublisher {
      *
      * @param listener for control messages
      */
-    public void registerControlListener(MessageListener listener);
+    public CancelableListener registerControlListener(MessageListener listener);
 
     /**
      * Publish authentication request message.
@@ -133,7 +131,7 @@ public interface MessageBroker extends InputPublisher {
      *
      * @param listener for authentication messages
      */
-    public void registerAuthListener(MessageListener listener);
+    public CancelableListener registerAuthListener(MessageListener listener);
 
     /**
      * publish message info request message.
@@ -157,7 +155,7 @@ public interface MessageBroker extends InputPublisher {
      *
      * @param listener for message info request messages
      */
-    public void registerMessageInfoListener(MessageListener listener);
+    public CancelableListener registerMessageInfoListener(MessageListener listener);
 
     /**
      * publishes a metrics request message.
@@ -181,7 +179,7 @@ public interface MessageBroker extends InputPublisher {
      *
      * @param listener for metrics request messages
      */
-    public void registerMetricsListener(MessageListener listener);
+    public CancelableListener registerMetricsListener(MessageListener listener);
 
     /**
      * publishes a log message
@@ -205,5 +203,5 @@ public interface MessageBroker extends InputPublisher {
      *
      * @param listener for log messages
      */
-    public void registerLogListener(MessageListener listener);
+    public CancelableListener registerLogListener(MessageListener listener);
 }

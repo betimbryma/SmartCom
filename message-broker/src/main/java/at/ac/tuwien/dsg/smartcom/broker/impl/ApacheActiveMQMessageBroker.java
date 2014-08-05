@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.broker.impl;
 
+import at.ac.tuwien.dsg.smartcom.broker.CancelableListener;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
 import at.ac.tuwien.dsg.smartcom.broker.utils.BrokerErrorUtils;
@@ -44,6 +45,14 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
         setUp(host, port);
     }
 
+    /**
+     * Initialize the Apache ActiveMQ Message Broker. It connects to the ActiveMQ instance
+     * and creates the queues that are used by the various sessions
+     *
+     * @param host address of the ActiveMQ instance
+     * @param port of the ActiveMQ instance
+     * @throws CommunicationException
+     */
     private void setUp(String host, int port) throws CommunicationException {
         try {
             log.debug("Initialising Apache ActiveMQ Message Broker!");
@@ -97,8 +106,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerInputListener(final MessageListener listener) {
-        setListener(listener, inputQueue);
+    public CancelableListener registerInputListener(final MessageListener listener) {
+        return setListener(listener, inputQueue);
     }
 
     @Override
@@ -140,7 +149,7 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
      * @param listener that has to be registered
      * @param destination for the listener
      */
-    private void setListener(final MessageListener listener, final Destination destination) {
+    private CancelableListener setListener(final MessageListener listener, final Destination destination) {
         try {
             log.trace("Setting listener for destination {}", destination);
             MessageConsumer consumer = session.createConsumer(destination);
@@ -156,6 +165,7 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
                     }
                 }
             });
+            return new CancelableListenerImpl(consumer);
         } catch (JMSException e) {
             log.error("Error while setting "+destination.toString()+" listener", e);
             throw BrokerErrorUtils.createRuntimeBrokerException(e);
@@ -212,8 +222,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerRequestListener(Identifier id, MessageListener listener) {
-        setListener(listener, createDestination(requestQueuePrefix, id));
+    public CancelableListener registerRequestListener(Identifier id, MessageListener listener) {
+        return setListener(listener, createDestination(requestQueuePrefix, id));
     }
 
     @Override
@@ -227,8 +237,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerTaskListener(Identifier id, MessageListener listener) {
-        setListener(listener, createDestination(taskQueuePrefix, id));
+    public CancelableListener registerTaskListener(Identifier id, MessageListener listener) {
+        return setListener(listener, createDestination(taskQueuePrefix, id));
     }
 
     @Override
@@ -247,8 +257,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerControlListener(MessageListener listener) {
-        setListener(listener, controlQueue);
+    public CancelableListener registerControlListener(MessageListener listener) {
+        return setListener(listener, controlQueue);
     }
 
     @Override
@@ -262,8 +272,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerAuthListener(MessageListener listener) {
-        setListener(listener, authQueue);
+    public CancelableListener registerAuthListener(MessageListener listener) {
+        return setListener(listener, authQueue);
     }
 
     @Override
@@ -277,8 +287,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerMessageInfoListener(MessageListener listener) {
-        setListener(listener, messageInfoQueue);
+    public CancelableListener registerMessageInfoListener(MessageListener listener) {
+        return setListener(listener, messageInfoQueue);
     }
 
     @Override
@@ -292,8 +302,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerMetricsListener(MessageListener listener) {
-        setListener(listener, metricsQueue);
+    public CancelableListener registerMetricsListener(MessageListener listener) {
+        return setListener(listener, metricsQueue);
     }
 
     @Override
@@ -307,7 +317,25 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerLogListener(MessageListener listener) {
-        setListener(listener, logQueue);
+    public CancelableListener registerLogListener(MessageListener listener) {
+        return setListener(listener, logQueue);
+    }
+
+    private class CancelableListenerImpl implements CancelableListener {
+
+        private final MessageConsumer consumer;
+
+        private CancelableListenerImpl(MessageConsumer consumer) {
+            this.consumer = consumer;
+        }
+
+        @Override
+        public void cancel() {
+            try {
+                this.consumer.close();
+            } catch (JMSException e) {
+                log.error("Could not close consumer", e);
+            }
+        }
     }
 }

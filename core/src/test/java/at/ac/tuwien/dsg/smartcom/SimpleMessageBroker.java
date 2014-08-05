@@ -67,11 +67,12 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerInputListener(MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerInputListener(MessageListener listener) {
         synchronized (inputQueue) {
             log.trace("added input listener");
             inputListener = listener;
         }
+        return null;
     }
 
     @Override
@@ -95,11 +96,12 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerRequestListener(Identifier id, MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerRequestListener(Identifier id, MessageListener listener) {
         synchronized (requestListeners) {
             log.trace("registered request listener");
             requestListeners.put(id, listener);
         }
+        return null;
     }
 
     @Override
@@ -145,11 +147,12 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerTaskListener(Identifier id, MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerTaskListener(Identifier id, MessageListener listener) {
         synchronized (taskListeners) {
             log.trace("Registered task listener with id {}", id);
             taskListeners.put(id, listener);
         }
+        return null;
     }
 
     @Override
@@ -186,8 +189,9 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerControlListener(MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerControlListener(MessageListener listener) {
         specialListeners.put(CONTROL_QUEUE, listener);
+        return null;
     }
 
     @Override
@@ -201,8 +205,9 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerAuthListener(MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerAuthListener(MessageListener listener) {
         specialListeners.put(AUTH_QUEUE, listener);
+        return null;
     }
 
     @Override
@@ -216,8 +221,9 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerMessageInfoListener(MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerMessageInfoListener(MessageListener listener) {
         specialListeners.put(MIS_QUEUE, listener);
+        return null;
     }
 
     @Override
@@ -231,8 +237,9 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerMetricsListener(MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerMetricsListener(MessageListener listener) {
         specialListeners.put(MPS_QUEUE, listener);
+        return null;
     }
 
     @Override
@@ -246,8 +253,9 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void registerLogListener(MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerLogListener(MessageListener listener) {
         specialListeners.put(LOG_QUEUE, listener);
+        return null;
     }
 
     private void publishSpecial(String id, Message message) {

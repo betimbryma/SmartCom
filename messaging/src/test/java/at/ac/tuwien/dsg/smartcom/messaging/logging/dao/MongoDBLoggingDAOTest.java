@@ -1,9 +1,9 @@
 package at.ac.tuwien.dsg.smartcom.messaging.logging.dao;
 
-import at.ac.tuwien.dsg.smartcom.messaging.logging.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.IdentifierType;
 import at.ac.tuwien.dsg.smartcom.model.Message;
+import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;

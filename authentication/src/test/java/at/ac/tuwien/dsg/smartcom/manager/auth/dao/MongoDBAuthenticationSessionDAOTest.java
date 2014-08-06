@@ -1,7 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.manager.auth.dao;
 
-import at.ac.tuwien.dsg.smartcom.manager.auth.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
+import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
@@ -69,7 +69,7 @@ public class MongoDBAuthenticationSessionDAOTest {
         dao.persistSession(Identifier.peer("test4"), "token3", calendar.getTime());
         assertTrue("Session seems not to be valid but should be!", dao.isValidSession(Identifier.peer("test4"), "token3"));
 
-        calendar.roll(Calendar.HOUR, false);
+        calendar.add(Calendar.HOUR, -1);
         dao.persistSession(Identifier.peer("test3"), "token1", calendar.getTime());
         assertFalse("Session seems to be valid but shouldn't!", dao.isValidSession(Identifier.peer("test3"), "token1"));
     }

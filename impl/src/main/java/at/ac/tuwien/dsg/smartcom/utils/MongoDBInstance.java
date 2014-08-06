@@ -8,6 +8,7 @@ import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.mongo.config.*;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
+import de.flapdoodle.embed.process.exceptions.DistributionException;
 import de.flapdoodle.embed.process.extract.UserTempNaming;
 import de.flapdoodle.embed.process.io.directories.FixedPath;
 import de.flapdoodle.embed.process.runtime.Network;
@@ -22,10 +23,9 @@ import java.net.UnknownHostException;
  * @version 1.0
  */
 public class MongoDBInstance {
+    private static final int MAX_START_TRIES = 5;
+    private static MongodStarter starter;
     private final int port;
-
-    private MongodExecutable mongodExe;
-    private MongodProcess mongod;
 
     public MongoDBInstance(int port) {
         if (port <= 0) {
@@ -35,12 +35,23 @@ public class MongoDBInstance {
         }
     }
 
-    public void setUp() throws IOException {
+    public MongoDBInstance() {
+        this.port = 12345;
+    }
+
+    //do this statically otherwise tests might behave unexpectedly
+    static {
+        setUpStatic();
+    }
+
+    private static void setUpStatic() {
         Command command = Command.MongoD;
 
         File file = new File("mongo");
         if (file.exists()) {
-            FileUtils.forceDelete(file);
+            try {
+                FileUtils.forceDelete(file);
+            } catch (IOException e) {/* nothing to do */}
         }
         file.mkdir();
 
@@ -54,27 +65,37 @@ public class MongoDBInstance {
                         .executableNaming(new UserTempNaming()))
                 .build();
 
-        MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
+        starter = MongodStarter.getInstance(runtimeConfig);
+    }
 
+    private MongodExecutable mongodExe;
+    private MongodProcess mongod;
+
+    public void setUp() throws IOException {
         IMongodConfig mongodConfig = new MongodConfigBuilder()
                 .version(Version.Main.PRODUCTION)
                 .net(new Net(port, Network.localhostIsIPv6()))
                 .build();
 
-        mongodExe = starter.prepare(mongodConfig);
-        mongod = mongodExe.start();
+        boolean started = false;
+        for (int i = 0; i < MAX_START_TRIES && !started; i++) {
+            try {
+                mongodExe = starter.prepare(mongodConfig);
+                mongod = mongodExe.start();
+                started = true;
+            } catch (IOException | DistributionException e) {
+                System.err.println("MongoDB failed to start (" + e.getLocalizedMessage() + ")... retrying");
+                setUpStatic();
+            }
+        }
+    }
+
+    public MongoClient getClient() throws UnknownHostException {
+        return new MongoClient("localhost", port);
     }
 
     public void tearDown() {
         mongod.stop();
         mongodExe.stop();
-    }
-
-    public MongoClient getMongoClient() {
-        try {
-            return new MongoClient("localhost", port);
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

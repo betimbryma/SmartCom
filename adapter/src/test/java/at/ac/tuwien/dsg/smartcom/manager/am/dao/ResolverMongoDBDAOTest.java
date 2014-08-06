@@ -1,8 +1,8 @@
 package at.ac.tuwien.dsg.smartcom.manager.am.dao;
 
-import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
@@ -10,7 +10,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -42,7 +44,12 @@ public class ResolverMongoDBDAOTest {
 
     @Test
     public void testInsert() throws Exception {
-        PeerAddress address1 = new PeerAddress(peer1, adapter1, Collections.EMPTY_LIST);
+        List<String> strings = new ArrayList<>(3);
+        strings.add("first");
+        strings.add("second");
+        strings.add("third");
+
+        PeerAddress address1 = new PeerAddress(peer1, adapter1, strings);
         PeerAddress address2 = new PeerAddress(this.peer1, adapter2, Collections.EMPTY_LIST);
         PeerAddress address3 = new PeerAddress(peer2, adapter1, Collections.EMPTY_LIST);
 
@@ -65,6 +72,7 @@ public class ResolverMongoDBDAOTest {
             if ("peer1".equals(address.getPeerId().getId())) {
                 if ("adapter1".equals(address.getAdapterId().getId()) && address.equals(address1)) {
                     address1found = true;
+                    assertEquals(3, address.getContactParameters().size());
                 } else if ("adapter2".equals(address.getAdapterId().getId()) && address.equals(address2)) {
                     address2found = true;
                 } else {

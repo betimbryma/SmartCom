@@ -1,7 +1,7 @@
-package at.ac.tuwien.dsg.smartcom;
+package at.ac.tuwien.dsg.smartcom.services;
 
-import at.ac.tuwien.dsg.smartcom.dao.MessageQueryDAO;
 import at.ac.tuwien.dsg.smartcom.model.QueryCriteria;
+import at.ac.tuwien.dsg.smartcom.services.dao.MessageQueryDAO;
 import org.picocontainer.annotations.Inject;
 
 /**
@@ -12,11 +12,6 @@ public class MessageQueryServiceImpl implements MessageQueryService {
 
     @Inject
     private MessageQueryDAO dao;
-
-//    @Override
-//    public Collection<Message> query(QueryCriteria criteria) throws IllegalQueryException {
-//        return null;
-//    }
 
     @Override
     public QueryCriteria createQuery() {

@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.adapter;
 
+import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 
@@ -21,6 +22,8 @@ public interface OutputAdapter {
      *
      * @param message Message that should be sent to the peer.
      * @param address The address of the peer (adapter specific)
+     *
+     * @throws AdapterException an exception occurred during the sending of a message
      */
-    public void push(Message message, PeerAddress address);
+    public void push(Message message, PeerAddress address) throws AdapterException;
 }

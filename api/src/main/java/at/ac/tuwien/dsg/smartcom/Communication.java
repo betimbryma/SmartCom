@@ -90,7 +90,7 @@ public interface Communication {
      * @param adapter The output adapter that can be used to contact peers.
      * @return Returns the middleware internal ID of the created adapter.
      */
-    public Identifier registerOutputAdapter(Class<OutputAdapter> adapter) throws CommunicationException;
+    public Identifier registerOutputAdapter(Class<? extends OutputAdapter> adapter) throws CommunicationException;
 
     /**
      * Removes a type of output adapters. Adapters that are currently in use will be removed

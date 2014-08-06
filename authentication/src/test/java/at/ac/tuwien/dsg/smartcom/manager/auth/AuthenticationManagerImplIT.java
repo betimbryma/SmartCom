@@ -2,8 +2,8 @@ package at.ac.tuwien.dsg.smartcom.manager.auth;
 
 import at.ac.tuwien.dsg.smartcom.manager.AuthenticationManager;
 import at.ac.tuwien.dsg.smartcom.manager.auth.dao.MongoDBAuthenticationSessionDAO;
-import at.ac.tuwien.dsg.smartcom.manager.auth.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
+import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.utils.PicoHelper;
 import com.mongodb.MongoClient;
 import org.junit.After;
@@ -61,7 +61,7 @@ public class AuthenticationManagerImplIT {
         dao.persistSession(Identifier.peer("test4"), "token3", calendar.getTime());
         assertTrue("Session seems not to be valid but should be!", manager.authenticate(Identifier.peer("test4"), "token3"));
 
-        calendar.roll(Calendar.HOUR, false);
+        calendar.add(Calendar.HOUR, -1);
         dao.persistSession(Identifier.peer("test3"), "token1", calendar.getTime());
         assertFalse("Session seems to be valid but shouldn't!", manager.authenticate(Identifier.peer("test3"), "token1"));
     }

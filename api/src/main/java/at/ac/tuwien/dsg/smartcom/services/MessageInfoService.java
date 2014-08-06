@@ -1,4 +1,4 @@
-package at.ac.tuwien.dsg.smartcom;
+package at.ac.tuwien.dsg.smartcom.services;
 
 import at.ac.tuwien.dsg.smartcom.exception.UnknownMessageException;
 import at.ac.tuwien.dsg.smartcom.model.Message;

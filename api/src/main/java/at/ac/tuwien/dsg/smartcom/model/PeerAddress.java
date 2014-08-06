@@ -15,9 +15,9 @@ import java.util.List;
 public class PeerAddress {
     private Identifier peerId; //id in the PM database
     private Identifier adapterId; //internal id of the adapter
-    private List<Serializable> contactParameters; //adapter specific contact/access parameters
+    private List<? extends Serializable> contactParameters; //adapter specific contact/access parameters
 
-    public PeerAddress(Identifier peerId, Identifier adapterId, List<Serializable> contactParameters) {
+    public PeerAddress(Identifier peerId, Identifier adapterId, List<? extends Serializable> contactParameters) {
         this.peerId = peerId;
         this.adapterId = adapterId;
         this.contactParameters = contactParameters;
@@ -39,11 +39,11 @@ public class PeerAddress {
         this.adapterId = adapterId;
     }
 
-    public List<Serializable> getContactParameters() {
+    public List<? extends Serializable> getContactParameters() {
         return contactParameters;
     }
 
-    public void setContactParameters(List<Serializable> contactParameters) {
+    public void setContactParameters(List<? extends Serializable> contactParameters) {
         this.contactParameters = contactParameters;
     }
 

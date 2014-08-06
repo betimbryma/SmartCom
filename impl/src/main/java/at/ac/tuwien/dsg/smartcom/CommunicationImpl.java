@@ -57,7 +57,7 @@ public class CommunicationImpl implements Communication {
     }
 
     @Override
-    public Identifier registerOutputAdapter(Class<OutputAdapter> adapter) throws CommunicationException {
+    public Identifier registerOutputAdapter(Class<? extends OutputAdapter> adapter) throws CommunicationException {
         return adapterManager.registerOutputAdapter(adapter);
     }
 

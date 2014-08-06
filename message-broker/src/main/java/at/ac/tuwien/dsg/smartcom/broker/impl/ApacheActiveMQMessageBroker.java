@@ -124,7 +124,9 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
         log.trace("Waiting for message in queue {}", destination);
         MessageConsumer consumer = null;
         try {
-            consumer = session.createConsumer(destination);
+            initLocalSessionAndProducer();
+
+            consumer = localSession.get().createConsumer(destination);
 
             Message msg =  (Message) ((ObjectMessage) consumer.receive()).getObject();
 

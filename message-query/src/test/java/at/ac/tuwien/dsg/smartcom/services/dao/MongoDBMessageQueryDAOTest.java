@@ -1,7 +1,7 @@
-package at.ac.tuwien.dsg.smartcom.dao;
+package at.ac.tuwien.dsg.smartcom.services.dao;
 
-import at.ac.tuwien.dsg.smartcom.QueryCriteriaImpl;
 import at.ac.tuwien.dsg.smartcom.model.QueryCriteria;
+import at.ac.tuwien.dsg.smartcom.services.QueryCriteriaImpl;
 import at.ac.tuwien.dsg.smartcom.utils.MessageQueryTestClass;
 import org.junit.Before;
 

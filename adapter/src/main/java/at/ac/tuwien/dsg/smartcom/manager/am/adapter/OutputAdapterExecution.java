@@ -1,11 +1,13 @@
 package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 
 import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.am.AddressResolver;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.utils.PredefinedMessageHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,9 +59,14 @@ public class OutputAdapterExecution implements Runnable {
             PeerAddress peerAddress = address.getPeerAddress(message.getReceiverId(), id);
 
             log.debug("Adapter {}: Sending message {} to peer {}", id, message, peerAddress);
-            adapter.push(message, peerAddress);
+            try {
+                adapter.push(message, peerAddress);
 
-            //TODO should we send an acknowledgement here?
+                //TODO should we send an acknowledgement here?
+                broker.publishControl(PredefinedMessageHelper.createAcknowledgeMessage(message));
+            } catch (AdapterException e) {
+                broker.publishControl(PredefinedMessageHelper.createCommunicationErrorMessage(message, e.getMessage()));
+            }
         }
     }
 }

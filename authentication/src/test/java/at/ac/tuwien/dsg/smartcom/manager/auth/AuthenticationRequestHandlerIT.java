@@ -5,9 +5,9 @@ import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
 import at.ac.tuwien.dsg.smartcom.manager.auth.dao.MongoDBAuthenticationSessionDAO;
-import at.ac.tuwien.dsg.smartcom.manager.auth.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.utils.PicoHelper;
 import org.junit.Before;
 

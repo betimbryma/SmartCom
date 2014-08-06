@@ -7,6 +7,7 @@ import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
+import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulExceptionAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
@@ -24,7 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class AdapterManagerOutputAdapterTest {
 
@@ -32,7 +33,7 @@ public class AdapterManagerOutputAdapterTest {
     private MessageBroker broker;
 
     private Identifier peerId1 = Identifier.peer("peer1");
-    private Identifier peerId2 = Identifier.peer("peer1");
+    private Identifier peerId2 = Identifier.peer("peer2");
 
     private MutablePicoContainer pico;
 
@@ -91,6 +92,14 @@ public class AdapterManagerOutputAdapterTest {
 
         assertNotNull("No input received!", input1);
         assertNotNull("No input received!", input2);
+
+        Message acknowledge1 = broker.receiveControl();
+        Message acknowledge2 = broker.receiveControl();
+
+        assertNotNull("No control received!", acknowledge1);
+        assertNotNull("No control received!", acknowledge2);
+        assertEquals("ACK", acknowledge1.getSubtype());
+        assertEquals("ACK", acknowledge2.getSubtype());
     }
 
     @Test(timeout = 2000l)
@@ -124,6 +133,44 @@ public class AdapterManagerOutputAdapterTest {
 
         assertNotNull("No input received!", input1);
         assertNotNull("No input received!", input2);
+
+        Message acknowledge1 = broker.receiveControl();
+        Message acknowledge2 = broker.receiveControl();
+
+        assertNotNull("No control received!", acknowledge1);
+        assertNotNull("No control received!", acknowledge2);
+        assertEquals("ACK", acknowledge1.getSubtype());
+        assertEquals("ACK", acknowledge2.getSubtype());
+    }
+
+    @Test()
+    public void testRegisterOutputAdapterWithAdapterThatThrowsException() throws CommunicationException {
+        manager.registerOutputAdapter(StatefulExceptionAdapter.class);
+
+        Identifier routing1 = manager.createEndpointForPeer(peerId1);
+        Identifier routing2 = manager.createEndpointForPeer(peerId2);
+
+        assertNull(routing1);
+
+        Message msg = new Message();
+        msg.setId(Identifier.message("2"));
+        msg.setReceiverId(peerId2);
+
+        broker.publishTask(routing2, msg);
+
+        synchronized (this) {
+            try {
+                wait(1000l);
+            } catch (InterruptedException ignored) {
+
+            }
+        }
+
+        Message control = broker.receiveControl();
+
+        assertNotNull("No control received!", control);
+        assertEquals("CONTROL", control.getType());
+        assertEquals("ERROR", control.getSubtype());
     }
 
     private class PMCallbackImpl implements PMCallback {
@@ -134,11 +181,15 @@ public class AdapterManagerOutputAdapterTest {
             if (peerId1.equals(id)) {
                 addresses.add(new PeerAddress(peerId1, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
                 addresses.add(new PeerAddress(peerId1, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+                List<String> parameters = new ArrayList<>();
+                parameters.add("test");
+                addresses.add(new PeerAddress(peerId1, Identifier.adapter("exception"), parameters));
             }
 
             if (peerId2.equals(id)) {
                 addresses.add(new PeerAddress(peerId2, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
                 addresses.add(new PeerAddress(peerId2, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+                addresses.add(new PeerAddress(peerId2, Identifier.adapter("exception"), Collections.EMPTY_LIST));
             }
 
             return addresses;

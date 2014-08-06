@@ -2,9 +2,9 @@ package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
-import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
 import org.junit.After;
 import org.junit.Before;

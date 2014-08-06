@@ -58,6 +58,7 @@ public class InputAdapterExecution implements Runnable {
                 response = adapter.pull();
             } catch (AdapterException e) {
                 log.error("Adapter {}: Error while checking response", id.getId(), e);
+                //TODO should we raise an error message here too? similar to the one in OutputAdapterExecution
             }
             if (response != null) {
                 enhanceMessage(response);

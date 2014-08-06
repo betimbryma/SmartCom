@@ -1,10 +1,10 @@
-package at.ac.tuwien.dsg.smartcom.dao;
+package at.ac.tuwien.dsg.smartcom.services.dao;
 
-import at.ac.tuwien.dsg.smartcom.QueryCriteriaImpl;
 import at.ac.tuwien.dsg.smartcom.exception.IllegalQueryException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.IdentifierType;
 import at.ac.tuwien.dsg.smartcom.model.Message;
+import at.ac.tuwien.dsg.smartcom.services.QueryCriteriaImpl;
 import com.mongodb.*;
 
 import java.net.UnknownHostException;

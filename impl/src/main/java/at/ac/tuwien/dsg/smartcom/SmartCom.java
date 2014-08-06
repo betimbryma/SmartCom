@@ -1,5 +1,8 @@
 package at.ac.tuwien.dsg.smartcom;
 
+import at.ac.tuwien.dsg.smartcom.adapters.AndroidOutputAdapter;
+import at.ac.tuwien.dsg.smartcom.adapters.DropboxOutputAdapter;
+import at.ac.tuwien.dsg.smartcom.adapters.RESTOutputAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.impl.ApacheActiveMQMessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.utils.ApacheActiveMQUtils;
 import at.ac.tuwien.dsg.smartcom.callback.CollectiveInfoCallback;
@@ -10,6 +13,16 @@ import at.ac.tuwien.dsg.smartcom.manager.am.AdapterExecutionEngine;
 import at.ac.tuwien.dsg.smartcom.manager.am.AdapterManagerImpl;
 import at.ac.tuwien.dsg.smartcom.manager.am.AddressResolver;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
+import at.ac.tuwien.dsg.smartcom.manager.auth.AuthenticationManagerImpl;
+import at.ac.tuwien.dsg.smartcom.manager.auth.AuthenticationRequestHandler;
+import at.ac.tuwien.dsg.smartcom.manager.auth.dao.MongoDBAuthenticationSessionDAO;
+import at.ac.tuwien.dsg.smartcom.messaging.logging.LoggingService;
+import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.LoggingDAO;
+import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.MongoDBLoggingDAO;
+import at.ac.tuwien.dsg.smartcom.services.MessageInfoService;
+import at.ac.tuwien.dsg.smartcom.services.MessageQueryService;
+import at.ac.tuwien.dsg.smartcom.services.MessageQueryServiceImpl;
+import at.ac.tuwien.dsg.smartcom.services.dao.MongoDBMessageQueryDAO;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
 import org.picocontainer.Characteristics;
@@ -60,7 +73,7 @@ public class SmartCom {
         try {
             mongoDB = new MongoDBInstance(-1); //uses standard port
             mongoDB.setUp();
-            mongoClient = mongoDB.getMongoClient();
+            mongoClient = mongoDB.getClient();
         } catch (IOException e) {
             throw new CommunicationException(e, new ErrorCode(1, "Could not create mongo database"));
         }
@@ -94,11 +107,21 @@ public class SmartCom {
 
     private void addDefaultAdapters() throws CommunicationException {
         //TODO
+
+        //Android adapter
+        communication.registerOutputAdapter(AndroidOutputAdapter.class);
+
+        //Dropbox adapter
+        communication.registerOutputAdapter(DropboxOutputAdapter.class);
+
+        //REST adapter
+        communication.registerOutputAdapter(RESTOutputAdapter.class);
     }
 
     private void initMessageQueryService() throws CommunicationException {
         log.debug("Initializing message query service");
-        //TODO
+        pico.addComponent(new MongoDBMessageQueryDAO(mongoClient, MONGODB_DATABASE, "log"));
+        pico.addComponent(MessageQueryServiceImpl.class);
     }
 
     private void initMessageInfoService() throws CommunicationException {
@@ -108,12 +131,18 @@ public class SmartCom {
 
     private void initAuthenticationManager() throws CommunicationException {
         log.debug("Initializing authentication manager");
-        //TODO
+        pico.addComponent(new MongoDBAuthenticationSessionDAO(mongoClient, MONGODB_DATABASE, "session"));
+        pico.addComponent(AuthenticationRequestHandler.class);
+        pico.addComponent(AuthenticationManagerImpl.class);
     }
 
     private void initMessagingAndRouting() throws CommunicationException {
         log.debug("Initializing messaging and routing manager");
         //TODO
+
+        //Logging
+        pico.addComponent(LoggingDAO.class, new MongoDBLoggingDAO(mongoClient, MONGODB_DATABASE, "logging"));
+        pico.addComponent(LoggingService.class);
     }
 
     private void initAdapterManager() throws CommunicationException {

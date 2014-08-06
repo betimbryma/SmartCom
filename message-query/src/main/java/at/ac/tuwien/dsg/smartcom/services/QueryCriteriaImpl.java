@@ -1,10 +1,10 @@
-package at.ac.tuwien.dsg.smartcom;
+package at.ac.tuwien.dsg.smartcom.services;
 
-import at.ac.tuwien.dsg.smartcom.dao.MessageQueryDAO;
 import at.ac.tuwien.dsg.smartcom.exception.IllegalQueryException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.QueryCriteria;
+import at.ac.tuwien.dsg.smartcom.services.dao.MessageQueryDAO;
 
 import java.util.Collection;
 import java.util.Date;

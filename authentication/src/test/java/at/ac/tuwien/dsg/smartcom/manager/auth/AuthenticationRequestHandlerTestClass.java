@@ -4,6 +4,7 @@ import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.utils.PicoHelper;
+import at.ac.tuwien.dsg.smartcom.utils.PredefinedMessageHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public abstract class AuthenticationRequestHandlerTestClass {
         //the content should be either "true" or "false".
         //Because the PMCallback will return either true or false depending on the content of the message
         //if the content is empty or anything else, it will throw an error
-        broker.publishAuthRequest(new Message.MessageBuilder().setSenderId(Identifier.peer("test1")).setContent("true").create());
+        broker.publishAuthRequest(PredefinedMessageHelper.createAuthenticationRequestMessage(Identifier.peer("test1"), "true"));
 
         Message message = broker.receiveControl();
         assertNotNull(message);
@@ -47,7 +48,7 @@ public abstract class AuthenticationRequestHandlerTestClass {
         assertEquals("AUTH", message.getType());
         assertEquals("REPLY", message.getSubtype());
 
-        broker.publishAuthRequest(new Message.MessageBuilder().setSenderId(Identifier.peer("test1")).setContent("false").create());
+        broker.publishAuthRequest(PredefinedMessageHelper.createAuthenticationRequestMessage(Identifier.peer("test1"), "false"));
 
         message = broker.receiveControl();
         assertNotNull(message);
@@ -55,7 +56,7 @@ public abstract class AuthenticationRequestHandlerTestClass {
         assertEquals("AUTH", message.getType());
         assertEquals("FAILED", message.getSubtype());
 
-        broker.publishAuthRequest(new Message.MessageBuilder().setSenderId(Identifier.peer("test1")).setContent("error").create());
+        broker.publishAuthRequest(PredefinedMessageHelper.createAuthenticationRequestMessage(Identifier.peer("test1"), "error"));
 
         message = broker.receiveControl();
         assertNotNull(message);

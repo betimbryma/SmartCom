@@ -9,10 +9,10 @@ import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
-import at.ac.tuwien.dsg.smartcom.manager.am.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
 import org.junit.After;
 import org.junit.Before;
@@ -28,8 +28,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class AdapterManagerIT {
     private static final int AMOUNT_OF_PEERS = 1000;
@@ -120,7 +119,12 @@ public class AdapterManagerIT {
 
         assertEquals("Not enough input received!", AMOUNT_OF_PEERS, counter);
 
-        System.out.println("remove");
+        for (int i = 0; i < AMOUNT_OF_PEERS; i++) {
+            Message acknowledge = broker.receiveControl();
+
+            assertNotNull("No control received!", acknowledge);
+            assertEquals("ACK", acknowledge.getSubtype());
+        }
 
         manager.removeOutputAdapter(statefulAdapterId);
 

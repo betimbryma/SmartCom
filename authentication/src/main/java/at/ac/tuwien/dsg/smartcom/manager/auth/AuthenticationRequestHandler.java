@@ -6,8 +6,8 @@ import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
 import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
 import at.ac.tuwien.dsg.smartcom.manager.auth.dao.AuthenticationSessionDAO;
-import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
+import at.ac.tuwien.dsg.smartcom.utils.PredefinedMessageHelper;
 import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +18,12 @@ import java.util.Calendar;
 import java.util.UUID;
 
 /**
+ * Handler that waits for authentication requests and handles them properly. Therefore
+ * it registers itself at the message broker as a listener for authentication messages.
+ * Upon reception of such a message, the handler will check if the provided credentials
+ * are correct by asking the PMCallback. If they are correct, the handler will create
+ * a new security token that can be used by a peer for a predefined time.
+ *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
@@ -27,15 +33,15 @@ public class AuthenticationRequestHandler implements MessageListener {
     public static final int DEFAULT_SESSION_VALIDITY_IN_MINUTES = 10;
 
     @Inject
-    private AuthenticationSessionDAO dao;
+    private AuthenticationSessionDAO dao; //used to persist the newly created session
 
     @Inject
-    private MessageBroker broker;
+    private MessageBroker broker; //used to register itself as a listener and to send respond messages
 
     @Inject
-    private PMCallback callback;
+    private PMCallback callback; //used to check if the credentials are correct
 
-    private CancelableListener listenerRegistration;
+    private CancelableListener listenerRegistration; //used to cancel the registration as listener when shutting down.
 
     @PostConstruct
     public void init() {
@@ -54,40 +60,36 @@ public class AuthenticationRequestHandler implements MessageListener {
         cal.add(Calendar.MINUTE, DEFAULT_SESSION_VALIDITY_IN_MINUTES);
 
         Message msg;
-        Message.MessageBuilder builder = new Message.MessageBuilder()
-                .setReceiverId(message.getSenderId())
-                .setSenderId(Identifier.component("AuthenticationManager"))
-                .setType("AUTH");
         try {
+            //check if the credentials are correct
+            //the sender of the message provides the peer id and the message itself contains the password
             if (callback.authenticate(message.getSenderId(), message.getContent())) {
+
+                //create a new session and store its value in the database
                 String session = createSessionId();
                 dao.persistSession(message.getSenderId(), session, cal.getTime());
                 log.debug("Created session with token {} for peer {}", session, message.getSenderId());
 
                 //Transfer the session id to the sender
-                msg = builder
-                        .setContent(session)
-                        .setSubtype("REPLY")
-                        .create();
+                msg = PredefinedMessageHelper.createAuthenticationSuccessfulMessage(message.getSenderId(), session);
             } else {
                 //Tell the sender that his request was not valid
-                msg = builder
-                        .setSubtype("FAILED")
-                        .create();
+                msg = PredefinedMessageHelper.createAuthenticationFailedMessage(message.getSenderId());
             }
         } catch (PeerAuthenticationException e) {
             log.error("An error occurred during the authentication", e);
 
             //Tell the sander that there was an error
-            msg = builder
-                    .setContent("An error occurred during the authentication: "+e.getLocalizedMessage())
-                    .setSubtype("ERROR")
-                    .create();
+            msg = PredefinedMessageHelper.createAuthenticationErrorMessage(message.getSenderId(), e.getLocalizedMessage());
         }
 
         broker.publishControl(msg);
     }
 
+    /**
+     * Creates a unique session id
+     * @return unique session id
+     */
     private String createSessionId() {
         return UUID.randomUUID().toString();
     }

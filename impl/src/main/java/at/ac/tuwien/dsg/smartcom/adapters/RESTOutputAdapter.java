@@ -2,6 +2,7 @@ package at.ac.tuwien.dsg.smartcom.adapters;
 
 import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
+import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.adapters.rest.JsonMessageDTO;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
@@ -32,7 +33,7 @@ public class RESTOutputAdapter implements OutputAdapter {
     }
 
     @Override
-    public void push(Message message, PeerAddress address) {
+    public void push(Message message, PeerAddress address) throws AdapterException {
         String url = (String) address.getContactParameters().get(0);
 
         WebTarget target = client.target(url);
@@ -41,6 +42,7 @@ public class RESTOutputAdapter implements OutputAdapter {
 
         if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
             log.error("Could not send message {} to peer address {}\nResponse: {}", message, address, response);
+            throw new AdapterException("Could not send message to peer!");
         }
     }
 }

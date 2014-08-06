@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.adapters;
 
+import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.adapters.rest.ObjectMapperProvider;
 import at.ac.tuwien.dsg.smartcom.adapters.rest.RESTResource;
 import at.ac.tuwien.dsg.smartcom.adapters.rest.TestSynchronizer;
@@ -71,7 +72,11 @@ public class RESTOutputAdapterTest {
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    adapter.push(message, new PeerAddress(Identifier.peer("peer"), Identifier.adapter("adapter"), list));
+                    try {
+                        adapter.push(message, new PeerAddress(Identifier.peer("peer"), Identifier.adapter("adapter"), list));
+                    } catch (AdapterException e) {
+                        e.printStackTrace();
+                    }
                 }
             });
         }

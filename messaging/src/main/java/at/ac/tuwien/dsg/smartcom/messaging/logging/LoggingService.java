@@ -1,5 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.messaging.logging;
 
+import at.ac.tuwien.dsg.smartcom.broker.CancelableListener;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
 import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.LoggingDAO;
@@ -7,6 +8,7 @@ import at.ac.tuwien.dsg.smartcom.model.Message;
 import org.picocontainer.annotations.Inject;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -19,10 +21,16 @@ public class LoggingService implements MessageListener {
 
     @Inject
     private MessageBroker broker;
+    private CancelableListener registration;
 
     @PostConstruct
     public void init() {
-        broker.registerLogListener(this);
+        registration = broker.registerLogListener(this);
+    }
+
+    @PreDestroy
+    public void preDestroy() {
+        registration.cancel();
     }
 
     @Override

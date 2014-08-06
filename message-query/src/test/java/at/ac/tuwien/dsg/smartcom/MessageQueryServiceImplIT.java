@@ -1,7 +1,9 @@
 package at.ac.tuwien.dsg.smartcom;
 
-import at.ac.tuwien.dsg.smartcom.dao.MongoDBMessageQueryDAO;
 import at.ac.tuwien.dsg.smartcom.model.QueryCriteria;
+import at.ac.tuwien.dsg.smartcom.services.MessageQueryService;
+import at.ac.tuwien.dsg.smartcom.services.MessageQueryServiceImpl;
+import at.ac.tuwien.dsg.smartcom.services.dao.MongoDBMessageQueryDAO;
 import at.ac.tuwien.dsg.smartcom.utils.MessageQueryTestClass;
 import at.ac.tuwien.dsg.smartcom.utils.PicoHelper;
 import org.junit.Before;

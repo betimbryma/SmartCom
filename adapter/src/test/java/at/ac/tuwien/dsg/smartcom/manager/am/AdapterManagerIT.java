@@ -3,17 +3,15 @@ package at.ac.tuwien.dsg.smartcom.manager.am;
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
-import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
-import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
-import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.manager.dao.MongoDBPeerChannelAddressResolverDAO;
+import at.ac.tuwien.dsg.smartcom.model.*;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +20,6 @@ import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,10 +46,9 @@ public class AdapterManagerIT {
         pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
         //mocks
         pico.as(Characteristics.CACHE).addComponent(SimpleMessageBroker.class);
-        pico.as(Characteristics.CACHE).addComponent(new PMCallbackImpl());
 
         //mongodb resolver dao
-        pico.as(Characteristics.CACHE).addComponent(new MongoDBResolverDAO(mongo, "test-resolver", "resolver"));
+        pico.as(Characteristics.CACHE).addComponent(new MongoDBPeerChannelAddressResolverDAO(mongo, "test-resolver", "resolver"));
 
         //real implementations
         pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
@@ -80,18 +76,27 @@ public class AdapterManagerIT {
 
         List<Identifier> adapterIds = new ArrayList<>(AMOUNT_OF_PEERS);
         List<Identifier[]> rules = new ArrayList<>(AMOUNT_OF_PEERS);
-        List<Identifier> peers = new ArrayList<>(AMOUNT_OF_PEERS);
+        List<PeerInfo> peerInfos = new ArrayList<>(AMOUNT_OF_PEERS);
         for (int i = 0; i < AMOUNT_OF_PEERS; i++) {
-            peers.add(Identifier.peer("peer"+i));
+            Identifier id = Identifier.peer("peer"+i);
+
+            List<PeerChannelAddress> addresses = new ArrayList<>();
+            addresses.add(new PeerChannelAddress(id, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
+            addresses.add(new PeerChannelAddress(id, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+
+            Collections.shuffle(addresses);
+
+            peerInfos.add(new PeerInfo(id, DeliveryPolicy.Peer.PREFERRED, Collections.EMPTY_LIST, addresses));
         }
 
-        for (Identifier peer : peers) {
-            Identifier route = manager.createEndpointForPeer(peer);
+        for (PeerInfo peer : peerInfos) {
+            List<Identifier> routes = manager.createEndpointForPeer(peer);
+            assertThat(routes, Matchers.not(Matchers.empty()));
             Identifier[] array = new Identifier[2];
-            array[0] = route;
-            array[1] = peer;
+            array[0] = routes.get(0);
+            array[1] = peer.getId();
             rules.add(array);
-            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId()+"."+route.returnIdWithoutPostfix()), 0));
+            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId().getId()+"."+array[0].returnIdWithoutPostfix()), 0));
         }
 
         InputListener listener = new InputListener();
@@ -101,7 +106,7 @@ public class AdapterManagerIT {
         for (Identifier[] rule : rules) {
             Message msg = new Message();
             msg.setReceiverId(rule[1]);
-            broker.publishTask(rule[0], msg);
+            broker.publishOutput(rule[0], msg);
         }
 
         for (Identifier adapterId : adapterIds) {
@@ -131,7 +136,7 @@ public class AdapterManagerIT {
         for (Identifier[] rule : rules) {
             Message msg = new Message();
             msg.setReceiverId(rule[1]);
-            broker.publishTask(rule[0], msg);
+            broker.publishOutput(rule[0], msg);
         }
 
         for (Identifier adapterId : adapterIds) {
@@ -148,25 +153,6 @@ public class AdapterManagerIT {
         }
 
         assertThat("No more requests handled after removed one (of two) output adapters!", listener.counter.get(), greaterThanOrEqualTo(counter));
-    }
-    
-    private class PMCallbackImpl implements PMCallback {
-        @Override
-        public Collection<PeerAddress> getPeerAddress(Identifier id) {
-            List<PeerAddress> addresses = new ArrayList<>();
-
-            addresses.add(new PeerAddress(id, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
-            addresses.add(new PeerAddress(id, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
-
-            Collections.shuffle(addresses);
-
-            return addresses;
-        }
-
-        @Override
-        public boolean authenticate(Identifier peerId, String password) {
-            return false;
-        }
     }
 
     private class InputListener implements MessageListener {

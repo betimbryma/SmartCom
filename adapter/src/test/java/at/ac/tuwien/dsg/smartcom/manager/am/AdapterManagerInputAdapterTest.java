@@ -1,7 +1,6 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
-import at.ac.tuwien.dsg.smartcom.SimplePeerManager;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
@@ -36,8 +35,7 @@ public class AdapterManagerInputAdapterTest {
         pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
         //mocks
         pico.as(Characteristics.CACHE).addComponent(SimpleMessageBroker.class);
-        pico.as(Characteristics.CACHE).addComponent(SimplePeerManager.class);
-        pico.as(Characteristics.CACHE).addComponent(SimpleAddressResolverDAO.class);
+        pico.as(Characteristics.CACHE).addComponent(SimpleAddressPeerChannelAddressResolverDAO.class);
 
         //real implementations
         pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
@@ -131,13 +129,8 @@ public class AdapterManagerInputAdapterTest {
         }
 
         @Override
-        public void preDestroy() {
-            text = "destroyed";
-        }
-
-        @Override
         protected void cleanUp() {
-
+            text = "destroyed";
         }
     }
 }

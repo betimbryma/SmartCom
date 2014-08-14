@@ -6,7 +6,7 @@ import at.ac.tuwien.dsg.smartcom.adapters.rest.RESTResource;
 import at.ac.tuwien.dsg.smartcom.adapters.rest.TestSynchronizer;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -73,7 +73,7 @@ public class RESTOutputAdapterTest {
                 @Override
                 public void run() {
                     try {
-                        adapter.push(message, new PeerAddress(Identifier.peer("peer"), Identifier.adapter("adapter"), list));
+                        adapter.push(message, new PeerChannelAddress(Identifier.peer("peer"), Identifier.adapter("adapter"), list));
                     } catch (AdapterException e) {
                         e.printStackTrace();
                     }

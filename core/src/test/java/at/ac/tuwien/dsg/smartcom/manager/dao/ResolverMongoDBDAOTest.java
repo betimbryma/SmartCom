@@ -1,7 +1,7 @@
-package at.ac.tuwien.dsg.smartcom.manager.am.dao;
+package at.ac.tuwien.dsg.smartcom.manager.dao;
 
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -24,7 +24,7 @@ public class ResolverMongoDBDAOTest {
     private final Identifier adapter2 = Identifier.adapter("adapter2");
     private MongoDBInstance mongoDB;
 
-    private MongoDBResolverDAO resolver;
+    private MongoDBPeerChannelAddressResolverDAO resolver;
     private DBCollection collection;
 
     @Before
@@ -34,7 +34,7 @@ public class ResolverMongoDBDAOTest {
 
         MongoClient mongo = new MongoClient("localhost", 12345);
         collection = mongo.getDB("test-resolver").getCollection("resolver");
-        resolver = new MongoDBResolverDAO(mongo, "test-resolver", "resolver");
+        resolver = new MongoDBPeerChannelAddressResolverDAO(mongo, "test-resolver", "resolver");
     }
 
     @After
@@ -49,9 +49,9 @@ public class ResolverMongoDBDAOTest {
         strings.add("second");
         strings.add("third");
 
-        PeerAddress address1 = new PeerAddress(peer1, adapter1, strings);
-        PeerAddress address2 = new PeerAddress(this.peer1, adapter2, Collections.EMPTY_LIST);
-        PeerAddress address3 = new PeerAddress(peer2, adapter1, Collections.EMPTY_LIST);
+        PeerChannelAddress address1 = new PeerChannelAddress(peer1, adapter1, strings);
+        PeerChannelAddress address2 = new PeerChannelAddress(this.peer1, adapter2, Collections.EMPTY_LIST);
+        PeerChannelAddress address3 = new PeerChannelAddress(peer2, adapter1, Collections.EMPTY_LIST);
 
         resolver.insert(address1);
         resolver.insert(address2);
@@ -64,21 +64,21 @@ public class ResolverMongoDBDAOTest {
         boolean address3found = false;
 
         for (DBObject dbObject : collection.find()) {
-            PeerAddress address = resolver.deserializePeerAddress(dbObject);
+            PeerChannelAddress address = resolver.deserializePeerAddress(dbObject);
             assertNotNull("PeerId null!", address.getPeerId());
-            assertNotNull("AdapterId null!", address.getAdapterId());
+            assertNotNull("AdapterId null!", address.getChannelType());
             assertNotNull("Parameters null!", address.getContactParameters());
 
             if ("peer1".equals(address.getPeerId().getId())) {
-                if ("adapter1".equals(address.getAdapterId().getId()) && address.equals(address1)) {
+                if ("adapter1".equals(address.getChannelType().getId()) && address.equals(address1)) {
                     address1found = true;
                     assertEquals(3, address.getContactParameters().size());
-                } else if ("adapter2".equals(address.getAdapterId().getId()) && address.equals(address2)) {
+                } else if ("adapter2".equals(address.getChannelType().getId()) && address.equals(address2)) {
                     address2found = true;
                 } else {
                     fail("address does not match any inserted addresses!");
                 }
-            } else if ("peer2".equals(address.getPeerId().getId()) && "adapter1".equals(address.getAdapterId().getId()) && address.equals(address3)) {
+            } else if ("peer2".equals(address.getPeerId().getId()) && "adapter1".equals(address.getChannelType().getId()) && address.equals(address3)) {
                 address3found = true;
             } else {
                 fail("address does not match any inserted addresses!");
@@ -92,9 +92,9 @@ public class ResolverMongoDBDAOTest {
 
     @Test
     public void testFind() throws Exception {
-        PeerAddress address1 = new PeerAddress(peer1, adapter1, Collections.EMPTY_LIST);
-        PeerAddress address2 = new PeerAddress(peer1, adapter2, Collections.EMPTY_LIST);
-        PeerAddress address3 = new PeerAddress(peer2, adapter1, Collections.EMPTY_LIST);
+        PeerChannelAddress address1 = new PeerChannelAddress(peer1, adapter1, Collections.EMPTY_LIST);
+        PeerChannelAddress address2 = new PeerChannelAddress(peer1, adapter2, Collections.EMPTY_LIST);
+        PeerChannelAddress address3 = new PeerChannelAddress(peer2, adapter1, Collections.EMPTY_LIST);
 
         collection.insert(resolver.serializePeerAddress(address1));
         collection.insert(resolver.serializePeerAddress(address2));
@@ -114,9 +114,9 @@ public class ResolverMongoDBDAOTest {
 
     @Test
     public void testRemove() throws Exception {
-        PeerAddress address1 = new PeerAddress(peer1, adapter1, Collections.EMPTY_LIST);
-        PeerAddress address2 = new PeerAddress(peer1, adapter2, Collections.EMPTY_LIST);
-        PeerAddress address3 = new PeerAddress(peer2, adapter1, Collections.EMPTY_LIST);
+        PeerChannelAddress address1 = new PeerChannelAddress(peer1, adapter1, Collections.EMPTY_LIST);
+        PeerChannelAddress address2 = new PeerChannelAddress(peer1, adapter2, Collections.EMPTY_LIST);
+        PeerChannelAddress address3 = new PeerChannelAddress(peer2, adapter1, Collections.EMPTY_LIST);
 
         collection.insert(resolver.serializePeerAddress(address1));
         collection.insert(resolver.serializePeerAddress(address2));

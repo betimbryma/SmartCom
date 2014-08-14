@@ -10,5 +10,5 @@ import java.io.Serializable;
  * @version 1.0
  */
 public enum IdentifierType implements Serializable{
-    PEER, COLLECTIVE, ADAPTER, COMPONENT, ROUTING_RULE, MESSAGE
+    PEER, COLLECTIVE, ADAPTER, COMPONENT, ROUTING_RULE, MESSAGE, CHANNEL
 }

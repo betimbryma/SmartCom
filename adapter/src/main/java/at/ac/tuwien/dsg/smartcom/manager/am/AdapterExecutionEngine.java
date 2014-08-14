@@ -34,7 +34,7 @@ public class AdapterExecutionEngine implements TaskScheduler{
     private MessageBroker broker; //used to send and receive messages
 
     private final Map<Identifier, InputAdapterExecution> inputAdapterMap = new HashMap<>(); //map of identifiers of adapters and the corresponding adapter executions
-    private final Map<Identifier, IInputPushAdapter> pushAdapterFacadeMap = new HashMap<>();
+    private final Map<Identifier, InputPushAdapter> pushAdapterFacadeMap = new HashMap<>();
     private final Map<Identifier, List<TimerTask>> taskMap = new HashMap<>();
     private final Map<Identifier, OutputAdapterExecution> outputAdapterMap = new HashMap<>();
     private final Map<Identifier, Future<?>> futureMap = new HashMap<>();
@@ -97,7 +97,7 @@ public class AdapterExecutionEngine implements TaskScheduler{
      * @param adapter instance of a input push adapter
      * @param id of the adapter
      */
-    void addInputAdapter(IInputPushAdapter adapter, Identifier id) {
+    void addInputAdapter(InputPushAdapter adapter, Identifier id) {
         log.info("Adding push adapter with id {}", id);
         //just add it to the managed adapters because they will organize their execution on their own
         pushAdapterFacadeMap.put(id, adapter);
@@ -131,7 +131,7 @@ public class AdapterExecutionEngine implements TaskScheduler{
     InputAdapter removeInputAdapter(Identifier id) {
         log.debug("Removing adapter with id {}", id);
         //check if it is a push adapter
-        IInputPushAdapter adapter = pushAdapterFacadeMap.get(id);
+        InputPushAdapter adapter = pushAdapterFacadeMap.get(id);
         if (adapter != null) {
             //simply destroy the adapter itself if it's a push adapter
             adapter.preDestroy();

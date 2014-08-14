@@ -3,16 +3,14 @@ package at.ac.tuwien.dsg.smartcom.manager.am;
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
-import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulExceptionAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
-import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.*;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +19,6 @@ import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +28,9 @@ public class AdapterManagerOutputAdapterTest {
 
     private AdapterManager manager;
     private MessageBroker broker;
+
+    private PeerInfo peerInfo1;
+    private PeerInfo peerInfo2;
 
     private Identifier peerId1 = Identifier.peer("peer1");
     private Identifier peerId2 = Identifier.peer("peer2");
@@ -43,8 +43,7 @@ public class AdapterManagerOutputAdapterTest {
 
         //mocks
         pico.as(Characteristics.CACHE).addComponent(SimpleMessageBroker.class);
-        pico.as(Characteristics.CACHE).addComponent(new PMCallbackImpl());
-        pico.as(Characteristics.CACHE).addComponent(SimpleAddressResolverDAO.class);
+        pico.as(Characteristics.CACHE).addComponent(SimpleAddressPeerChannelAddressResolverDAO.class);
 
         //real implementations
         pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
@@ -55,6 +54,20 @@ public class AdapterManagerOutputAdapterTest {
         manager = pico.getComponent(AdapterManagerImpl.class);
 
         pico.start();
+
+        List<PeerChannelAddress> addresses1 = new ArrayList<>();
+        addresses1.add(new PeerChannelAddress(peerId1, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
+        addresses1.add(new PeerChannelAddress(peerId1, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+        List<String> parameters = new ArrayList<>();
+        parameters.add("test");
+        addresses1.add(new PeerChannelAddress(peerId1, Identifier.adapter("exception"), parameters));
+        peerInfo1 = new PeerInfo(peerId1, DeliveryPolicy.Peer.PREFERRED, Collections.EMPTY_LIST, addresses1);
+
+        List<PeerChannelAddress> addresses2 = new ArrayList<>();
+        addresses2.add(new PeerChannelAddress(peerId2, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
+        addresses2.add(new PeerChannelAddress(peerId2, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+        addresses2.add(new PeerChannelAddress(peerId2, Identifier.adapter("exception"), Collections.EMPTY_LIST));
+        peerInfo2 = new PeerInfo(peerId2, DeliveryPolicy.Peer.PREFERRED, Collections.EMPTY_LIST, addresses2);
     }
 
     @After
@@ -72,8 +85,8 @@ public class AdapterManagerOutputAdapterTest {
 
         manager.registerOutputAdapter(StatelessAdapter.class);
 
-        Identifier routing1 = manager.createEndpointForPeer(peerId1);
-        Identifier routing2 = manager.createEndpointForPeer(peerId2);
+        Identifier routing1 = manager.createEndpointForPeer(peerInfo1).get(0);
+        Identifier routing2 = manager.createEndpointForPeer(peerInfo2).get(0);
 
         Message msg1 = new Message();
         msg1.setReceiverId(peerId1);
@@ -81,8 +94,8 @@ public class AdapterManagerOutputAdapterTest {
         Message msg2 = new Message();
         msg2.setReceiverId(peerId2);
 
-        broker.publishTask(routing1, msg1);
-        broker.publishTask(routing2, msg2);
+        broker.publishOutput(routing1, msg1);
+        broker.publishOutput(routing2, msg2);
 
         broker.publishRequest(id1, new Message());
         broker.publishRequest(id2, new Message());
@@ -111,8 +124,8 @@ public class AdapterManagerOutputAdapterTest {
 
         manager.registerOutputAdapter(StatefulAdapter.class);
 
-        Identifier routing1 = manager.createEndpointForPeer(peerId1);
-        Identifier routing2 = manager.createEndpointForPeer(peerId2);
+        Identifier routing1 = manager.createEndpointForPeer(peerInfo1).get(0);
+        Identifier routing2 = manager.createEndpointForPeer(peerInfo2).get(0);
 
         Message msg1 = new Message();
         msg1.setId(Identifier.message("1"));
@@ -122,8 +135,8 @@ public class AdapterManagerOutputAdapterTest {
         msg2.setId(Identifier.message("2"));
         msg2.setReceiverId(peerId2);
 
-        broker.publishTask(routing1, msg1);
-        broker.publishTask(routing2, msg2);
+        broker.publishOutput(routing1, msg1);
+        broker.publishOutput(routing2, msg2);
 
         broker.publishRequest(id1, new Message.MessageBuilder().setId(Identifier.message("3")).create());
         broker.publishRequest(id2, new Message.MessageBuilder().setId(Identifier.message("4")).create());
@@ -133,6 +146,14 @@ public class AdapterManagerOutputAdapterTest {
 
         assertNotNull("No input received!", input1);
         assertNotNull("No input received!", input2);
+
+        synchronized (this) {
+            try {
+                wait(1000);
+            } catch (InterruptedException ignored) {
+
+            }
+        }
 
         Message acknowledge1 = broker.receiveControl();
         Message acknowledge2 = broker.receiveControl();
@@ -147,16 +168,14 @@ public class AdapterManagerOutputAdapterTest {
     public void testRegisterOutputAdapterWithAdapterThatThrowsException() throws CommunicationException {
         manager.registerOutputAdapter(StatefulExceptionAdapter.class);
 
-        Identifier routing1 = manager.createEndpointForPeer(peerId1);
-        Identifier routing2 = manager.createEndpointForPeer(peerId2);
-
-        assertNull(routing1);
+        assertThat(manager.createEndpointForPeer(peerInfo1), Matchers.empty());
+        Identifier routing2 = manager.createEndpointForPeer(peerInfo2).get(0);
 
         Message msg = new Message();
         msg.setId(Identifier.message("2"));
         msg.setReceiverId(peerId2);
 
-        broker.publishTask(routing2, msg);
+        broker.publishOutput(routing2, msg);
 
         synchronized (this) {
             try {
@@ -170,34 +189,6 @@ public class AdapterManagerOutputAdapterTest {
 
         assertNotNull("No control received!", control);
         assertEquals("CONTROL", control.getType());
-        assertEquals("ERROR", control.getSubtype());
-    }
-
-    private class PMCallbackImpl implements PMCallback {
-        @Override
-        public Collection<PeerAddress> getPeerAddress(Identifier id) {
-            List<PeerAddress> addresses = new ArrayList<>();
-
-            if (peerId1.equals(id)) {
-                addresses.add(new PeerAddress(peerId1, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
-                addresses.add(new PeerAddress(peerId1, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
-                List<String> parameters = new ArrayList<>();
-                parameters.add("test");
-                addresses.add(new PeerAddress(peerId1, Identifier.adapter("exception"), parameters));
-            }
-
-            if (peerId2.equals(id)) {
-                addresses.add(new PeerAddress(peerId2, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
-                addresses.add(new PeerAddress(peerId2, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
-                addresses.add(new PeerAddress(peerId2, Identifier.adapter("exception"), Collections.EMPTY_LIST));
-            }
-
-            return addresses;
-        }
-
-        @Override
-        public boolean authenticate(Identifier username, String password) {
-            return false;
-        }
+        assertEquals("COMERROR", control.getSubtype());
     }
 }

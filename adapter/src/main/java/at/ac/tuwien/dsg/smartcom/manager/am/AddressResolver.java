@@ -1,8 +1,8 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
-import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
+import at.ac.tuwien.dsg.smartcom.manager.dao.PeerChannelAddressResolverDAO;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -30,10 +30,10 @@ public class AddressResolver {
     private static final Logger log = LoggerFactory.getLogger(AddressResolver.class);
     private static final int DEFAULT_CACHE_SIZE = 1000;
 
-    private final LoadingCache<AddressKey, PeerAddress> cache;
+    private final LoadingCache<AddressKey, PeerChannelAddress> cache;
 
     @Inject
-    private ResolverDAO dao; //DAO that is used to find, persist and delete peer addresses
+    private PeerChannelAddressResolverDAO dao; //DAO that is used to find, persist and delete peer addresses
 
     /**
      * Create a new address resolver with the default cache size.
@@ -60,11 +60,11 @@ public class AddressResolver {
                 .expireAfterWrite(10, TimeUnit.MINUTES)
                 .build(
                         //load entries from the database in case of a cache miss
-                        new CacheLoader<AddressKey, PeerAddress>() {
+                        new CacheLoader<AddressKey, PeerChannelAddress>() {
                             @Override
-                            public PeerAddress load(AddressKey addressKey) throws Exception {
+                            public PeerChannelAddress load(AddressKey addressKey) throws Exception {
                                 log.debug("loading address {} from database", addressKey);
-                                PeerAddress address = AddressResolver.this.dao.find(addressKey.peerId, addressKey.adapterId);
+                                PeerChannelAddress address = AddressResolver.this.dao.find(addressKey.peerId, addressKey.adapterId);
 
                                 //throw an exception if there is no such address because it is not allowed to return null here
                                 if (address == null) {
@@ -86,7 +86,7 @@ public class AddressResolver {
      * @param adapterId if of the adapter
      * @return a corresponding address or null if there is no such address
      */
-    public PeerAddress getPeerAddress(Identifier peerId, Identifier adapterId) {
+    public PeerChannelAddress getPeerAddress(Identifier peerId, Identifier adapterId) {
         try {
             return cache.get(new AddressKey(peerId, Identifier.adapter(adapterId.returnIdWithoutPostfix())));
         } catch (ExecutionException e) {
@@ -107,9 +107,9 @@ public class AddressResolver {
      *
      * @param address the new peer address.
      */
-    public void addPeerAddress(PeerAddress address) {
+    public void addPeerAddress(PeerChannelAddress address) {
         dao.insert(address);
-        cache.put(new AddressKey(address.getPeerId(), address.getAdapterId()), address);
+        cache.put(new AddressKey(address.getPeerId(), address.getChannelType()), address);
     }
 
     /**

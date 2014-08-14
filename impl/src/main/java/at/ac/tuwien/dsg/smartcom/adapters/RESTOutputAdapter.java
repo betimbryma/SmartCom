@@ -5,7 +5,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
 import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.adapters.rest.JsonMessageDTO;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class RESTOutputAdapter implements OutputAdapter {
     }
 
     @Override
-    public void push(Message message, PeerAddress address) throws AdapterException {
+    public void push(Message message, PeerChannelAddress address) throws AdapterException {
         String url = (String) address.getContactParameters().get(0);
 
         WebTarget target = client.target(url);

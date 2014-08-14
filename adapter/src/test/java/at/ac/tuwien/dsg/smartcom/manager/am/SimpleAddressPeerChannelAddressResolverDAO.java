@@ -1,8 +1,8 @@
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
-import at.ac.tuwien.dsg.smartcom.manager.am.dao.ResolverDAO;
+import at.ac.tuwien.dsg.smartcom.manager.dao.PeerChannelAddressResolverDAO;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,18 +11,18 @@ import java.util.Map;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public class SimpleAddressResolverDAO implements ResolverDAO {
+public class SimpleAddressPeerChannelAddressResolverDAO implements PeerChannelAddressResolverDAO {
 
-    private Map<String, PeerAddress> addresses = new HashMap<>();
+    private Map<String, PeerChannelAddress> addresses = new HashMap<>();
     private int requests = 0;
 
     @Override
-    public synchronized void insert(PeerAddress address) {
-        addresses.put(address.getPeerId().getId()+"."+address.getAdapterId().getId(), address);
+    public synchronized void insert(PeerChannelAddress address) {
+        addresses.put(address.getPeerId().getId()+"."+address.getChannelType().getId(), address);
     }
 
     @Override
-    public synchronized PeerAddress find(Identifier peerId, Identifier adapterId) {
+    public synchronized PeerChannelAddress find(Identifier peerId, Identifier adapterId) {
         requests++;
         return addresses.get(peerId.getId()+"."+adapterId.getId());
     }

@@ -6,6 +6,9 @@ import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
+import at.ac.tuwien.dsg.smartcom.model.PeerInfo;
+
+import java.util.List;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -56,8 +59,8 @@ public interface AdapterManager {
      * endpoint, a corresponding routing rule will be returned. If there is no such
      * adapter available, a new one will be created (based on available contact information
      * of the peer) and a corresponding routing rule will be returned.
-     * @param peerId id of the peer that requires a new endpoint
+     * @param peerInfo information provided on the peer
      * @return the identifier of the new endpoint for the peer
      */
-    public Identifier createEndpointForPeer(Identifier peerId);
+    public List<Identifier> createEndpointForPeer(PeerInfo peerInfo);
 }

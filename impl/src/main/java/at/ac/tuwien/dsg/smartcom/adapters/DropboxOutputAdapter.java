@@ -4,7 +4,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
 import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import com.dropbox.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ public class DropboxOutputAdapter implements OutputAdapter {
     private final DbxClient client;
     private final String path;
 
-    public DropboxOutputAdapter(PeerAddress address) throws AdapterException {
+    public DropboxOutputAdapter(PeerChannelAddress address) throws AdapterException {
         DbxRequestConfig config = new DbxRequestConfig("SmartCom Adapter", Locale.getDefault().toString());
         client = new DbxClient(config, (String) address.getContactParameters().get(0));
 
@@ -37,7 +37,7 @@ public class DropboxOutputAdapter implements OutputAdapter {
     }
 
     @Override
-    public void push(Message message, PeerAddress address) throws AdapterException {
+    public void push(Message message, PeerChannelAddress address) throws AdapterException {
         File taskFile = null;
         try {
             taskFile = File.createTempFile("task_"+message.getConversationId(), "task");

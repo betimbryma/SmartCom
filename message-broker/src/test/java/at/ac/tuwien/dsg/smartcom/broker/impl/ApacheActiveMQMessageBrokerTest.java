@@ -59,9 +59,9 @@ public class ApacheActiveMQMessageBrokerTest {
 
     @Test
     public void testReceiveTasks() throws Exception {
-        Method receive = broker.getClass().getMethod("receiveTasks", Identifier.class);
-        Method publish = broker.getClass().getMethod("publishTask", Identifier.class, Message.class);
-        Method listener = broker.getClass().getMethod("registerTaskListener", Identifier.class, MessageListener.class);
+        Method receive = broker.getClass().getMethod("receiveOutput", Identifier.class);
+        Method publish = broker.getClass().getMethod("publishOutput", Identifier.class, Message.class);
+        Method listener = broker.getClass().getMethod("registerOutputListener", Identifier.class, MessageListener.class);
 
         parametrizedTest(receive, publish, listener, Identifier.adapter("test"));
     }

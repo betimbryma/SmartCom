@@ -6,14 +6,13 @@ import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
-import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
-import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.exception.ErrorCode;
 import at.ac.tuwien.dsg.smartcom.manager.AdapterManager;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerInfo;
 import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +35,6 @@ public class AdapterManagerImpl implements AdapterManager {
 
     @Inject
     private AdapterExecutionEngine executionEngine; //used to execute adapters
-
-    @Inject
-    private PMCallback peerManager; //used to get information upon peers
 
     @Inject
     private MessageBroker broker; //sending and receiving messages
@@ -179,10 +175,10 @@ public class AdapterManagerImpl implements AdapterManager {
      * @throws InstantiationException could not instantiate the adapter using the default constructor
      * @see AdapterManagerImpl#instantiateClass(Class)
      */
-    private OutputAdapter instantiateClass(Class<? extends OutputAdapter> adapter, PeerAddress address) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+    private OutputAdapter instantiateClass(Class<? extends OutputAdapter> adapter, PeerChannelAddress address) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
         try {
             //look for a constructor that has a single parameter of type PeerAddress
-            Constructor<? extends OutputAdapter> constructor = adapter.getDeclaredConstructor(PeerAddress.class);
+            Constructor<? extends OutputAdapter> constructor = adapter.getDeclaredConstructor(PeerChannelAddress.class);
             if (constructor != null) {
                 return constructor.newInstance(address);
             }
@@ -195,43 +191,53 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public Identifier createEndpointForPeer(Identifier peerId) {
-        Identifier adapterId = null;
+    public List<Identifier> createEndpointForPeer(PeerInfo peerInfo) {
+        List<Identifier> adapters = new ArrayList<>();
 
         //get all available addresses for a peer
-        Collection<PeerAddress> peerAddress;
-        try {
-            peerAddress = peerManager.getPeerAddress(peerId);
-        } catch (NoSuchPeerException e) {
-            log.warn("No such peer: {}", peerId);
-            return null;
-        }
+        Collection<PeerChannelAddress> peerChannelAddreses;
+        peerChannelAddreses = peerInfo.getAddresses();
 
         //check for every address if there is an adapter registered
-        //instantiate the first one that is available and skip the rest
-        for (PeerAddress address : peerAddress) {
+        addressLoop:
+        for (PeerChannelAddress address : peerChannelAddreses) {
             //check first if there is a stateless adapter
-            if(stateless.contains(address.getAdapterId())) {
+            if(stateless.contains(address.getChannelType())) {
                 //we are already done, just add the address to our address resolver (cache) and return the adapter id
                 addressResolver.addPeerAddress(address);
-                adapterId = address.getAdapterId();
-                break;
-            } else if (statefulAdapters.containsKey(address.getAdapterId())) {
+                adapters.add(Identifier.adapter(address.getChannelType().getId()));
+                switch(peerInfo.getDeliveryPolicy()) {
+                    case TO_ALL_CHANNELS:
+                        continue addressLoop;
+                    case AT_LEAST_ONE:
+                        continue addressLoop;
+                    case PREFERRED:
+                        break addressLoop; //assuming the first working adapter is the preferred
+                }
+            } else if (statefulAdapters.containsKey(address.getChannelType())) {
                 try {
                     //get the id of the adapter type and create a new id for the stateful adapter instance for this peer
-                    Identifier adapter = address.getAdapterId();
-                    Identifier newId = Identifier.adapter(adapter, peerId);
+                    Identifier adapter = address.getChannelType();
+                    Identifier newId = Identifier.adapter(adapter, peerInfo.getId());
 
 
                     synchronized (statefulInstances) {
                         //check if there is already such an instance
-                        List<Identifier> instances = statefulInstances.get(address.getAdapterId());
+                        List<Identifier> instances = statefulInstances.get(address.getChannelType());
                         if (instances != null) {
                             if (instances.contains(newId)) {
                                 //there is already such an instance, just return its id
-                                adapterId = newId;
+                                adapters.add(newId);
                                 addressResolver.addPeerAddress(address);
-                                break;
+
+                                switch(peerInfo.getDeliveryPolicy()) {
+                                    case TO_ALL_CHANNELS:
+                                        continue addressLoop;
+                                    case AT_LEAST_ONE:
+                                        break addressLoop;
+                                    case PREFERRED:
+                                        break addressLoop;
+                                }
                             }
                         } else {
                             instances = new ArrayList<>();
@@ -250,24 +256,27 @@ public class AdapterManagerImpl implements AdapterManager {
 
                         //start executing the new adapter
                         executionEngine.addOutputAdapter(outputAdapter, newId);
-                        adapterId = newId;
-                        instances.add(adapterId);
+                        adapters.add(newId);
+                        instances.add(newId);
                     }
                     addressResolver.addPeerAddress(address);
-                    break;
+                    switch(peerInfo.getDeliveryPolicy()) {
+                        case TO_ALL_CHANNELS:
+                            continue addressLoop;
+                        case AT_LEAST_ONE:
+                            break addressLoop;
+                        case PREFERRED:
+                            break addressLoop;
+                    }
                 } catch (IllegalAccessException | InstantiationException e) {
-                    log.error("Could not instantiate class " + statefulAdapters.get(address.getAdapterId()).toString(), e);
+                    log.error("Could not instantiate class " + statefulAdapters.get(address.getChannelType()).toString(), e);
                 }
             } else {
-                log.warn("Unknown adapter: "+address.getAdapterId());
+                log.warn("Unknown adapter: "+address.getChannelType());
             }
         }
 
-        if (adapterId == null) {
-            return null;
-        }
-
-        return adapterId;
+        return adapters;
     }
 
     @Override

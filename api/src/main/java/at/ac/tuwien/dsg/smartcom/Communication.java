@@ -32,14 +32,14 @@ public interface Communication {
      * @param message Specifies the message that should be handled by the middleware.
      * @return Returns the internal ID of the middleware to track the message within the system.
      * @throws CommunicationException a generic exception that will be thrown if something went wrong
-     *              in the initial handling of the message.
+     *                                in the initial handling of the message.
      */
     public Identifier send(Message message) throws CommunicationException;
 
     /**
      * Add a special route to the routing rules (e.g., route input from peer A
      * always to peer B). Returns the ID of the routing rule (can be used to delete it).
-     * The middleware will check if the rule is valid and throw an exception otherwise.
+     * The middleware will check if the rule is valID and throw an exception otherwise.
      *
      * @param rule Specifies the routing rule that should be added to the routing rules of the middleware.
      * @return Returns the middleware internal ID of the rule
@@ -48,10 +48,12 @@ public interface Communication {
     public Identifier addRouting(RoutingRule rule) throws InvalidRuleException;
 
     /**
-     * Remove a previously defined routing rule identified by an ID.
+     * Remove a previously defined routing rule identified by an Id. As soon as the method returns
+     * the routing rule will not be applied any more. If there is no such rule with the given Id,
+     * null will be returned.
      *
      * @param routeId The ID of the routing rule that should be removed.
-     * @return The removed routing rule or nothing if there is no such rule in the system.
+     * @return The removed routing rule or null if there is no such rule in the system.
      */
     public RoutingRule removeRouting(Identifier routeId);
 
@@ -69,14 +71,16 @@ public interface Communication {
      * Returns the ID of the adapter. The pull requests will be issued in the specified
      * interval until the adapter is explicitly removed from the system.
      *
-     * @param adapter Specifies the input pull adapter
+     * @param adapter  Specifies the input pull adapter
      * @param interval Interval in milliseconds that specifies when to issue pull requests. Can’t be zero or negative.
      * @return Returns the middleware internal ID of the adapter.
      */
     public Identifier addPullAdapter(InputPullAdapter adapter, long interval);
 
     /**
-     * Removes a input adapter from the execution.
+     * Removes a input adapter from the execution. As soon as this method returns, the
+     * adapter with the given ID will not be executed any more. It returns the requested
+     * input adapter or null if there is no adapter with such an ID in the system.
      *
      * @param adapterId The ID of the adapter that should be removed.
      * @return Returns the input adapter that has been removed or nothing if there is no such adapter.
@@ -85,10 +89,16 @@ public interface Communication {
 
     /**
      * Registers a new type of output adapter that can be used by the middleware to get in contact with a peer.
-     * The output adapters will be instantiated by the middleware on demand.
+     * The output adapters will be instantiated by the middleware on demand. Note that these adapters are required
+     * to have an @Adapter annotation otherwise an exception will be thrown.
+     * In case of a stateless adapter, it is possible that the adapter will be instantiated immediately. If
+     * any error occurs during the instantiation, an exception will be thrown
      *
      * @param adapter The output adapter that can be used to contact peers.
      * @return Returns the middleware internal ID of the created adapter.
+     * @throws CommunicationException if the adapter could not be handled, the specific reason is embedded in
+     *                                the exception.
+     * @see at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter
      */
     public Identifier registerOutputAdapter(Class<? extends OutputAdapter> adapter) throws CommunicationException;
 
@@ -108,4 +118,5 @@ public interface Communication {
      * @param callback callback for notification
      */
     public void registerNotificationCallback(NotificationCallback callback);
+    //TODO do we need to specify which messages should be sent to the callback? should we add some mechanism to unregister it?}
 }

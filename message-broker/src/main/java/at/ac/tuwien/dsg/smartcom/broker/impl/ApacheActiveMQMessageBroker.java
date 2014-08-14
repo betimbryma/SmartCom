@@ -234,17 +234,17 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     @Override
-    public Message receiveTasks(Identifier id) {
+    public Message receiveOutput(Identifier id) {
         return receiveMessage(createDestination(taskQueuePrefix, id));
     }
 
     @Override
-    public CancelableListener registerTaskListener(Identifier id, MessageListener listener) {
+    public CancelableListener registerOutputListener(Identifier id, MessageListener listener) {
         return setListener(listener, createDestination(taskQueuePrefix, id));
     }
 
     @Override
-    public void publishTask(Identifier id, Message message) {
+    public void publishOutput(Identifier id, Message message) {
         sendMessage(message, createDestination(taskQueuePrefix, id));
     }
 

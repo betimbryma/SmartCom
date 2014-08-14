@@ -11,8 +11,15 @@ public final class PredefinedMessageHelper {
     private static final Identifier authenticationManager = Identifier.component("AuthenticationManager");
 
     private static final String AUTH_TYPE = "AUTH";
+
     private static final String CONTROL_TYPE = "CONTROL";
     private static final String ACK_SUBTYPE = "ACK";
+    private static final String COMERROR_SUBTYPE = "COMERROR";
+    private static final String TIMEOUT_SUBTYPE = "TIMEOUT";
+
+    private static final String REQUEST_SUBTYPE = "REQUEST";
+    private static final String REPLY_SUBTYPE = "REPLY";
+    private static final String FAILED_SUBTYPE = "FAILED";
     private static final String ERROR_SUBTYPE = "ERROR";
 
     public static Message createAuthenticationRequestMessage(Identifier sender, String password) {
@@ -21,7 +28,7 @@ public final class PredefinedMessageHelper {
                 .setContent(password)
                 .setReceiverId(authenticationManager)
                 .setType(AUTH_TYPE)
-                .setSubtype("REQUEST")
+                .setSubtype(REQUEST_SUBTYPE)
                 .create();
     }
 
@@ -31,7 +38,7 @@ public final class PredefinedMessageHelper {
                 .setContent(token)
                 .setSenderId(authenticationManager)
                 .setType(AUTH_TYPE)
-                .setSubtype("REPLY")
+                .setSubtype(REPLY_SUBTYPE)
                 .create();
     }
 
@@ -40,7 +47,7 @@ public final class PredefinedMessageHelper {
                 .setReceiverId(receiver)
                 .setSenderId(authenticationManager)
                 .setType(AUTH_TYPE)
-                .setSubtype("FAILED")
+                .setSubtype(FAILED_SUBTYPE)
                 .create();
     }
 
@@ -63,13 +70,33 @@ public final class PredefinedMessageHelper {
                 .create();
     }
 
-    public static Message createCommunicationErrorMessage(Message message, String error) {
+    public static Message createErrorMessage(Message message, String error) {
         return new Message.MessageBuilder()
                 .setSenderId(message.getReceiverId())
                 .setConversationId(message.getConversationId())
                 .setContent(error)
                 .setType(CONTROL_TYPE)
                 .setSubtype(ERROR_SUBTYPE)
+                .create();
+    }
+
+    public static Message createCommunicationErrorMessage(Message message, String error) {
+        return new Message.MessageBuilder()
+                .setSenderId(message.getReceiverId())
+                .setConversationId(message.getConversationId())
+                .setContent(error)
+                .setType(CONTROL_TYPE)
+                .setSubtype(COMERROR_SUBTYPE)
+                .create();
+    }
+
+    public static Message createTimeoutMessage(Message message, String error) {
+        return new Message.MessageBuilder()
+                .setSenderId(message.getReceiverId())
+                .setConversationId(message.getConversationId())
+                .setContent(error)
+                .setType(CONTROL_TYPE)
+                .setSubtype(TIMEOUT_SUBTYPE)
                 .create();
     }
 }

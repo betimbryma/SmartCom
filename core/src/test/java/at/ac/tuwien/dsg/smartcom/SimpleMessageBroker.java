@@ -129,7 +129,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public Message receiveTasks(Identifier id) {
+    public Message receiveOutput(Identifier id) {
         try {
             BlockingDeque<Message> queue;
             synchronized (taskQueues) {
@@ -148,7 +148,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerTaskListener(Identifier id, MessageListener listener) {
+    public at.ac.tuwien.dsg.smartcom.broker.CancelableListener registerOutputListener(Identifier id, MessageListener listener) {
         synchronized (taskListeners) {
             log.trace("Registered task listener with id {}", id);
             taskListeners.put(id, listener);
@@ -157,7 +157,7 @@ public final class SimpleMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void publishTask(Identifier id, Message message) {
+    public void publishOutput(Identifier id, Message message) {
         BlockingDeque<Message> queue = taskQueues.get(id);
         if (queue == null) {
             synchronized (taskQueues) {

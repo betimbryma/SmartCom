@@ -1,11 +1,7 @@
 package at.ac.tuwien.dsg.smartcom.callback;
 
-import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
-
-import java.util.Collection;
 
 /**
  * The Peer Manager Callback (PMCallback) will be used to ask the Peer Manager for different
@@ -21,16 +17,7 @@ import java.util.Collection;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public interface PMCallback {
-
-    /**
-     * Resolves the address(s) of a given peer (i.e, provides the address and the method/adapter that should be used).
-     *
-     * @param id id of the requested peer
-     * @return Returns a collection of all addresses and methods/adapters which can be used to contact the peer.
-     * @throws NoSuchPeerException if there exists no such peer.
-     */
-    public Collection<PeerAddress> getPeerAddress(Identifier id) throws NoSuchPeerException;
+public interface PeerAuthenticationCallback {
 
     /**
      * Authenticates a peer, i.e. checks if the provided credentials match the peers credentials in the system.

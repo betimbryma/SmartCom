@@ -57,33 +57,33 @@ public interface MessageBroker extends InputPublisher {
     public void publishRequest(Identifier id, Message message);
 
     /**
-     * Receives task messages for a given id. Might block until there
+     * Receives output messages for a given id. Might block until there
      * is a message available.
      *
      * @param id that the task message is assigned to
      * @return the message
      */
-    public Message receiveTasks(Identifier id);
+    public Message receiveOutput(Identifier id);
 
     /**
      * Register a message listener that will be notified on the arrival of
-     * new task messages for a given receiver. Note that a message listener
+     * new output messages for a given receiver. Note that a message listener
      * will consume the message and that there can only be one listener at a
      * time for each id.
      *  @param id the id of the task receiver
      * @param listener for task messages
      */
-    public CancelableListener registerTaskListener(Identifier id, MessageListener listener);
+    public CancelableListener registerOutputListener(Identifier id, MessageListener listener);
 
     /**
-     * Publish a task message for a given receiver destination id (note that
+     * Publish an output message for a given receiver destination id (note that
      * this is not the same as the receiver id! One receiver id can be resolved
      * to many receiver destination ids).
      *
      * @param id of the receiver destination
      * @param message that should be published
      */
-    public void publishTask(Identifier id, Message message);
+    public void publishOutput(Identifier id, Message message);
 
     /**
      * Publish a control message.

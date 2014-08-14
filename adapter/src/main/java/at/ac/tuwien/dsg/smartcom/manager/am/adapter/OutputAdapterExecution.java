@@ -6,7 +6,7 @@ import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.manager.am.AddressResolver;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import at.ac.tuwien.dsg.smartcom.utils.PredefinedMessageHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,17 +50,17 @@ public class OutputAdapterExecution implements Runnable {
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             log.debug("Adapter {}: Waiting for new task ...", id);
-            Message message = broker.receiveTasks(id);
+            Message message = broker.receiveOutput(id);
             if (message == null) {
                 log.debug("Adapter {}: Received interrupted!", id);
                 break;
             }
             log.debug("Adapter {}: Received task {}", id, message);
-            PeerAddress peerAddress = address.getPeerAddress(message.getReceiverId(), id);
+            PeerChannelAddress peerChannelAddress = address.getPeerAddress(message.getReceiverId(), id);
 
-            log.debug("Adapter {}: Sending message {} to peer {}", id, message, peerAddress);
+            log.debug("Adapter {}: Sending message {} to peer {}", id, message, peerChannelAddress);
             try {
-                adapter.push(message, peerAddress);
+                adapter.push(message, peerChannelAddress);
 
                 //TODO should we send an acknowledgement here?
                 broker.publishControl(PredefinedMessageHelper.createAcknowledgeMessage(message));

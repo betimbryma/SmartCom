@@ -1,7 +1,7 @@
-package at.ac.tuwien.dsg.smartcom.manager.am.dao;
+package at.ac.tuwien.dsg.smartcom.manager.dao;
 
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -20,8 +20,8 @@ import java.util.List;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public class MongoDBResolverDAO implements ResolverDAO {
-    private static final Logger log = LoggerFactory.getLogger(MongoDBResolverDAO.class);
+public class MongoDBPeerChannelAddressResolverDAO implements PeerChannelAddressResolverDAO {
+    private static final Logger log = LoggerFactory.getLogger(MongoDBPeerChannelAddressResolverDAO.class);
     private static final String RESOLVER_COLLECTION = "PEER_ADDRESS_RESOLVER_COLLECTION";
 
     private final DBCollection coll;
@@ -35,9 +35,9 @@ public class MongoDBResolverDAO implements ResolverDAO {
      * @param port port number of the MongoDB instance
      * @param database name of the database that should be used.
      * @throws UnknownHostException if the database cannot be resolved
-     * @see MongoDBResolverDAO#RESOLVER_COLLECTION
+     * @see MongoDBPeerChannelAddressResolverDAO#RESOLVER_COLLECTION
      */
-    public MongoDBResolverDAO(String host, int port, String database) throws UnknownHostException {
+    public MongoDBPeerChannelAddressResolverDAO(String host, int port, String database) throws UnknownHostException {
         this(new MongoClient(host, port), database, RESOLVER_COLLECTION);
     }
 
@@ -53,12 +53,12 @@ public class MongoDBResolverDAO implements ResolverDAO {
      * @param database name of the database that should be used
      * @param collection name of the collection that should be used
      */
-    public MongoDBResolverDAO(MongoClient client, String database, String collection) {
+    public MongoDBPeerChannelAddressResolverDAO(MongoClient client, String database, String collection) {
         coll = client.getDB(database).getCollection(collection);
     }
 
     @Override
-    public void insert(PeerAddress address) {
+    public void insert(PeerChannelAddress address) {
         BasicDBObject doc = serializePeerAddress(address);
         coll.insert(doc);
     }
@@ -69,7 +69,7 @@ public class MongoDBResolverDAO implements ResolverDAO {
      * @param address that should be serialized
      * @return MongoDB specific document format
      */
-    BasicDBObject serializePeerAddress(PeerAddress address) {
+    BasicDBObject serializePeerAddress(PeerChannelAddress address) {
         BasicDBObject contactParams = new BasicDBObject();
         int i = 0;
         for (Serializable o : address.getContactParameters()) {
@@ -77,19 +77,19 @@ public class MongoDBResolverDAO implements ResolverDAO {
         }
 
         BasicDBObject doc = new BasicDBObject()
-                .append("_id", address.getPeerId().getId()+"."+address.getAdapterId().getId())
+                .append("_id", address.getPeerId().getId()+"."+address.getChannelType().getId())
                 .append("peerId", address.getPeerId().getId())
-                .append("adapterId", address.getAdapterId().getId())
+                .append("adapterId", address.getChannelType().getId())
                 .append("contactParameters", contactParams);
         log.debug("Saving peer address in mongoDB: {}", doc);
         return doc;
     }
 
     @Override
-    public PeerAddress find(Identifier peerId, Identifier adapterId) {
+    public PeerChannelAddress find(Identifier peerId, Identifier adapterId) {
         BasicDBObject query = new BasicDBObject("_id", peerId.getId()+"."+adapterId.getId());
 
-        PeerAddress address = null;
+        PeerChannelAddress address = null;
         DBObject one = coll.findOne(query);
         if (one != null) {
             address = deserializePeerAddress(one);
@@ -110,15 +110,15 @@ public class MongoDBResolverDAO implements ResolverDAO {
      * @param dbObject MongoDB specific document that represents a peer address
      * @return the corresponding peer address
      */
-    PeerAddress deserializePeerAddress(DBObject dbObject) {
-        PeerAddress address;List<Serializable> list = new ArrayList<>();
+    PeerChannelAddress deserializePeerAddress(DBObject dbObject) {
+        PeerChannelAddress address;List<Serializable> list = new ArrayList<>();
         DBObject contactParameters = (DBObject) dbObject.get("contactParameters");
         int i = 0;
         while (contactParameters.containsField(i + "")) {
             list.add((Serializable) contactParameters.get((i++) + ""));
         }
 
-        address = new PeerAddress(Identifier.peer((String) dbObject.get("peerId")), Identifier.adapter((String) dbObject.get("adapterId")), list);
+        address = new PeerChannelAddress(Identifier.peer((String) dbObject.get("peerId")), Identifier.adapter((String) dbObject.get("adapterId")), list);
         return address;
     }
 }

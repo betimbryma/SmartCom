@@ -6,16 +6,16 @@ import at.ac.tuwien.dsg.smartcom.adapters.RESTOutputAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.impl.ApacheActiveMQMessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.utils.ApacheActiveMQUtils;
 import at.ac.tuwien.dsg.smartcom.callback.CollectiveInfoCallback;
-import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
+import at.ac.tuwien.dsg.smartcom.callback.PeerAuthenticationCallback;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.exception.ErrorCode;
 import at.ac.tuwien.dsg.smartcom.manager.am.AdapterExecutionEngine;
 import at.ac.tuwien.dsg.smartcom.manager.am.AdapterManagerImpl;
 import at.ac.tuwien.dsg.smartcom.manager.am.AddressResolver;
-import at.ac.tuwien.dsg.smartcom.manager.am.dao.MongoDBResolverDAO;
 import at.ac.tuwien.dsg.smartcom.manager.auth.AuthenticationManagerImpl;
 import at.ac.tuwien.dsg.smartcom.manager.auth.AuthenticationRequestHandler;
 import at.ac.tuwien.dsg.smartcom.manager.auth.dao.MongoDBAuthenticationSessionDAO;
+import at.ac.tuwien.dsg.smartcom.manager.dao.MongoDBPeerChannelAddressResolverDAO;
 import at.ac.tuwien.dsg.smartcom.messaging.logging.LoggingService;
 import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.LoggingDAO;
 import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.MongoDBLoggingDAO;
@@ -47,14 +47,14 @@ public class SmartCom {
     private MessageInfoService messageInfoService;
     private MessageQueryService queryService;
 
-    private final PMCallback peerManager;
+    private final PeerAuthenticationCallback peerManager;
     private final CollectiveInfoCallback collectiveInfoCallback;
 
     private MutablePicoContainer pico;
     private MongoDBInstance mongoDB;
     private MongoClient mongoClient;
 
-    public SmartCom(PMCallback peerManager, CollectiveInfoCallback collectiveInfoCallback) {
+    public SmartCom(PeerAuthenticationCallback peerManager, CollectiveInfoCallback collectiveInfoCallback) {
         this.peerManager = peerManager;
         this.collectiveInfoCallback = collectiveInfoCallback;
     }
@@ -147,7 +147,7 @@ public class SmartCom {
 
     private void initAdapterManager() throws CommunicationException {
         log.debug("Initializing adapter manager");
-        pico.as(Characteristics.CACHE).addComponent(new MongoDBResolverDAO(mongoClient, MONGODB_DATABASE, "resolver"));
+        pico.as(Characteristics.CACHE).addComponent(new MongoDBPeerChannelAddressResolverDAO(mongoClient, MONGODB_DATABASE, "resolver"));
         pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
         pico.as(Characteristics.CACHE).addComponent(AdapterExecutionEngine.class);
         pico.as(Characteristics.CACHE).addComponent(AddressResolver.class);

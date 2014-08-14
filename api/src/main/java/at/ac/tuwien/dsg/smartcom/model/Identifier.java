@@ -112,4 +112,8 @@ public class Identifier implements Serializable {
     public static Identifier message(String id) {
         return new Identifier(IdentifierType.MESSAGE, id);
     }
+
+    public static Identifier channelType(String id) {
+        return new Identifier(IdentifierType.CHANNEL, id);
+    }
 }

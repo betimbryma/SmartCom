@@ -4,7 +4,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
 import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import at.ac.tuwien.dsg.smartcom.utils.PropertiesLoader;
 import com.google.android.gcm.server.Constants;
 import com.google.android.gcm.server.Result;
@@ -29,7 +29,7 @@ public class AndroidOutputAdapter implements OutputAdapter {
     }
 
     @Override
-    public void push(Message message, PeerAddress address) throws AdapterException {
+    public void push(Message message, PeerChannelAddress address) throws AdapterException {
         com.google.android.gcm.server.Message msg = new com.google.android.gcm.server.Message.Builder().addData("message", message.getContent()).build();
 
         Result result;

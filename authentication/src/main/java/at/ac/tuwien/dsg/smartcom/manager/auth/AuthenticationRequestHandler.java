@@ -3,7 +3,7 @@ package at.ac.tuwien.dsg.smartcom.manager.auth;
 import at.ac.tuwien.dsg.smartcom.broker.CancelableListener;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
-import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
+import at.ac.tuwien.dsg.smartcom.callback.PeerAuthenticationCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
 import at.ac.tuwien.dsg.smartcom.manager.auth.dao.AuthenticationSessionDAO;
 import at.ac.tuwien.dsg.smartcom.model.Message;
@@ -39,7 +39,7 @@ public class AuthenticationRequestHandler implements MessageListener {
     private MessageBroker broker; //used to register itself as a listener and to send respond messages
 
     @Inject
-    private PMCallback callback; //used to check if the credentials are correct
+    private PeerAuthenticationCallback callback; //used to check if the credentials are correct
 
     private CancelableListener listenerRegistration; //used to cancel the registration as listener when shutting down.
 

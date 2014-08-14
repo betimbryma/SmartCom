@@ -1,17 +1,13 @@
 package at.ac.tuwien.dsg.smartcom.manager.auth;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
-import at.ac.tuwien.dsg.smartcom.callback.PMCallback;
-import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
+import at.ac.tuwien.dsg.smartcom.callback.PeerAuthenticationCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
 import at.ac.tuwien.dsg.smartcom.manager.auth.dao.MongoDBAuthenticationSessionDAO;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import at.ac.tuwien.dsg.smartcom.utils.PicoHelper;
 import org.junit.Before;
-
-import java.util.Collection;
 
 public class AuthenticationRequestHandlerIT extends AuthenticationRequestHandlerTestClass {
 
@@ -26,7 +22,7 @@ public class AuthenticationRequestHandlerIT extends AuthenticationRequestHandler
 
         pico = new PicoHelper();
         pico.addComponent(new MongoDBAuthenticationSessionDAO(mongoDB.getClient(), "test-session", "session"));
-        pico.addComponent(new SimplePMCallback());
+        pico.addComponent(new SimplePeerAuthenticationCallback());
         pico.addComponent(new SimpleMessageBroker());
         pico.addComponent(AuthenticationRequestHandler.class);
 
@@ -40,12 +36,7 @@ public class AuthenticationRequestHandlerIT extends AuthenticationRequestHandler
         mongoDB.tearDown();
     }
 
-    private class SimplePMCallback implements PMCallback {
-
-        @Override
-        public Collection<PeerAddress> getPeerAddress(Identifier id) throws NoSuchPeerException {
-            return null;
-        }
+    private class SimplePeerAuthenticationCallback implements PeerAuthenticationCallback {
 
         @Override
         public boolean authenticate(Identifier peerId, String password) throws PeerAuthenticationException {

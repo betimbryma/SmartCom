@@ -1,9 +1,8 @@
 package at.ac.tuwien.dsg.smartcom.callback;
 
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchCollectiveException;
+import at.ac.tuwien.dsg.smartcom.model.CollectiveInfo;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
-
-import java.util.List;
 
 /**
  * This API is used to provide different information regarding the composition
@@ -26,5 +25,5 @@ public interface CollectiveInfoCallback {
      * @return List of peer ids that are part of the collective.
      * @throws NoSuchCollectiveException if there exists no such collective.
      */
-    public List<Identifier> resolveCollective(Identifier collective) throws NoSuchCollectiveException;
+    public CollectiveInfo getCollectiveInfo(Identifier collective) throws NoSuchCollectiveException;
 }

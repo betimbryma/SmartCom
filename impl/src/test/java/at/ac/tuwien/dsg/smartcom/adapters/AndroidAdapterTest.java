@@ -2,7 +2,7 @@ package at.ac.tuwien.dsg.smartcom.adapters;
 
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
-import at.ac.tuwien.dsg.smartcom.model.PeerAddress;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -34,7 +34,7 @@ public class AndroidAdapterTest {
 
         List<Serializable> parameters = new ArrayList<>(2);
         parameters.add(regId);
-        PeerAddress address = new PeerAddress(Identifier.peer("test"), Identifier.adapter("Android"), parameters);
+        PeerChannelAddress address = new PeerChannelAddress(Identifier.peer("test"), Identifier.adapter("Android"), parameters);
 
         final Message message = new Message.MessageBuilder()
                 .setId(Identifier.message("testId"))

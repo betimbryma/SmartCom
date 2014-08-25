@@ -11,7 +11,16 @@
 
 ### Setup ###
 
-* TODO
+* Build the whole system using Apache Maven
+* Instantiate the class "at.ac.tuwien.dsg.smartcom.SmartCom"
+  * Call the method "initializeSmartCom()" to start SmartCom
+  * get the Communication API by calling "getCommunication()"
+  * get the services using the methods "getMessageInfoService()", "getQueryService()"
+  * Stop SmartCom by calling "tearDownSmartCom()"
+
+### Documentation ###
+
+The documentation can be found in the wiki: https://github.com/tuwiendsg/SmartCom/wiki
 
 ### Who do I talk to? ###
 

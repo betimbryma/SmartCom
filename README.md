@@ -18,6 +18,9 @@
   * get the services using the methods "getMessageInfoService()", "getQueryService()"
   * Stop SmartCom by calling "tearDownSmartCom()"
 
+### First Steps ###
+https://github.com/tuwiendsg/SmartCom/wiki/First-Steps
+
 ### Documentation ###
 
 The documentation can be found in the wiki: https://github.com/tuwiendsg/SmartCom/wiki

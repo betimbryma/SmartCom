@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom;
 
 import at.ac.tuwien.dsg.smartcom.adapter.InputAdapter;
@@ -93,6 +76,19 @@ public interface Communication {
      * @return Returns the middleware internal ID of the adapter.
      */
     public Identifier addPullAdapter(InputPullAdapter adapter, long interval);
+
+    /**
+     * Creates a input adapter that will pull for updates in a certain time interval.
+     * Returns the ID of the adapter. The pull requests will be issued in the specified
+     * interval. If deleteIfSuccessful is set to true, the adapter will be removed in case of
+     * a successful execution, it will continue in case of a unsuccessful execution.
+     *
+     * @param adapter  Specifies the input pull adapter
+     * @param interval Interval in milliseconds that specifies when to issue pull requests. Can’t be zero or negative.
+     * @param deleteIfSuccessful delete this adapter after a successful execution
+     * @return Returns the middleware internal ID of the adapter.
+     */
+    public Identifier addPullAdapter(InputPullAdapter adapter, long interval, boolean deleteIfSuccessful);
 
     /**
      * Removes a input adapter from the execution. As soon as this method returns, the

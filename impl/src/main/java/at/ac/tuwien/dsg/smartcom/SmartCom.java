@@ -1,31 +1,17 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom;
 
 import at.ac.tuwien.dsg.smartcom.adapters.AndroidOutputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapters.DropboxOutputAdapter;
+import at.ac.tuwien.dsg.smartcom.adapters.EmailOutputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapters.RESTOutputAdapter;
 import at.ac.tuwien.dsg.smartcom.broker.impl.ApacheActiveMQMessageBroker;
 import at.ac.tuwien.dsg.smartcom.broker.utils.ApacheActiveMQUtils;
 import at.ac.tuwien.dsg.smartcom.callback.CollectiveInfoCallback;
 import at.ac.tuwien.dsg.smartcom.callback.PeerAuthenticationCallback;
+import at.ac.tuwien.dsg.smartcom.callback.PeerInfoCallback;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.exception.ErrorCode;
+import at.ac.tuwien.dsg.smartcom.manager.MessagingAndRoutingManager;
 import at.ac.tuwien.dsg.smartcom.manager.am.AdapterExecutionEngine;
 import at.ac.tuwien.dsg.smartcom.manager.am.AdapterManagerImpl;
 import at.ac.tuwien.dsg.smartcom.manager.am.AddressResolver;
@@ -33,13 +19,18 @@ import at.ac.tuwien.dsg.smartcom.manager.auth.AuthenticationManagerImpl;
 import at.ac.tuwien.dsg.smartcom.manager.auth.AuthenticationRequestHandler;
 import at.ac.tuwien.dsg.smartcom.manager.auth.dao.MongoDBAuthenticationSessionDAO;
 import at.ac.tuwien.dsg.smartcom.manager.dao.MongoDBPeerChannelAddressResolverDAO;
+import at.ac.tuwien.dsg.smartcom.messaging.MessagingAndRoutingManagerImpl;
+import at.ac.tuwien.dsg.smartcom.messaging.PeerInfoService;
+import at.ac.tuwien.dsg.smartcom.messaging.PeerInfoServiceImpl;
 import at.ac.tuwien.dsg.smartcom.messaging.logging.LoggingService;
 import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.LoggingDAO;
 import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.MongoDBLoggingDAO;
+import at.ac.tuwien.dsg.smartcom.rest.CommunicationRESTImpl;
 import at.ac.tuwien.dsg.smartcom.services.MessageInfoService;
 import at.ac.tuwien.dsg.smartcom.services.MessageQueryService;
 import at.ac.tuwien.dsg.smartcom.services.MessageQueryServiceImpl;
 import at.ac.tuwien.dsg.smartcom.services.dao.MongoDBMessageQueryDAO;
+import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
 import org.picocontainer.Characteristics;
@@ -65,25 +56,37 @@ public class SmartCom {
     private MessageQueryService queryService;
 
     private final PeerAuthenticationCallback peerManager;
+    private final PeerInfoCallback peerInfoCallback;
     private final CollectiveInfoCallback collectiveInfoCallback;
 
     private MutablePicoContainer pico;
     private MongoDBInstance mongoDB;
     private MongoClient mongoClient;
+    private CommunicationRESTImpl communicationREST;
 
-    public SmartCom(PeerAuthenticationCallback peerManager, CollectiveInfoCallback collectiveInfoCallback) {
+    public SmartCom(PeerAuthenticationCallback peerManager, PeerInfoCallback peerInfoCallback, CollectiveInfoCallback collectiveInfoCallback) {
         this.peerManager = peerManager;
+        this.peerInfoCallback = peerInfoCallback;
         this.collectiveInfoCallback = collectiveInfoCallback;
     }
 
     public void initializeSmartCom() throws CommunicationException {
+        initializeSmartCom(true);
+    }
+
+    public void initializeSmartComWithoutAdapters() throws CommunicationException {
+        initializeSmartCom(false);
+    }
+
+    private void initializeSmartCom(boolean initAdapters) throws CommunicationException {
         log.info("Initializing SmartCom Communication Middleware...");
         pico = new PicoBuilder().withAnnotatedFieldInjection().withJavaEE5Lifecycle().withCaching().build();
 
         log.info("Adding external components...");
         //add external components
-        pico.addComponent(peerManager);
-        pico.addComponent(collectiveInfoCallback);
+        pico.addComponent(PeerAuthenticationCallback.class, peerManager);
+        pico.addComponent(CollectiveInfoCallback.class, collectiveInfoCallback);
+        pico.addComponent(PeerInfoCallback.class, peerInfoCallback);
 
         //start database
         log.info("Starting databases...");
@@ -103,16 +106,22 @@ public class SmartCom {
         this.messageInfoService = pico.getComponent(MessageInfoService.class);
         this.queryService = pico.getComponent(MessageQueryService.class);
 
+        log.info("Creating rest api...");
+        initRESTAPI();
+
         pico.start();
 
         log.info("Adding default adapters...");
-        addDefaultAdapters();
+        if (initAdapters) {
+            addDefaultAdapters();
+        }
 
         log.info("Initialization of SmartCom Communication Middleware complete!");
     }
 
     private void initComponents() throws CommunicationException {
         pico.addComponent(CommunicationImpl.class);
+        pico.addComponent(StatisticBean.class);
 
         initMessageBroker();
         initAdapterManager();
@@ -124,6 +133,9 @@ public class SmartCom {
 
     private void addDefaultAdapters() throws CommunicationException {
         //TODO
+
+        //Email adapter
+        communication.registerOutputAdapter(EmailOutputAdapter.class);
 
         //Android adapter
         communication.registerOutputAdapter(AndroidOutputAdapter.class);
@@ -155,7 +167,10 @@ public class SmartCom {
 
     private void initMessagingAndRouting() throws CommunicationException {
         log.debug("Initializing messaging and routing manager");
-        //TODO
+
+        //Messaging and Routing Manager
+        pico.addComponent(MessagingAndRoutingManager.class, MessagingAndRoutingManagerImpl.class);
+        pico.addComponent(PeerInfoService.class, PeerInfoServiceImpl.class);
 
         //Logging
         pico.addComponent(LoggingDAO.class, new MongoDBLoggingDAO(mongoClient, MONGODB_DATABASE, "logging"));
@@ -170,28 +185,44 @@ public class SmartCom {
         pico.as(Characteristics.CACHE).addComponent(AddressResolver.class);
     }
 
+    private void initRESTAPI() {
+        log.debug("Initializing REST API");
+        communicationREST = new CommunicationRESTImpl(communication, pico.getComponent(StatisticBean.class));
+        communicationREST.init();
+    }
+
+    private ApacheActiveMQMessageBroker messageBroker;
+
     private void initMessageBroker() throws CommunicationException {
         log.debug("Initializing message broker");
         try {
-            ApacheActiveMQUtils.startActiveMQ(ACTIVE_MQ_PORT); //uses standard port
+            ApacheActiveMQUtils.startActiveMQWithoutPersistence(ACTIVE_MQ_PORT); //uses standard port
         } catch (Exception e) {
             throw new CommunicationException(e, new ErrorCode(10, "Could not initialize message broker"));
         }
-        pico.addComponent(new ApacheActiveMQMessageBroker("localhost", ACTIVE_MQ_PORT));
+        messageBroker = new ApacheActiveMQMessageBroker("localhost", ACTIVE_MQ_PORT, true, pico.getComponent(StatisticBean.class));
+        pico.addComponent(messageBroker);
+//        pico.addComponent(MessageBroker.class, SimpleMessageBroker.class); //enables this line and disable the ones above for a fast local execution
     }
 
     public void tearDownSmartCom() throws CommunicationException {
-        try {
-            ApacheActiveMQUtils.stopActiveMQ();
-        } catch (Exception e) {
-            throw new CommunicationException(e, new ErrorCode(99, "Could not stop ActiveMQ"));
-        }
+        communicationREST.cleanUp();
 
         pico.stop();
         pico.dispose();
 
+        if (messageBroker != null) {
+            messageBroker.cleanUp();
+        }
+
         mongoClient.close();
         mongoDB.tearDown();
+
+        try {
+            ApacheActiveMQUtils.stopActiveMQ();
+        } catch (Exception e) {
+            throw new CommunicationException(e, new ErrorCode(10, "Could not shutdown message broker"));
+        }
     }
 
     public Communication getCommunication() {

@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
@@ -29,6 +12,7 @@ import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.utils.AdapterTestQueue;
 import at.ac.tuwien.dsg.smartcom.model.*;
+import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -67,6 +51,7 @@ public class AdapterManagerTest {
         pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
         pico.as(Characteristics.CACHE).addComponent(AdapterExecutionEngine.class);
         pico.as(Characteristics.CACHE).addComponent(AddressResolver.class);
+        pico.as(Characteristics.CACHE).addComponent(StatisticBean.class);
 
         broker = pico.getComponent(SimpleMessageBroker.class);
         manager = pico.getComponent(AdapterManagerImpl.class);
@@ -74,13 +59,13 @@ public class AdapterManagerTest {
         pico.start();
 
         List<PeerChannelAddress> addresses1 = new ArrayList<>();
-        addresses1.add(new PeerChannelAddress(peerId1, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
-        addresses1.add(new PeerChannelAddress(peerId1, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+        addresses1.add(new PeerChannelAddress(peerId1, Identifier.channelType("stateless"), Collections.EMPTY_LIST));
+        addresses1.add(new PeerChannelAddress(peerId1, Identifier.channelType("stateful"), Collections.EMPTY_LIST));
         peerInfo1 = new PeerInfo(peerId1, DeliveryPolicy.Peer.PREFERRED, Collections.EMPTY_LIST, addresses1);
 
         List<PeerChannelAddress> addresses2 = new ArrayList<>();
-        addresses2.add(new PeerChannelAddress(peerId2, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
-        addresses2.add(new PeerChannelAddress(peerId2, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+        addresses2.add(new PeerChannelAddress(peerId2, Identifier.channelType("stateless"), Collections.EMPTY_LIST));
+        addresses2.add(new PeerChannelAddress(peerId2, Identifier.channelType("stateful"), Collections.EMPTY_LIST));
         peerInfo2 = new PeerInfo(peerId2, DeliveryPolicy.Peer.PREFERRED, Collections.EMPTY_LIST, addresses2);
     }
 
@@ -88,6 +73,8 @@ public class AdapterManagerTest {
     public void tearDown() throws Exception {
         pico.stop();
         pico.dispose();
+
+        AdapterTestQueue.clear();
     }
 
     @Test(timeout = 1500l, expected = CommunicationException.class)
@@ -96,7 +83,7 @@ public class AdapterManagerTest {
         assertNull("Adapter should not have an id because it should not have been registered!", id);
     }
 
-    @Test(timeout = 2000l)
+    @Test(timeout = 20000l)
     public void testRemoveAdapterWithPushAdapter() throws Exception {
         CyclicBarrier barrier = new CyclicBarrier(6);
         List<Identifier> inputAdapterIds = new ArrayList<>();
@@ -106,6 +93,11 @@ public class AdapterManagerTest {
         inputAdapterIds.add(manager.addPushAdapter(new TestInputPushAdapter(barrier)));
         inputAdapterIds.add(manager.addPushAdapter(new TestInputPushAdapter(barrier)));
         inputAdapterIds.add(manager.addPushAdapter(new TestInputPushAdapter(barrier)));
+
+        try {
+            barrier.await();
+        } catch (InterruptedException | BrokenBarrierException ignored) {
+        }
 
         for (Identifier inputAdapterId : inputAdapterIds) {
             manager.removeInputAdapter(inputAdapterId);
@@ -136,11 +128,11 @@ public class AdapterManagerTest {
         CyclicBarrier barrier = new CyclicBarrier(5);
         List<Identifier> inputAdapterIds = new ArrayList<>();
 
-        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
-        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
-        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
-        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
-        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0, false));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0, false));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0, false));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0, false));
+        inputAdapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(barrier), 0, false));
 
         for (Identifier inputAdapterId : inputAdapterIds) {
             manager.removeInputAdapter(inputAdapterId);
@@ -162,10 +154,10 @@ public class AdapterManagerTest {
         }
     }
 
-    @Test(timeout = 3000l)
+    @Test(timeout = 10000l)
     public void testRemoveOutputAdapterWithStatefulAdapter() throws Exception {
         InputPullAdapter pullAdapter1 = new TestSimpleInputPullAdapter(peerId1.getId()+".stateful");
-        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
+        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0, false);
 
         Identifier adapter = manager.registerOutputAdapter(StatefulAdapter.class);
 
@@ -207,10 +199,10 @@ public class AdapterManagerTest {
         }
     }
 
-    @Test(timeout = 1500l)
+    @Test
     public void testRemoveOutputAdapterWithStatelessAdapter() throws Exception {
         InputPullAdapter pullAdapter1 = new TestSimpleInputPullAdapter(peerId1.getId()+".stateless");
-        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
+        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0, false);
         Identifier adapter = manager.registerOutputAdapter(StatelessAdapter.class);
 
         Identifier routing1 = manager.createEndpointForPeer(peerInfo1).get(0);
@@ -304,6 +296,8 @@ public class AdapterManagerTest {
                 @Override
                 public void run() {
                     try {
+                        barrier.await();
+
                         barrier.await();
 
                         if (publishMessage) {

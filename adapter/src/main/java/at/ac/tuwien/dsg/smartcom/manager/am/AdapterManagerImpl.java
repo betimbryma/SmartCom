@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.adapter.InputAdapter;
@@ -30,6 +13,7 @@ import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import at.ac.tuwien.dsg.smartcom.model.PeerInfo;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +24,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Default implementation of the Adapter Manager.
@@ -65,6 +52,8 @@ public class AdapterManagerImpl implements AdapterManager {
 
     private final List<Identifier> stateless = new ArrayList<>(); //List of stateless adapters that are executed
 
+    private final ExecutorService replicaExecutor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("REPLICA-thread-%d").build());
+
     @PostConstruct
     public void init() {
         executionEngine.init();
@@ -73,6 +62,16 @@ public class AdapterManagerImpl implements AdapterManager {
     @PreDestroy
     public void destroy() {
         executionEngine.destroy();
+
+        replicaExecutor.shutdown();
+        try {
+            if (!replicaExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                replicaExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            log.error("Could not await termination of executor. forcing shutdown", e);
+            replicaExecutor.shutdownNow();
+        }
     }
 
     @Override
@@ -93,11 +92,11 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     @Override
-    public Identifier addPullAdapter(InputPullAdapter adapter, long period) {
+    public Identifier addPullAdapter(InputPullAdapter adapter, long period, boolean deleteIfSuccessful) {
         final Identifier id = Identifier.adapter(generateAdapterId(adapter));
 
         //add the input pull adapter to the execution engine
-        executionEngine.addInputAdapter(adapter, id);
+        executionEngine.addInputAdapter(adapter, id, deleteIfSuccessful);
 
         //if the request period has been specified, generate a task that handles the pull request regularly
         if (period > 0) {
@@ -137,7 +136,7 @@ public class AdapterManagerImpl implements AdapterManager {
             //if the adapter is not stateful, instantiate it immediately and start executing it
             try {
                 OutputAdapter instance = instantiateClass(adapter);
-                executionEngine.addOutputAdapter(instance, id);
+                executionEngine.addOutputAdapter(instance, id, false);
                 stateless.add(id);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 log.error("Could not instantiate class "+adapter.toString(), e);
@@ -153,6 +152,31 @@ public class AdapterManagerImpl implements AdapterManager {
 
         return id;
     }
+
+//    public void createReplication(final Class<? extends OutputAdapter> adapter, final Identifier id) {
+//        replicaExecutor.submit(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    OutputAdapter instance = instantiateClass(adapter);
+//                    executionEngine.addOutputAdapterReplica(instance, id);
+//                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+//                    log.error("Could not instantiate class "+adapter.toString(), e);
+////            throw new CommunicationException(new ErrorCode(332, "Could not instantiate class: "+e.getLocalizedMessage()));
+//                }
+//            }
+//        });
+//    }
+//
+//
+//    public void removeReplication(final Identifier id) {
+//        replicaExecutor.submit(new Runnable() {
+//            @Override
+//            public void run() {
+//                executionEngine.removeOutputAdapterReplica(id);
+//            }
+//        });
+//    }
 
     /**
      * Instantiate a given output adapter. The method will look for the default constructor and will throw a NoSuchMethodException
@@ -218,8 +242,10 @@ public class AdapterManagerImpl implements AdapterManager {
         //check for every address if there is an adapter registered
         addressLoop:
         for (PeerChannelAddress address : peerChannelAddreses) {
+        	Identifier adapterId = Identifier.adapter(address.getChannelType().getId());
+        	
             //check first if there is a stateless adapter
-            if(stateless.contains(address.getChannelType())) {
+            if(stateless.contains(adapterId)) {
                 //we are already done, just add the address to our address resolver (cache) and return the adapter id
                 addressResolver.addPeerAddress(address);
                 adapters.add(Identifier.adapter(address.getChannelType().getId()));
@@ -231,10 +257,10 @@ public class AdapterManagerImpl implements AdapterManager {
                     case PREFERRED:
                         break addressLoop; //assuming the first working adapter is the preferred
                 }
-            } else if (statefulAdapters.containsKey(address.getChannelType())) {
+            } else if (statefulAdapters.containsKey(adapterId)) {
                 try {
                     //get the id of the adapter type and create a new id for the stateful adapter instance for this peer
-                    Identifier adapter = address.getChannelType();
+                    Identifier adapter = Identifier.adapter(address.getChannelType().getId());
                     Identifier newId = Identifier.adapter(adapter, peerInfo.getId());
 
 
@@ -262,7 +288,7 @@ public class AdapterManagerImpl implements AdapterManager {
                         }
 
                         //instantiate new adapter type
-                        Class<? extends OutputAdapter> outputAdapterClass = statefulAdapters.get(adapter);
+                        Class<? extends OutputAdapter> outputAdapterClass = statefulAdapters.get(adapterId);
                         OutputAdapter outputAdapter;
                         try {
                             outputAdapter = instantiateClass(outputAdapterClass, address);
@@ -272,7 +298,7 @@ public class AdapterManagerImpl implements AdapterManager {
                         }
 
                         //start executing the new adapter
-                        executionEngine.addOutputAdapter(outputAdapter, newId);
+                        executionEngine.addOutputAdapter(outputAdapter, newId, true);
                         adapters.add(newId);
                         instances.add(newId);
                     }

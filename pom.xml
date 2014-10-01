@@ -68,6 +68,7 @@
         <module>message-info</module>
         <module>smartcom-demo</module>
         <module>core</module>
+        <module>rest</module>
     </modules>
 
     <dependencies>
@@ -136,7 +137,19 @@
                 <artifactId>activemq-kahadb-store</artifactId>
                 <version>5.10.0</version>
             </dependency>
+            <dependency>
+				<groupId>com.eaio.uuid</groupId>
+				<artifactId>uuid</artifactId>
+				<version>3.4</version>
+			</dependency>
         </dependencies>
     </dependencyManagement>
+    
+    <repositories>
+		<repository>
+			<id>eaio.com</id>
+			<url>http://eaio.com/maven2</url>
+		</repository>
+	</repositories>
 
 </project>

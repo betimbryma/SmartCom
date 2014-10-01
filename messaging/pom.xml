@@ -44,5 +44,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+        <dependency>
+        	<groupId>at.ac.tuwien.dsg</groupId>
+        	<artifactId>smartcom-adapter</artifactId>
+        	<version>${project.version}</version>
+        	<scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

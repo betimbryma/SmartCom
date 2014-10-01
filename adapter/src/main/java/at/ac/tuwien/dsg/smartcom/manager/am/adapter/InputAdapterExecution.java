@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.manager.am.adapter;
 
 import at.ac.tuwien.dsg.smartcom.adapter.InputAdapter;
@@ -23,6 +6,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.exception.AdapterException;
 import at.ac.tuwien.dsg.smartcom.broker.MessageBroker;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
+import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,17 +23,24 @@ public class InputAdapterExecution implements Runnable {
     private final InputPullAdapter adapter; //adapter that is handled by this execution environment
     private final Identifier id; //id of the adapter and the execution environment
     private final MessageBroker broker; //broker used to publish received message
+    private final boolean deleteIfSuccessful;
+
+    private final StatisticBean statistic;
 
     /**
      * Create a new Input Adapter Execution for a given adapter and id. The broker is used to publish the received messages
      * @param adapter that will be handled by the input adapter execution
      * @param id of the adapter
      * @param broker that is used to publish messages
+     * @param deleteIfSuccessful delete the adapter if it has been executed successfully
+     * @param statistic
      */
-    public InputAdapterExecution(InputPullAdapter adapter, Identifier id, MessageBroker broker) {
+    public InputAdapterExecution(InputPullAdapter adapter, Identifier id, MessageBroker broker, boolean deleteIfSuccessful, StatisticBean statistic) {
         this.adapter = adapter;
         this.id = id;
         this.broker = broker;
+        this.deleteIfSuccessful = deleteIfSuccessful;
+        this.statistic = statistic;
     }
 
     /**
@@ -63,9 +54,10 @@ public class InputAdapterExecution implements Runnable {
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            log.debug("Adapter {}: Waiting for requests...", id.getId());
+            log.trace("Adapter {}: Waiting for requests...", id.getId());
             Message message = broker.receiveRequests(id);
-            log.debug("Adapter {}: Received request {}", id.getId(), message);
+            statistic.requestReceived();
+            log.trace("Adapter {}: Received request {}", id.getId(), message);
             if (message == null) {
                 log.debug("Adapter {}: Received interrupted!", id.getId());
                 break;
@@ -82,6 +74,10 @@ public class InputAdapterExecution implements Runnable {
                 log.debug("Adapter {}: Received response {}", id.getId(), response);
 
                 broker.publishInput(response);
+
+                if (deleteIfSuccessful) {
+                    break;
+                }
             } else {
                 handleNoMessageReceived();
             }
@@ -92,7 +88,7 @@ public class InputAdapterExecution implements Runnable {
      * no message has been received
      */
     private void handleNoMessageReceived() {
-        log.error("Adapter {}: No message received!", id.getId());
+        log.trace("Adapter {}: No message received!", id.getId());
         //TODO what should we do here?
         // proposal:
         //      if message has a sender, create and send a input to the sender,

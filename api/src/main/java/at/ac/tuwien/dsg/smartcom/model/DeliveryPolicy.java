@@ -1,27 +1,37 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.model;
+
+
+import at.ac.tuwien.dsg.smartcom.exception.DeliveryPolicyFailedException;
+
+public interface DeliveryPolicy {
+    public static enum Collective {
+        TO_ALL_MEMBERS, TO_ANY;
+        
+        public interface Policy{
+        	
+        }
+    }
+    
+    public static enum Peer {
+        TO_ALL_CHANNELS, AT_LEAST_ONE, PREFERRED;
+    }
+    
+    public static enum Message {
+        ACKNOWLEDGED, UNACKNOWLEDGED;
+    }
+    
+    public boolean check(int whatToCheck) throws DeliveryPolicyFailedException;
+    
+    public static final int CHECK_ERR = 1;
+    public static final int CHECK_ACK = 2;
+    
+}
 
 /**
 * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
 * @version 1.0
 */
-public enum DeliveryPolicy {;
+/*public enum DeliveryPolicy {;
 
     public interface Policy {
 
@@ -69,4 +79,4 @@ public enum DeliveryPolicy {;
             return value+20;
         }
     }
-}
+}*/

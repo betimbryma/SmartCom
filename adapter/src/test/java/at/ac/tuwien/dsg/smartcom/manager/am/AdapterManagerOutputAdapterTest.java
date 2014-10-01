@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
@@ -26,7 +9,9 @@ import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulExceptionAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatelessAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
+import at.ac.tuwien.dsg.smartcom.manager.am.utils.AdapterTestQueue;
 import at.ac.tuwien.dsg.smartcom.model.*;
+import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -66,6 +51,7 @@ public class AdapterManagerOutputAdapterTest {
         pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
         pico.as(Characteristics.CACHE).addComponent(AdapterExecutionEngine.class);
         pico.as(Characteristics.CACHE).addComponent(AddressResolver.class);
+        pico.as(Characteristics.CACHE).addComponent(StatisticBean.class);
 
         broker = pico.getComponent(SimpleMessageBroker.class);
         manager = pico.getComponent(AdapterManagerImpl.class);
@@ -73,17 +59,17 @@ public class AdapterManagerOutputAdapterTest {
         pico.start();
 
         List<PeerChannelAddress> addresses1 = new ArrayList<>();
-        addresses1.add(new PeerChannelAddress(peerId1, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
-        addresses1.add(new PeerChannelAddress(peerId1, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+        addresses1.add(new PeerChannelAddress(peerId1, Identifier.channelType("stateless"), Collections.EMPTY_LIST));
+        addresses1.add(new PeerChannelAddress(peerId1, Identifier.channelType("stateful"), Collections.EMPTY_LIST));
         List<String> parameters = new ArrayList<>();
         parameters.add("test");
-        addresses1.add(new PeerChannelAddress(peerId1, Identifier.adapter("exception"), parameters));
+        addresses1.add(new PeerChannelAddress(peerId1, Identifier.channelType("exception"), parameters));
         peerInfo1 = new PeerInfo(peerId1, DeliveryPolicy.Peer.PREFERRED, Collections.EMPTY_LIST, addresses1);
 
         List<PeerChannelAddress> addresses2 = new ArrayList<>();
-        addresses2.add(new PeerChannelAddress(peerId2, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
-        addresses2.add(new PeerChannelAddress(peerId2, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
-        addresses2.add(new PeerChannelAddress(peerId2, Identifier.adapter("exception"), Collections.EMPTY_LIST));
+        addresses2.add(new PeerChannelAddress(peerId2, Identifier.channelType("stateless"), Collections.EMPTY_LIST));
+        addresses2.add(new PeerChannelAddress(peerId2, Identifier.channelType("stateful"), Collections.EMPTY_LIST));
+        addresses2.add(new PeerChannelAddress(peerId2, Identifier.channelType("exception"), Collections.EMPTY_LIST));
         peerInfo2 = new PeerInfo(peerId2, DeliveryPolicy.Peer.PREFERRED, Collections.EMPTY_LIST, addresses2);
     }
 
@@ -91,14 +77,16 @@ public class AdapterManagerOutputAdapterTest {
     public void tearDown() throws Exception {
         pico.stop();
         pico.dispose();
+
+        AdapterTestQueue.clear();
     }
 
-    @Test(timeout = 1500l)
+    @Test(timeout = 10000l)
     public void testRegisterOutputAdapterWithStatelessAdapter() throws CommunicationException {
         InputPullAdapter pullAdapter1 = new TestInputPullAdapter(peerId1.getId()+".stateless");
-        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
+        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0, false);
         InputPullAdapter pullAdapter2 = new TestInputPullAdapter(peerId2.getId()+".stateless");
-        Identifier id2 = manager.addPullAdapter(pullAdapter2, 0);
+        Identifier id2 = manager.addPullAdapter(pullAdapter2, 0, false);
 
         manager.registerOutputAdapter(StatelessAdapter.class);
 
@@ -132,12 +120,12 @@ public class AdapterManagerOutputAdapterTest {
         assertEquals("ACK", acknowledge2.getSubtype());
     }
 
-    @Test(timeout = 2000l)
+    @Test(timeout = 10000l)
     public void testRegisterOutputAdapterWithStatefulAdapter() throws CommunicationException {
         InputPullAdapter pullAdapter1 = new TestInputPullAdapter(peerId1.getId()+".stateful");
-        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0);
+        Identifier id1 = manager.addPullAdapter(pullAdapter1, 0, false);
         InputPullAdapter pullAdapter2 = new TestInputPullAdapter(peerId2.getId()+".stateful");
-        Identifier id2 = manager.addPullAdapter(pullAdapter2, 0);
+        Identifier id2 = manager.addPullAdapter(pullAdapter2, 0, false);
 
         manager.registerOutputAdapter(StatefulAdapter.class);
 

@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.model;
 
 import java.io.Serializable;
@@ -26,9 +9,10 @@ import java.io.Serializable;
  * Furthermore this class can be used for internal messages too.
  *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
- * @version 1.0
+ * @author Ognjen Scekic
+ * @version 1.1
  */
-public class Message implements Serializable {
+public class Message implements Serializable, Cloneable {
 
     private Identifier id;
     private String content;
@@ -40,6 +24,9 @@ public class Message implements Serializable {
     private long ttl;
     private String language;
     private String securityToken;
+    private boolean wantsAcknowledgement = false;
+    
+    private Identifier refersTo; //in case of a control message, reporting failed delivery message, or ACK, this field indicates the Identifier of the original message that the control message refers to. 
 
     public Identifier getId() {
         return id;
@@ -120,6 +107,45 @@ public class Message implements Serializable {
     public void setSecurityToken(String securityToken) {
         this.securityToken = securityToken;
     }
+    
+    public Identifier getRefersTo() {
+		return refersTo;
+	}
+
+	public void setRefersTo(Identifier refersTo) {
+		this.refersTo = refersTo;
+	}
+
+    public boolean isWantsAcknowledgement() {
+        return wantsAcknowledgement;
+    }
+
+    public void setWantsAcknowledgement(boolean wantsAcknowledgement) {
+        this.wantsAcknowledgement = wantsAcknowledgement;
+    }
+
+    @Override
+    public Message clone() {
+        Message msg = new Message();
+        if (this.id != null) {
+            msg.id = new Identifier(this.id.getType(), this.id.getId(), this.id.getPostfix());
+        }
+        msg.content = this.content;
+        msg.type = this.type;
+        msg.subtype = this.subtype;
+        if (senderId != null) {
+            msg.senderId = new Identifier(this.senderId.getType(), this.senderId.getId(), this.senderId.getPostfix());
+        }
+        if (receiverId != null) {
+            msg.receiverId = new Identifier(this.receiverId.getType(), this.receiverId.getId(), this.receiverId.getPostfix());
+        }
+        msg.conversationId = this.conversationId;
+        msg.ttl = this.ttl;
+        msg.language = this.language;
+        msg.securityToken = this.securityToken;
+        msg.wantsAcknowledgement = this.wantsAcknowledgement;
+        return msg;
+    }
 
     @Override
     public String toString() {
@@ -134,6 +160,7 @@ public class Message implements Serializable {
                 ", ttl=" + ttl +
                 ", language='" + language + '\'' +
                 ", securityToken='" + securityToken + '\'' +
+                ", refersTo='" + refersTo + '\'' +
                 '}';
     }
 
@@ -209,6 +236,16 @@ public class Message implements Serializable {
 
         public MessageBuilder setSecurityToken(String securityToken) {
             msg.securityToken = securityToken;
+            return this;
+        }
+        
+        public MessageBuilder setRefersTo(Identifier refersTo) {
+            msg.refersTo = refersTo;
+            return this;
+        }
+
+        public MessageBuilder setWantsAcknowledgement(boolean acknowledgement) {
+            msg.wantsAcknowledgement = acknowledgement;
             return this;
         }
 

@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.manager;
 
 import at.ac.tuwien.dsg.smartcom.adapter.InputAdapter;
@@ -44,9 +27,10 @@ public interface AdapterManager {
      * Add a pull adapter to the adapter manager.
      * @param adapter the pull adapter
      * @param period defines the period between two pull attempts
+     * @param deleteIfSuccessful delete the adapter after a successful execution
      * @return the id of the pull adapter
      */
-    Identifier addPullAdapter(InputPullAdapter adapter, long period);
+    Identifier addPullAdapter(InputPullAdapter adapter, long period, boolean deleteIfSuccessful);
 
     /**
      * Removes a input adapter from the execution. Note that after returning,

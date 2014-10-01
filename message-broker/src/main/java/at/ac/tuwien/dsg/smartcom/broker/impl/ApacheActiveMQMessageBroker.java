@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.broker.impl;
 
 import at.ac.tuwien.dsg.smartcom.broker.CancelableListener;
@@ -24,6 +7,7 @@ import at.ac.tuwien.dsg.smartcom.broker.utils.BrokerErrorUtils;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
+import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +16,7 @@ import javax.jms.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Apache ActiveMQ Message Broker
@@ -43,6 +28,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     private static final Logger log = LoggerFactory.getLogger(ApacheActiveMQMessageBroker.class);
     private static final String requestQueuePrefix = "SmartCom.request.";
     private static final String taskQueuePrefix = "SmartCom.task.";
+    public static final int TCP_CONNECTIONS = 50;
+    public static final int VM_CONNECTIONS = 10;
 
     private Connection connection;
     private Session session;
@@ -58,8 +45,19 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     private Queue metricsQueue;
     private Queue logQueue;
 
-    public ApacheActiveMQMessageBroker(String host, int port) throws CommunicationException {
-        setUp(host, port);
+    private java.util.Queue<Connection> connectionQueue;
+    private List<Connection> consumerConnections;
+
+    private final StatisticBean statistic;
+    private ActiveMQConnectionFactory connectionFactory;
+
+    public ApacheActiveMQMessageBroker(String host, int port, boolean local, StatisticBean statistic) throws CommunicationException {
+        this.statistic = statistic;
+        setUp(host, port, local);
+    }
+
+    public ApacheActiveMQMessageBroker(String host, int port, StatisticBean statistic) throws CommunicationException {
+        this(host, port, false, statistic);
     }
 
     /**
@@ -68,24 +66,44 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
      *
      * @param host address of the ActiveMQ instance
      * @param port of the ActiveMQ instance
+     * @param local
      * @throws CommunicationException
      */
-    private void setUp(String host, int port) throws CommunicationException {
+    private void setUp(String host, int port, boolean local) throws CommunicationException {
         try {
             log.debug("Initialising Apache ActiveMQ Message Broker!");
 
             //ConnectionFactory for the Apache ActiveMQ instance
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://"+host+":"+port);
+            connectionQueue = new LinkedBlockingDeque<>();
+            consumerConnections = new ArrayList<>();
+            int connections = 0;
+            if (local) {
+                connectionFactory = new ActiveMQConnectionFactory("vm://" + host + "?create=false&jms.prefetchPolicy.all=1000");
+                connections = VM_CONNECTIONS;
+            } else {
+                connectionFactory = new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
+                connections = TCP_CONNECTIONS;
+            }
+//            connectionFactory.setOptimizeAcknowledge(true);
+//            connectionFactory.setAlwaysSessionAsync(false);
 
             //Connect to the instance
             connection = connectionFactory.createConnection();
             connection.start();
 
+            for (int i = 0; i < connections; i++) {
+                Connection con = connectionFactory.createConnection();
+                con.start();
+                connectionQueue.add(con);
+            }
+
+            //since one connection per thread is allowed by AMQ
             sessions = Collections.synchronizedList(new ArrayList<Session>());
 
             //Sessions for this broker
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
+            
+            //see down
             setUpDestinations(session);
 
             localSession = new ThreadLocal<>();
@@ -96,7 +114,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     private void setUpDestinations(Session session) throws JMSException {
-        inputQueue = session.createQueue("SmartCom.input");
+        //these will be shared by different threads, as the name of the queue is unique.
+    	inputQueue = session.createQueue("SmartCom.input");
         controlQueue = session.createQueue("SmartCom.control");
         authQueue = session.createQueue("SmartCom.auth");
         messageInfoQueue = session.createQueue("SmartCom.messageInfo");
@@ -107,11 +126,24 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     public void cleanUp() throws CommunicationException {
         try {
             for (Session session : sessions) {
-                session.close();
+                try {
+                    session.close();
+                } catch (JMSException e) {
+                    log.warn("Error while closing session!", e);
+                }
             }
 
             session.close();
             connection.close();
+
+            Connection connection1;
+            while ((connection1 = connectionQueue.poll()) != null) {
+                connection1.close();
+            }
+
+            for (Connection consumerConnection : consumerConnections) {
+                consumerConnection.close();
+            }
         } catch (JMSException e) {
             throw BrokerErrorUtils.createBrokerException(e);
         }
@@ -129,11 +161,12 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
 
     @Override
     public void publishInput(Message message) {
+        statistic.brokerPublishInput();
         sendMessage(message, inputQueue);
     }
 
     /**
-     * Receive a message from a destination.
+     * Receive a message from a destination. Invoked by the consumer on the queue. Blocks until a msg is available.
      * @param destination of the message
      * @return the received message
      */
@@ -164,15 +197,23 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     }
 
     /**
-     * registers a listener on the destination
+     * registers a listener on the destination. This should be the preferred way to receive messages from a queue, rather that calling receiveMessage(), 
+     * also because it is cancelable,
      * @param listener that has to be registered
      * @param destination for the listener
      */
     private CancelableListener setListener(final MessageListener listener, final Destination destination) {
         try {
             log.trace("Setting listener for destination {}", destination);
-            MessageConsumer consumer = session.createConsumer(destination);
 
+            Connection connection = connectionFactory.createConnection();
+            connection.start();
+            consumerConnections.add(connection);
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            sessions.add(session);
+
+            MessageConsumer consumer = session.createConsumer(destination);
             consumer.setMessageListener(new javax.jms.MessageListener() {
                 @Override
                 public void onMessage(javax.jms.Message message) {
@@ -184,7 +225,8 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
                     }
                 }
             });
-            return new CancelableListenerImpl(consumer);
+            //differently than in receiveMessage, we now do not close the consumer, but rather return a cancellable listener.
+            return new CancelableListenerImpl(consumer, session);
         } catch (JMSException e) {
             log.error("Error while setting "+destination.toString()+" listener", e);
             throw BrokerErrorUtils.createRuntimeBrokerException(e);
@@ -198,7 +240,7 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
      * @param message that should be sent
      * @param destination of the message
      */
-    private void sendMessage(Message message, Destination destination) {
+    private void sendMessage(final Message message, final Destination destination) {
         log.trace("Sending message {} to queue {}", message, destination);
         try {
             initLocalSessionAndProducer();
@@ -216,12 +258,16 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
      * @throws JMSException
      */
     private void initLocalSessionAndProducer() throws JMSException {
+    	//methods like createSession and createProducer take the invoking thread, and assume it when creating the new sesion and producer instances.
         if (localSession.get() == null) {
+            Connection connection = connectionQueue.poll();
             localSession.set(connection.createSession(false, Session.AUTO_ACKNOWLEDGE));
             sessions.add(localSession.get());
+            connectionQueue.add(connection);
 
-            MessageProducer producer = session.createProducer(null);
-            producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+            MessageProducer producer = localSession.get().createProducer(null);
+            //AMQ will automatically persist messages UNTIL delivered. This does not store msgs permanently.
+//            producer.setDeliveryMode(DeliveryMode.PERSISTENT);
             localProducer.set(producer);
         }
     }
@@ -248,6 +294,7 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     @Override
     public void publishRequest(Identifier id, Message message) {
         sendMessage(message, createDestination(requestQueuePrefix, id));
+        statistic.brokerPublishRequest();
     }
 
     @Override
@@ -263,11 +310,13 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     @Override
     public void publishOutput(Identifier id, Message message) {
         sendMessage(message, createDestination(taskQueuePrefix, id));
+        statistic.brokerPublishOutput();
     }
 
     @Override
     public void publishControl(Message message) {
         sendMessage(message, controlQueue);
+        statistic.brokerPublishControl();
     }
 
     @Override
@@ -328,6 +377,7 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     @Override
     public void publishLog(Message message) {
         sendMessage(message, logQueue);
+        statistic.brokerPublishLog();
     }
 
     @Override
@@ -343,15 +393,18 @@ public class ApacheActiveMQMessageBroker implements MessageBroker {
     private class CancelableListenerImpl implements CancelableListener {
 
         private final MessageConsumer consumer;
+        private final Session session;
 
-        private CancelableListenerImpl(MessageConsumer consumer) {
+        private CancelableListenerImpl(MessageConsumer consumer, Session session) {
             this.consumer = consumer;
+            this.session = session;
         }
 
         @Override
         public void cancel() {
             try {
                 this.consumer.close();
+                this.session.close();
             } catch (JMSException e) {
                 log.error("Could not close consumer", e);
             }

@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.manager.dao.PeerChannelAddressResolverDAO;
@@ -27,7 +10,11 @@ import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,6 +35,8 @@ public class AddressResolver {
     private static final int DEFAULT_CACHE_SIZE = 1000;
 
     private final LoadingCache<AddressKey, PeerChannelAddress> cache;
+
+    private ExecutorService executor;
 
     @Inject
     private PeerChannelAddressResolverDAO dao; //DAO that is used to find, persist and delete peer addresses
@@ -94,6 +83,23 @@ public class AddressResolver {
                         });
     }
 
+    @PostConstruct
+    public void init() {
+        executor  = Executors.newSingleThreadExecutor();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        //shut down the executor
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            log.error("Could not await termination of executor. forcing shutdown", e);
+            executor.shutdownNow();
+        }
+    }
+
     /**
      * Returns the peer address of a given peer for a specific adapter. The address
      * will be resolved using the cache or - in case of a cache miss - from the database.
@@ -108,7 +114,7 @@ public class AddressResolver {
             return cache.get(new AddressKey(peerId, Identifier.adapter(adapterId.returnIdWithoutPostfix())));
         } catch (ExecutionException e) {
             if (e.getCause() instanceof AddressResolverException) {
-                log.debug("There is address for PeerId {} and AdapterId {}", peerId, adapterId);
+                log.trace("There is an address for PeerId {} and AdapterId {}", peerId, adapterId);
                 return null;
             }
             log.error("Exception during retrieval of peer address!", e);
@@ -124,8 +130,14 @@ public class AddressResolver {
      *
      * @param address the new peer address.
      */
-    public void addPeerAddress(PeerChannelAddress address) {
-        dao.insert(address);
+    public void addPeerAddress(final PeerChannelAddress address) {
+//        executor.submit(new Runnable() {
+//            @Override
+//            public void run() {
+                dao.insert(address);
+//            }
+//        });
+
         cache.put(new AddressKey(address.getPeerId(), address.getChannelType()), address);
     }
 
@@ -139,6 +151,7 @@ public class AddressResolver {
      * @param adapterId id of the adapter
      */
     public void removePeerAddress(Identifier peerId, Identifier adapterId) {
+        log.trace("Invalidating address for PeerId {} and AdapterId {}", peerId, adapterId);
         cache.invalidate(new AddressKey(peerId, adapterId));
         dao.remove(peerId, adapterId);
     }

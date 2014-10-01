@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.model;
 
 import java.util.List;
@@ -34,6 +17,9 @@ public class PeerInfo {
         this.deliveryPolicy = deliveryPolicy;
         this.privacyPolicies = privacyPolicies;
         this.addresses = addresses;
+    }
+
+    public PeerInfo() {
     }
 
     public Identifier getId() {
@@ -77,6 +63,34 @@ public class PeerInfo {
 
         if (id != null ? !id.equals(peerInfo.id) : peerInfo.id != null) return false;
 
+        return true;
+    }
+    
+    /**
+     * Checks if the two objects are equal by also checking whether the collection-type members contain the same elements.
+     * @param o
+     * @return
+     */
+    public boolean equalsByDeepCoparison(Object o) {
+        if (!this.equals(o)) return false;
+        
+        PeerInfo other = (PeerInfo) o; //so far the same by Id
+        
+        if (other.deliveryPolicy == null || deliveryPolicy != other.deliveryPolicy) return false; //differ in privacy policy
+        
+        if (other.privacyPolicies != null && other.privacyPolicies != this.privacyPolicies){
+        	if (this.privacyPolicies == null) return false;
+        	boolean equalLists = other.privacyPolicies.size() == this.privacyPolicies.size() && other.privacyPolicies.containsAll(this.privacyPolicies);
+        	if (!equalLists) return false; //this should work if duplicates are not allowed, and they should not be allowed.
+        }
+        
+        if (other.addresses != null && other.addresses != this.addresses){
+        	if (this.addresses == null) return false;
+        	boolean equalLists = other.addresses.size() == this.addresses.size() && other.addresses.containsAll(this.addresses);
+        	if (!equalLists) return false; //this should work if duplicates are not allowed, and they should not be allowed.
+        }
+        
+        	
         return true;
     }
 

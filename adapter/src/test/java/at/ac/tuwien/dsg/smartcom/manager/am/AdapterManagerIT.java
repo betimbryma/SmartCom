@@ -1,20 +1,3 @@
-/**
- * Copyright (c) 2014 Technische Universitat Wien (TUW), Distributed Systems Group E184 (http://dsg.tuwien.ac.at)
- *
- * This work was partially supported by the EU FP7 FET SmartSociety (http://www.smart-society-project.eu/).
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package at.ac.tuwien.dsg.smartcom.manager.am;
 
 import at.ac.tuwien.dsg.smartcom.SimpleMessageBroker;
@@ -26,6 +9,7 @@ import at.ac.tuwien.dsg.smartcom.manager.am.adapter.StatefulAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.am.adapter.TestInputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.manager.dao.MongoDBPeerChannelAddressResolverDAO;
 import at.ac.tuwien.dsg.smartcom.model.*;
+import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
 import org.hamcrest.Matchers;
@@ -71,6 +55,7 @@ public class AdapterManagerIT {
         pico.as(Characteristics.CACHE).addComponent(AdapterManagerImpl.class);
         pico.as(Characteristics.CACHE).addComponent(AdapterExecutionEngine.class);
         pico.as(Characteristics.CACHE).addComponent(AddressResolver.class);
+        pico.as(Characteristics.CACHE).addComponent(StatisticBean.class);
 
         broker = pico.getComponent(SimpleMessageBroker.class);
         manager = pico.getComponent(AdapterManagerImpl.class);
@@ -98,8 +83,8 @@ public class AdapterManagerIT {
             Identifier id = Identifier.peer("peer"+i);
 
             List<PeerChannelAddress> addresses = new ArrayList<>();
-            addresses.add(new PeerChannelAddress(id, Identifier.adapter("stateless"), Collections.EMPTY_LIST));
-            addresses.add(new PeerChannelAddress(id, Identifier.adapter("stateful"), Collections.EMPTY_LIST));
+            addresses.add(new PeerChannelAddress(id, Identifier.channelType("stateless"), Collections.EMPTY_LIST));
+            addresses.add(new PeerChannelAddress(id, Identifier.channelType("stateful"), Collections.EMPTY_LIST));
 
             Collections.shuffle(addresses);
 
@@ -113,7 +98,7 @@ public class AdapterManagerIT {
             array[0] = routes.get(0);
             array[1] = peer.getId();
             rules.add(array);
-            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId().getId()+"."+array[0].returnIdWithoutPostfix()), 0));
+            adapterIds.add(manager.addPullAdapter(new TestInputPullAdapter(peer.getId().getId()+"."+array[0].returnIdWithoutPostfix()), 0, false));
         }
 
         InputListener listener = new InputListener();

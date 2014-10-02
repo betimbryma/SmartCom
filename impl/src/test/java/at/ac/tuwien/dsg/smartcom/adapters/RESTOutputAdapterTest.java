@@ -27,6 +27,8 @@ public class RESTOutputAdapterTest {
     private HttpServer server;
     private ExecutorService executor;
 
+    private int port;
+
     @Before
     public void setUp() throws Exception {
         final ResourceConfig application = new ResourceConfig(
@@ -35,7 +37,9 @@ public class RESTOutputAdapterTest {
                 JacksonFeature.class
         );
 
-        server = GrizzlyHttpServerFactory.createHttpServer(URI.create("http://localhost:8080/"), application);
+        port = FreePortProviderUtil.getFreePort();
+
+        server = GrizzlyHttpServerFactory.createHttpServer(URI.create("http://localhost:"+port+"/"), application);
         server.start();
 
         executor = Executors.newFixedThreadPool(5);
@@ -66,7 +70,7 @@ public class RESTOutputAdapterTest {
 
         final RESTOutputAdapter adapter = new RESTOutputAdapter();
         final List<Serializable> list = new ArrayList<>();
-        list.add("http://localhost:8080/message/");
+        list.add("http://localhost:"+port+"/message/");
 
         for (int i = 0; i < 20; i++) {
             executor.submit(new Runnable() {

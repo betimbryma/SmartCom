@@ -31,11 +31,15 @@ public class RESTInputAdapterTest {
     private RESTInputAdapter adapter;
     private Publisher publisher;
 
+    private int port;
+
     @Before
     public void setUp() throws Exception {
         publisher = new Publisher();
 
-        adapter = new RESTInputAdapter(8080, "test");
+        port = FreePortProviderUtil.getFreePort();
+
+        adapter = new RESTInputAdapter(port, "test");
         adapter.setInputPublisher(publisher);
         adapter.setScheduler(new Scheduler());
         adapter.init();
@@ -53,7 +57,7 @@ public class RESTInputAdapterTest {
 
     @Test(timeout = 20000l)
     public void testRESTInputAdapter() throws Exception {
-        final WebTarget target = client.target("http://localhost:8080/test");
+        final WebTarget target = client.target("http://localhost:"+port+"/test");
 
         final Message message = new Message.MessageBuilder()
                 .setId(Identifier.message("testId"))

@@ -24,7 +24,7 @@ public class ApacheActiveMQMessageBrokerTest {
 
     @Before
     public void setUp() throws Exception {
-        ApacheActiveMQUtils.startActiveMQ(61616); //uses standard port
+        ApacheActiveMQUtils.startActiveMQWithoutPersistence(61616); //uses standard port
         broker = new ApacheActiveMQMessageBroker("localhost", 61616, new StatisticBean());
     }
 

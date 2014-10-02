@@ -295,11 +295,11 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
                 statistic.callbackCalled();
                 callback.notify(msg);
             }
-
+		}
             //TODO change this to send the message to the callback
 //			Message errorMsg = PredefinedMessageHelper.createDeliveryErrorMessage(msg, "No recipient could be computed", getMyIdentifier());
 //			send(errorMsg); //or rather just inform TEE ?
-        }
+        
 
 		if (receiverList.isEmpty()){// || PredefinedMessageHelper.ACK_SUBTYPE_CHECKED.equals(msg.getSubtype())){
 			notifyCallbacks(msg);
@@ -322,7 +322,7 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 			}else if (rec.getType() == IdentifierType.PEER){
 				try {
                     statistic.peerMessageSendingRequest();
-					deliverToPeer(msg, rec, isPrimaryRecipient);
+					deliverToPeer(msg, rec, isPrimaryRecipient, false);
 				} catch (CommunicationException e) {
 					//Message errorMsg = PredefinedMessageHelper.createDeliveryErrorMessage(msg, "Delivery to peer " + rec.getId() + " failed.", getMyIdentifier());
 					
@@ -360,7 +360,7 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 			try {
                 Message localMessage = msg.clone();
                 localMessage.setReceiverId(peer);
-				deliverToPeer(localMessage, peer, createDataStruct);
+				deliverToPeer(localMessage, peer, createDataStruct, true);
 			} catch (Exception e) {
 				
 				//Identifier origSender = msg.getSenderId();
@@ -377,7 +377,7 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 		}
 	}
 	
-	private void deliverToPeer(final Message msg, Identifier recipient, boolean writeToDataStruct)
+	private void deliverToPeer(final Message msg, Identifier recipient, boolean writeToDataStruct, boolean isIntendedForCollective)
 			throws CommunicationException, NoSuchPeerException, RoutingException {
 		
 		boolean doSend = true;
@@ -399,7 +399,7 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 		}
 		
 		if (writeToDataStruct){
-			registerPeerMessageDeliveryAttempt(msg, peerInfo);
+			registerPeerMessageDeliveryAttempt(msg, peerInfo, isIntendedForCollective);
 		}
 		
 		//returned values will be according to the peer delivery policy (e.g., only one ID for DeliveryPolicy.PREFERRED)
@@ -510,6 +510,20 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 		return adapters;
 	}
 	
+	boolean isMessagePartOfOriginalCollectiveDelivery(Message msg) {
+	
+		Identifier msgID_keypart = msg.getRefersTo();
+		Identifier senderID_keypart = msg.getReceiverId();
+		
+		DeliveryPolicyDataStructureKey key = new DeliveryPolicyDataStructureKey(msgID_keypart, senderID_keypart);
+		if (!peerDatastruct.containsKey(key)) return true; //if entry is not there, it was evicted by the response message fulfilling the collective policy
+		
+		ArrayList<PeerPolicyDataStructureValueElement> valEls = peerDatastruct.get(key);
+		if (valEls == null || valEls.size() == 0) return true; //someone else just purged the datastructure, so return true, as it will send the ACK
+		
+		return valEls.get(0).isIntendedForCollective; //just reading from any element is enough
+		
+	}
 	
 	/**
 	 * Invalidates a particular entry from the peer delivery data structure.
@@ -721,7 +735,7 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 		}
 	}
 	
-	private void registerPeerMessageDeliveryAttempt(Message msg, PeerInfo peerInfo){
+	private void registerPeerMessageDeliveryAttempt(Message msg, PeerInfo peerInfo, boolean isIntendedForCollective){
 		
 		
 		DeliveryPolicy.Peer deliveryPolicyType = peerInfo.getDeliveryPolicy();
@@ -742,7 +756,7 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 		}
 
 		DeliveryPolicyDataStructureKey key = new DeliveryPolicyDataStructureKey(msg.getId(), msg.getSenderId());
-		PeerPolicyDataStructureValueElement valEl = new PeerPolicyDataStructureValueElement(msg.getReceiverId(), deliveryPolicy);
+		PeerPolicyDataStructureValueElement valEl = new PeerPolicyDataStructureValueElement(msg.getReceiverId(), deliveryPolicy, isIntendedForCollective);
 		
 		ArrayList<PeerPolicyDataStructureValueElement> values = null;
 		
@@ -852,12 +866,14 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
     public class PeerPolicyDataStructureValueElement{
     	public final Identifier peer;
     	public final DeliveryPolicy policy;
-    	boolean valid;
+    	public boolean valid;
+    	public boolean isIntendedForCollective;
     	
-    	public PeerPolicyDataStructureValueElement(Identifier peer, DeliveryPolicy policy){
+    	public PeerPolicyDataStructureValueElement(Identifier peer, DeliveryPolicy policy, boolean forCollective){
     		this.peer = peer;
     		this.policy = policy;
     		this.valid = true;
+    		this.isIntendedForCollective = forCollective;
     	}
     }
 
@@ -899,7 +915,9 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 	private void enforcePeerDeliveryPolicy(Message msg){ 
 		try {
 			boolean policySucceeded = checkPeerDeliveryPolicy(msg);
+			 
 			if (policySucceeded){
+				boolean isMessagePartOfOriginalCollectiveDelivery = isMessagePartOfOriginalCollectiveDelivery(msg);
 				if (!discardEntryInPeerDeliveryPolicyDataStructure(msg)){
 					return; //returns if there was no such entry. 
 				}
@@ -908,6 +926,8 @@ public class MessagingAndRoutingManagerImpl implements MessagingAndRoutingManage
 				if (collectiveDeliveryPolicyHasEntry(msg)){
 					enforceCollectiveDeliveryPolicy(msg);
 				}else{
+					if (isMessagePartOfOriginalCollectiveDelivery) return; //if the original message was for collective and there is no collective entry anymore, then no ACKs should be sent, because it should have been sent already
+					if (!msg.isWantsAcknowledgement()) return;
 					//send ACK to TEE if message delivery policy = ACK for the initial message
 					if (PredefinedMessageHelper.ACK_SUBTYPE.equals(msg.getSubtype())){
 						handleMessage(PredefinedMessageHelper.createAcknowledgeMessageFromAdaptersAcknowledgeMessage(msg));

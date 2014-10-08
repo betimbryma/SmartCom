@@ -130,6 +130,12 @@ public interface Communication {
      *
      * @param callback callback for notification
      */
-    public void registerNotificationCallback(NotificationCallback callback);
-    //TODO do we need to specify which messages should be sent to the callback? should we add some mechanism to unregister it?}
+    public Identifier registerNotificationCallback(NotificationCallback callback);
+
+    /**
+     * Unregister a previously registered notification callback.
+     *
+     * @param callback callback for notification
+     */
+    public boolean unregisterNotificationCallback(Identifier callback);
 }

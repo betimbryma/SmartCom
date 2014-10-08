@@ -14,20 +14,22 @@ import at.ac.tuwien.dsg.smartcom.manager.dao.MongoDBPeerChannelAddressResolverDA
 import at.ac.tuwien.dsg.smartcom.messaging.policies.privacy.peer.AlwaysFailsDummyPeerPrivacyPolicy;
 import at.ac.tuwien.dsg.smartcom.model.*;
 import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
-import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
-import at.ac.tuwien.dsg.smartcom.utils.PicoHelper;
-import at.ac.tuwien.dsg.smartcom.utils.PredefinedMessageHelper;
+import at.ac.tuwien.dsg.smartcom.utils.*;
+
 import com.mongodb.MongoClient;
+
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class MessagingAndRoutingManagerIT {
 
@@ -69,7 +71,9 @@ public class MessagingAndRoutingManagerIT {
     	mrMgr = pico.getComponent(MessagingAndRoutingManager.class);
     	
     	adManager = pico.getComponent(AdapterManager.class);
-    	  	
+    	
+    	//registers the new output adapter type. Since it is a stateful one, and a new instance will get instantiated when needed, we do not need the return value. It would make sense in case of a stateful one.
+    	adManager.registerOutputAdapter(at.ac.tuwien.dsg.smartcom.messaging.adapter.StatefulAdapter.class);  	
 
         pico.start();
     }
@@ -83,23 +87,15 @@ public class MessagingAndRoutingManagerIT {
         pico.stop();
     }
 
-    //TODO This test does not work at all... I (philipp) tried to fix it but the whole test setup seems to be wrong, please fix it.
-//    @Test
-    public void test() throws Exception {
+    
+    @Test
+    public void testCollectiveDeliveryAcknowledged() throws Exception {
     	
-    	//registers the new output adapter type. Since it is a stateful one, and a new instance will get instantiated when needed, we do not need the return value. It would make sense in case of a stateful one.
-    	adManager.registerOutputAdapter(at.ac.tuwien.dsg.smartcom.messaging.adapter.StatefulAdapter.class); 
-    	
-    	
-    	Identifier[] outputAdapters = new Identifier[3];
-    	Identifier[] inputAdapters = new Identifier[3];
     	
     	for (int i=1; i<4; i++){
     		//creates an instance of stateful adapter, and returns its Identifier
     		PeerInfo pinf = peerInfoService.getPeerInfo(Identifier.peer("peer" + i));
     		assertNotNull(pinf);
-    		//outputAdapters[i-1] = adManager.createEndpointForPeer(pinf).get(0);
-    		//inputAdapters[i-1] = adManager.addPullAdapter(new TestInputPullAdapter("peer"+ i + ".stateful"), 2000, false);
     	}
     	
     	
@@ -108,11 +104,14 @@ public class MessagingAndRoutingManagerIT {
     							 .setReceiverId(Identifier.collective("col1"))
     							 .setSenderId(PredefinedMessageHelper.taskExecutionEngine)
     							 .setConversationId("conversation 1")
-    							 .setType(null) //TODO What to set here?
+    							 .setWantsAcknowledgement(true)
+    							 .setType(null) 
     							 .create();
     	
     	NotificationCallback_TestLocal receiver = new NotificationCallback_TestLocal(lock, receivedMessage);
-    	mrMgr.registerNotificationCallback(receiver);
+    	Identifier receiverId = mrMgr.registerNotificationCallback(receiver);
+    	
+    	
     	
     	lock.lock();
         try {
@@ -120,16 +119,64 @@ public class MessagingAndRoutingManagerIT {
         	receivedMessage.await();
         	Message receivedMessage = receiver.receivedMessage;
         	
-        	assertNotNull(receivedMessage);
-        	//assertEquals("ACK", receivedMessage.getSubtype());
+        	assertNotNull("Received message should not be null", receivedMessage);
+        	assertEquals("Received message should be an ACK", PredefinedMessageHelper.ACK_SUBTYPE_CHECKED, receivedMessage.getSubtype());
+        	assertEquals("RefersTo() field of the ACK message should correspond to the ID of the sent message", msg.getId().getId(), receivedMessage.getRefersTo().getId());
         	
         }finally {
             lock.unlock();
+            mrMgr.unregisterNotificationCallback(receiverId);
         }
 	
      
     }
+    
 
+    @Test
+    public void testCollectiveDeliveryUnacknowledged() throws Exception {
+    	
+    	
+    	Message msg = new Message.MessageBuilder()
+    							 .setContent("msg 1 contents)")
+    							 .setReceiverId(Identifier.collective("col1"))
+    							 .setSenderId(PredefinedMessageHelper.taskExecutionEngine)
+    							 .setConversationId("conversation 1")
+    							 .setWantsAcknowledgement(false)
+    							 .setType(null) 
+    							 .create();
+    	
+    	NotificationCallback_TestLocal receiver = new NotificationCallback_TestLocal(lock, receivedMessage);
+    	Identifier receiverId = mrMgr.registerNotificationCallback(receiver);
+    	
+    	
+    	
+    	lock.lock();
+        try {
+        	mrMgr.send(msg);
+        	receivedMessage.await(6000, TimeUnit.MILLISECONDS);
+        	Message receivedMessage = receiver.receivedMessage;
+        	
+        	assertNull("Received message should be null", receivedMessage);
+
+        	
+        }finally {
+            lock.unlock();
+            mrMgr.unregisterNotificationCallback(receiverId);
+        }
+	
+     
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     private class CollectiveInfoCallback_TestLocal implements CollectiveInfoCallback {
     	
 

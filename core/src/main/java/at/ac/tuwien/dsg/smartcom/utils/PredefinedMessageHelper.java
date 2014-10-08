@@ -27,6 +27,19 @@ public final class PredefinedMessageHelper {
     public static final String REPLY_SUBTYPE = "REPLY";
     public static final String FAILED_SUBTYPE = "FAILED";
     public static final String ERROR_SUBTYPE = "ERROR";
+    
+    
+    public static boolean isPredefinedType(Message message){
+    	if (message == null || message.equals("")) return false;
+    	switch (message.getType()){
+	    	case AUTH_TYPE:
+	    	case CONTROL_TYPE:
+	    		return true;
+	    	case DATA_TYPE:
+	    	default:
+	    		return false;
+    	}
+    }
 
     public static Message createAuthenticationRequestMessage(Identifier sender, String password) {
         return new Message.MessageBuilder()
@@ -73,6 +86,7 @@ public final class PredefinedMessageHelper {
                 .setReceiverId(message.getSenderId())
                 .setConversationId(message.getConversationId())
                 .setRefersTo(message.getId())
+                .setWantsAcknowledgement(message.isWantsAcknowledgement()) //this field indicAtes whether the sender wants the ACK sent back or not
                 .setType(CONTROL_TYPE)
                 .setSubtype(ACK_SUBTYPE)
                 .create();
@@ -128,12 +142,12 @@ public final class PredefinedMessageHelper {
      * @param message
      * @return
      */
-    public static Message createDeliveryErrorMessageFromAdaptersCommunicationErrorMessage(Message message) {    	
+    public static Message createDeliveryErrorMessageFromAdaptersCommunicationErrorMessage(Message message, String errMsg) {    	
     	return new Message.MessageBuilder()
                 .setReceiverId(null) //to differentiate from real messages in messageHandle, e.g., to leave isPrimaryRecipient false, and to allow determineReceivers() to handle it properly
                 .setConversationId(message.getConversationId())
                 .setRefersTo(message.getRefersTo()) //refersTo should already be correctly set
-                .setContent(message.getContent())
+                .setContent("Delivery error for MSG " + message.getRefersTo() + ": " + errMsg)
                 
                 .setId(message.getId()) //we take the id of the original message. This means it must not go through send() or it will get discarded
                 
@@ -154,7 +168,7 @@ public final class PredefinedMessageHelper {
         .setReceiverId(null) //to differentiate from real messages in messageHandle, e.g., to leave isPrimaryRecipient false, and to allow determineReceivers() to handle it properly
         .setConversationId(message.getConversationId())
         .setRefersTo(message.getRefersTo()) //refersTo should already be correctly set
-        .setContent(message.getContent())
+        .setContent("ACK delivery of message " + message.getRefersTo())
         
         .setId(message.getId()) //we take the id of the original message. This means it must not go through send() or it will get discarded
         
@@ -173,4 +187,5 @@ public final class PredefinedMessageHelper {
                 .setSubtype(TIMEOUT_SUBTYPE)
                 .create();
     }
+    
 }

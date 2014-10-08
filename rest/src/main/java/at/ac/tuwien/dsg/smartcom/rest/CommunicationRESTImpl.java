@@ -50,7 +50,6 @@ public class CommunicationRESTImpl {
     private HttpServer server;
     private final URI serverURI;
 
-    @Inject
     private ExecutorService executorService;
 
     @Inject
@@ -61,6 +60,12 @@ public class CommunicationRESTImpl {
 
     public CommunicationRESTImpl(Communication communication, StatisticBean statistic) {
         this();
+        this.communication = communication;
+        this.statistic = statistic;
+    }
+
+    public CommunicationRESTImpl(int port, String serverURIPostfix, Communication communication, StatisticBean statistic) {
+        this(port, serverURIPostfix);
         this.communication = communication;
         this.statistic = statistic;
     }

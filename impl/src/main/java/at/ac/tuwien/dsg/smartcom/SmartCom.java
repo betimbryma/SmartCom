@@ -49,7 +49,11 @@ public class SmartCom {
     private static final Logger log = LoggerFactory.getLogger(SmartCom.class);
 
     public static final String MONGODB_DATABASE = "SmartCom";
-    public static final int ACTIVE_MQ_PORT = 61616;
+    public static final int ACTIVE_MQ_DEFAULT_PORT = 61616;
+    public static final int REST_API_DEFAULT_PORT = 8080;
+
+    private int activeMQPort = ACTIVE_MQ_DEFAULT_PORT;
+    private int restAPIPort = REST_API_DEFAULT_PORT;
 
     private Communication communication;
     private MessageInfoService messageInfoService;
@@ -68,6 +72,19 @@ public class SmartCom {
         this.peerManager = peerManager;
         this.peerInfoCallback = peerInfoCallback;
         this.collectiveInfoCallback = collectiveInfoCallback;
+    }
+
+    public void setActiveMqPort(int port) {
+        activeMQPort = port;
+    }
+
+    public void setRestApiPort(int port) {
+        restAPIPort = port;
+    }
+
+    public void resetDefault() {
+        activeMQPort = ACTIVE_MQ_DEFAULT_PORT;
+        restAPIPort = REST_API_DEFAULT_PORT;
     }
 
     public void initializeSmartCom() throws CommunicationException {
@@ -187,7 +204,7 @@ public class SmartCom {
 
     private void initRESTAPI() {
         log.debug("Initializing REST API");
-        communicationREST = new CommunicationRESTImpl(communication, pico.getComponent(StatisticBean.class));
+        communicationREST = new CommunicationRESTImpl(restAPIPort, "", communication, pico.getComponent(StatisticBean.class));
         communicationREST.init();
     }
 
@@ -196,11 +213,11 @@ public class SmartCom {
     private void initMessageBroker() throws CommunicationException {
         log.debug("Initializing message broker");
         try {
-            ApacheActiveMQUtils.startActiveMQWithoutPersistence(ACTIVE_MQ_PORT); //uses standard port
+            ApacheActiveMQUtils.startActiveMQWithoutPersistence(activeMQPort); //uses standard port
         } catch (Exception e) {
             throw new CommunicationException(e, new ErrorCode(10, "Could not initialize message broker"));
         }
-        messageBroker = new ApacheActiveMQMessageBroker("localhost", ACTIVE_MQ_PORT, true, pico.getComponent(StatisticBean.class));
+        messageBroker = new ApacheActiveMQMessageBroker("localhost", activeMQPort, true, pico.getComponent(StatisticBean.class));
         pico.addComponent(messageBroker);
 //        pico.addComponent(MessageBroker.class, SimpleMessageBroker.class); //enables this line and disable the ones above for a fast local execution
     }

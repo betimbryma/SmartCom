@@ -26,5 +26,7 @@ public interface MessagingAndRoutingManager {
 
     public RoutingRule removeRouting(Identifier routeId);
 
-    public void registerNotificationCallback(NotificationCallback callback);
+    public Identifier registerNotificationCallback(NotificationCallback callback);
+    
+    public boolean unregisterNotificationCallback(Identifier callback);
 }

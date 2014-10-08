@@ -12,6 +12,8 @@ import at.ac.tuwien.dsg.smartcom.manager.MessagingAndRoutingManager;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
+import at.ac.tuwien.dsg.smartcom.utils.PredefinedMessageHelper;
+
 import org.picocontainer.annotations.Inject;
 
 /**
@@ -28,6 +30,11 @@ public class CommunicationImpl implements Communication {
 
     @Override
     public Identifier send(Message message) throws CommunicationException {
+
+    	if (PredefinedMessageHelper.isPredefinedType(message)){ //prevent external users from setting the message to be a control type
+    		message.setType(null);
+    	}
+
         return marManager.send(message);
     }
 
@@ -72,7 +79,12 @@ public class CommunicationImpl implements Communication {
     }
 
     @Override
-    public void registerNotificationCallback(NotificationCallback callback) {
-        marManager.registerNotificationCallback(callback);
+    public Identifier registerNotificationCallback(NotificationCallback callback) {
+        return marManager.registerNotificationCallback(callback);
+    }
+    
+    @Override
+    public boolean unregisterNotificationCallback(Identifier callback){
+    	return marManager.unregisterNotificationCallback(callback);
     }
 }

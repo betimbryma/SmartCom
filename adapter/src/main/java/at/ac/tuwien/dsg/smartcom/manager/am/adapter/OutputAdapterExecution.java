@@ -58,9 +58,7 @@ public class OutputAdapterExecution implements MessageListener {
         log.debug("Adapter {}: Sending message {} to peer {}", id, message, peerChannelAddress);
         try {
             adapter.push(message, peerChannelAddress);
-
-            //TODO should we send an acknowledgement here?
-            broker.publishControl(PredefinedMessageHelper.createAcknowledgeMessage(message));
+            broker.publishControl(PredefinedMessageHelper.createAcknowledgeMessage(message)); //this is the internal acknowledgment message used to determine if the delivery policies will hold.
         } catch (Exception e) {
             broker.publishControl(PredefinedMessageHelper.createCommunicationErrorMessage(message, e.getMessage()));
         }

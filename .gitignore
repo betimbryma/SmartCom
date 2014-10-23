@@ -18,6 +18,7 @@ target/
 # others
 mongo/
 activemq-data/
+performance/
 
 #Java
 *.class

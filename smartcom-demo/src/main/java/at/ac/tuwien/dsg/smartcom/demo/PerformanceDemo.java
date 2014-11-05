@@ -19,6 +19,7 @@ package at.ac.tuwien.dsg.smartcom.demo;
 
 import at.ac.tuwien.dsg.smartcom.Communication;
 import at.ac.tuwien.dsg.smartcom.SmartCom;
+import at.ac.tuwien.dsg.smartcom.SmartComBuilder;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
 import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
@@ -138,8 +139,7 @@ public class PerformanceDemo {
         final int messages = (int) (messageProducersAmount*peersAmount* messages_per_worker_per_peer*10);
         CountDownLatch counter = new CountDownLatch(messages);
 
-        SmartCom smartCom = new SmartCom(peerManager, peerManager, peerManager);
-        smartCom.initializeSmartComWithoutAdapters();
+        SmartCom smartCom = new SmartComBuilder(peerManager, peerManager, peerManager).create();
         Communication communication = smartCom.getCommunication();
         communication.registerNotificationCallback(new NotificationHandler(counter));
         communication.registerOutputAdapter(OutputAdapter.class);

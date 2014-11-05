@@ -34,6 +34,9 @@ public class PeerChannelAddress {
     private Identifier channelType; //type of the channel
     private List<? extends Serializable> contactParameters; //adapter specific contact/access parameters
 
+    public PeerChannelAddress() {
+    }
+
     public PeerChannelAddress(Identifier peerId, Identifier channelType, List<? extends Serializable> contactParameters) {
         this.peerId = peerId;
         this.channelType = channelType;

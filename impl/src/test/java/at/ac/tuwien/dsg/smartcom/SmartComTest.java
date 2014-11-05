@@ -31,8 +31,7 @@ public class SmartComTest {
 
     //@Test
     public void testSmartComInterface() throws Exception {
-        SmartCom smartCom = new SmartCom(new PeerManager(), new PeerInfoCallback(), new CollectiveInfo());
-        smartCom.initializeSmartCom();
+        SmartCom smartCom = new SmartComBuilder(new PeerManager(), new PeerInfoCallback(), new CollectiveInfo()).create();
 
         assertNotNull(smartCom.getCommunication());
     }

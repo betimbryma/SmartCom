@@ -43,6 +43,7 @@ public interface MessageBroker extends InputPublisher {
      * and that there can only be one listener at a time.
      *
      * @param listener for input messages
+     * @return listener that can be cancelled
      */
     public CancelableListener registerInputListener(MessageListener listener);
 
@@ -60,8 +61,9 @@ public interface MessageBroker extends InputPublisher {
      * new request messages for a given receiver. Note that a message listener
      * will consume the message and that there can only be one listener at a
      * time for each id.
-     *  @param id the id of the request receiver
+     * @param id the id of the request receiver
      * @param listener for request messages
+     * @return listener that can be cancelled
      */
     public CancelableListener registerRequestListener(Identifier id, MessageListener listener);
 
@@ -87,8 +89,10 @@ public interface MessageBroker extends InputPublisher {
      * new output messages for a given receiver. Note that a message listener
      * will consume the message and that there can only be one listener at a
      * time for each id.
-     *  @param id the id of the task receiver
+     *
+     * @param id the id of the task receiver
      * @param listener for task messages
+     * @return listener that can be cancelled
      */
     public CancelableListener registerOutputListener(Identifier id, MessageListener listener);
 
@@ -123,6 +127,7 @@ public interface MessageBroker extends InputPublisher {
      * and that there can only be one listener at a time.
      *
      * @param listener for control messages
+     * @return listener that can be cancelled
      */
     public CancelableListener registerControlListener(MessageListener listener);
 
@@ -147,6 +152,7 @@ public interface MessageBroker extends InputPublisher {
      * and that there can only be one listener at a time.
      *
      * @param listener for authentication messages
+     * @return listener that can be cancelled
      */
     public CancelableListener registerAuthListener(MessageListener listener);
 
@@ -171,6 +177,7 @@ public interface MessageBroker extends InputPublisher {
      * and that there can only be one listener at a time.
      *
      * @param listener for message info request messages
+     * @return listener that can be cancelled
      */
     public CancelableListener registerMessageInfoListener(MessageListener listener);
 
@@ -195,6 +202,7 @@ public interface MessageBroker extends InputPublisher {
      * and that there can only be one listener at a time.
      *
      * @param listener for metrics request messages
+     * @return listener that can be cancelled
      */
     public CancelableListener registerMetricsListener(MessageListener listener);
 
@@ -219,6 +227,7 @@ public interface MessageBroker extends InputPublisher {
      * and that there can only be one listener at a time.
      *
      * @param listener for log messages
+     * @return listener that can be cancelled
      */
     public CancelableListener registerLogListener(MessageListener listener);
 }

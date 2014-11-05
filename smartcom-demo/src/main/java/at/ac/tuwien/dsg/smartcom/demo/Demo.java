@@ -19,6 +19,7 @@ package at.ac.tuwien.dsg.smartcom.demo;
 
 import at.ac.tuwien.dsg.smartcom.Communication;
 import at.ac.tuwien.dsg.smartcom.SmartCom;
+import at.ac.tuwien.dsg.smartcom.SmartComBuilder;
 import at.ac.tuwien.dsg.smartcom.adapters.DropboxInputAdapter;
 import at.ac.tuwien.dsg.smartcom.adapters.EmailInputAdapter;
 import at.ac.tuwien.dsg.smartcom.callback.NotificationCallback;
@@ -195,8 +196,7 @@ public class Demo {
             peerManager.addPeer(peer.getId(), peer, peer.getId().getId());
         }
 
-        SmartCom smartCom = new SmartCom(peerManager, peerManager, peerManager);
-        smartCom.initializeSmartCom();
+        SmartCom smartCom = new SmartComBuilder(peerManager, peerManager, peerManager).create();
         Communication communication = smartCom.getCommunication();
         communication.registerNotificationCallback(new NotificationHandler());
 

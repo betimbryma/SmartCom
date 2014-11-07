@@ -33,6 +33,7 @@ public class JsonMessageDTO implements Serializable {
     private String type;
     private String subtype;
     private String sender;
+    private String receiver;
     private String conversation;
     private String language;
     private String securityToken;
@@ -41,11 +42,18 @@ public class JsonMessageDTO implements Serializable {
     }
 
     public JsonMessageDTO(Message message) {
-        this.id = message.getId().getId();
+        if (message.getId() != null) {
+            this.id = message.getId().getId();
+        }
         this.content = message.getContent();
         this.type = message.getType();
         this.subtype = message.getSubtype();
-        this.sender = message.getSenderId().getId();
+        if (message.getSenderId() != null) {
+            this.sender = message.getSenderId().getId();
+        }
+        if (message.getReceiverId() != null) {
+            this.receiver = message.getReceiverId().getId();
+        }
         this.conversation = message.getConversationId();
         this.language = message.getLanguage();
         this.securityToken = message.getSecurityToken();
@@ -53,14 +61,22 @@ public class JsonMessageDTO implements Serializable {
 
     public Message createMessage() {
         Message.MessageBuilder builder = new Message.MessageBuilder()
-                .setId(Identifier.message(id))
                 .setContent(content)
                 .setType(type)
                 .setSubtype(subtype)
-                .setSenderId(Identifier.peer(sender))
                 .setConversationId(conversation)
                 .setLanguage(language)
                 .setSecurityToken(securityToken);
+
+        if (id != null) {
+            builder = builder.setId(Identifier.message(id));
+        }
+        if (sender != null) {
+            builder = builder.setSenderId(Identifier.peer(sender));
+        }
+        if (receiver != null) {
+            builder = builder.setReceiverId(Identifier.peer(receiver));
+        }
 
         return builder.create();
     }
@@ -159,6 +175,7 @@ public class JsonMessageDTO implements Serializable {
                 ", type='" + type + '\'' +
                 ", subtype='" + subtype + '\'' +
                 ", sender='" + sender + '\'' +
+                ", receiver='" + receiver + '\'' +
                 ", conversation='" + conversation + '\'' +
                 ", language='" + language + '\'' +
                 ", securityToken='" + securityToken + '\'' +

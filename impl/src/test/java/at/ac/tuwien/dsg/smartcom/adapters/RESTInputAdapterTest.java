@@ -25,6 +25,7 @@ import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,11 +36,13 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class RESTInputAdapterTest {
 
@@ -105,11 +108,57 @@ public class RESTInputAdapterTest {
 
         latch.await();
 
+        for (Message msg : publisher.getMessages()) {
+            assertEquals(message, msg);
+        }
+
+
+    }
+
+    @Test(timeout = 20000l)
+    public void testRESTInputAdapter_nullIds() throws Exception {
+        final WebTarget target = client.target("http://localhost:"+port+"/test");
+
+        final Message message = new Message.MessageBuilder()
+                .setContent("testContent")
+                .setType("testType")
+                .setSubtype("testSubType")
+                .setConversationId("conversationId")
+                .setTtl(3)
+                .setLanguage("testLanguage")
+                .setSecurityToken("securityToken")
+                .create();
+
+        final CountDownLatch latch = new CountDownLatch(20);
+
+        publisher.setLatch(latch);
+
+        for (int i = 0; i < 20; i++) {
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.json(new JsonMessageDTO(message)), Response.class);
+                    assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+                }
+            });
+        }
+
+        latch.await();
+
+        assertThat(publisher.getMessages(), Matchers.hasSize(20));
+
+        for (Message msg : publisher.getMessages()) {
+            assertNull(msg.getId());
+            assertNull(msg.getReceiverId());
+            assertNull(msg.getSenderId());
+        }
+
     }
 
     private class Publisher implements InputPublisher {
 
         private CountDownLatch latch;
+        private List<Message> messages = new ArrayList<>();
 
         public void setLatch(CountDownLatch latch) {
             this.latch = latch;
@@ -117,7 +166,12 @@ public class RESTInputAdapterTest {
 
         @Override
         public void publishInput(Message message) {
+            messages.add(message);
             latch.countDown();
+        }
+
+        public List<Message> getMessages() {
+            return messages;
         }
     }
 

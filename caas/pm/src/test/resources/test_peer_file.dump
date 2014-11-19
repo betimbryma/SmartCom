@@ -1,0 +1,5 @@
+{"id":1,"name":"Peer1","deliveryPolicy":"AT_LEAST_ONE","peerAddressList":[{"type":"email","values":["peer@peer.de"]},{"type":"skype","values":["peerSkype"]}]}
+{"id":2,"name":"Peer2","deliveryPolicy":"AT_LEAST_ONE","peerAddressList":[{"type":"email","values":["peer@peer.de"]},{"type":"skype","values":["peerSkype"]}]}
+{"id":3,"name":"Peer3","deliveryPolicy":"AT_LEAST_ONE","peerAddressList":[{"type":"email","values":["peer@peer.de"]},{"type":"skype","values":["peerSkype"]}]}
+{"id":4,"name":"Peer4","deliveryPolicy":"AT_LEAST_ONE","peerAddressList":[{"type":"email","values":["peer@peer.de"]},{"type":"skype","values":["peerSkype"]}]}
+{"id":5,"name":"Peer5","deliveryPolicy":"AT_LEAST_ONE","peerAddressList":[{"type":"email","values":["peer@peer.de"]},{"type":"skype","values":["peerSkype"]}]}

@@ -1,0 +1,4 @@
+{"id":"1","peers":["1","2","3"],"deliveryPolicy":"TO_ALL_MEMBERS"}
+{"id":"2","peers":["3","4","5"],"deliveryPolicy":"TO_ALL_MEMBERS"}
+{"id":"3","peers":["2"],"deliveryPolicy":"TO_ALL_MEMBERS"}
+{"id":"4","peers":[],"deliveryPolicy":"TO_ALL_MEMBERS"}

@@ -18,6 +18,7 @@
 package at.ac.tuwien.dsg.smartcom.broker.impl;
 
 import at.ac.tuwien.dsg.smartcom.broker.MessageListener;
+import at.ac.tuwien.dsg.smartcom.broker.util.FreePortProviderUtil;
 import at.ac.tuwien.dsg.smartcom.broker.utils.ApacheActiveMQUtils;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
@@ -41,8 +42,10 @@ public class ApacheActiveMQMessageBrokerTest {
 
     @Before
     public void setUp() throws Exception {
-        ApacheActiveMQUtils.startActiveMQWithoutPersistence(61616); //uses standard port
-        broker = new ApacheActiveMQMessageBroker("localhost", 61616, new StatisticBean());
+        int port = FreePortProviderUtil.getFreePort();
+
+        ApacheActiveMQUtils.startActiveMQWithoutPersistence(port); //uses standard port
+        broker = new ApacheActiveMQMessageBroker("localhost", port, new StatisticBean());
     }
 
     @After

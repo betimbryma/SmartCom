@@ -23,12 +23,8 @@ import at.ac.tuwien.dsg.smartcom.callback.PeerInfoCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchCollectiveException;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
-import at.ac.tuwien.dsg.smartcom.model.CollectiveInfo;
-import at.ac.tuwien.dsg.smartcom.model.Identifier;
-import at.ac.tuwien.dsg.smartcom.model.PeerInfo;
+import at.ac.tuwien.dsg.smartcom.model.*;
 import at.ac.tuwien.dsg.smartcom.utils.PropertiesLoader;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +34,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -52,28 +50,41 @@ public class SmartSocRESTPeerManager implements PeerAuthenticationCallback, Peer
     private final String authenticationURL;
 
     private final long userId;
+    private final String peerURL2;
+    private final String peerURL3;
 
     public SmartSocRESTPeerManager(long userId) {
+        this(userId, PropertiesLoader.getProperty("pm.properties", "collectiveURL"),
+                PropertiesLoader.getProperty("pm.properties", "peerURL"),
+                PropertiesLoader.getProperty("pm.properties", "peerURL2"),
+                PropertiesLoader.getProperty("pm.properties", "peerURL3"),
+                PropertiesLoader.getProperty("pm.properties", "authenticationURL"));
+    }
+
+    public SmartSocRESTPeerManager(long userId, String collectiveURL, String peerURL, String peerURL2, String peerURL3, String authenticationURL) {
         this.userId = userId;
         this.client = ClientBuilder.newBuilder()
                 .register(JacksonFeature.class)
-                .property(ClientProperties.CONNECT_TIMEOUT, 1000)
-                .property(ClientProperties.READ_TIMEOUT,    1000)
+//                .register(new LoggingFilter(java.util.logging.Logger.getLogger("Jersey"), true))
+//                .property(ClientProperties.CONNECT_TIMEOUT, 1000)
+//                .property(ClientProperties.READ_TIMEOUT,    1000)
                 .build();
 
-        collectiveURL = PropertiesLoader.getProperty("pm.properties", "collectiveURL");
-        peerURL = PropertiesLoader.getProperty("pm.properties", "peerURL");
-        authenticationURL = PropertiesLoader.getProperty("pm.properties", "authenticationURL");
+        this.collectiveURL = collectiveURL;
+        this.peerURL = peerURL;
+        this.peerURL2 = peerURL2;
+        this.peerURL3 = peerURL3;
+        this.authenticationURL = authenticationURL;
     }
 
     @Override
     public CollectiveInfo getCollectiveInfo(Identifier collective) throws NoSuchCollectiveException {
         try {
-            WebTarget target = client.target(collectiveURL + "/" + collective.getId());
+            WebTarget target = client.target(collectiveURL.replace("<collective_id>", collective.getId()));
             target.queryParam("userId", userId);
-            target.queryParam("attributeDefinitionIds", "NULL");
+//            target.queryParam("attributeDefinitionIds", "NULL");
 
-            ClientResponse response = target.request(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+            Response response = target.request(MediaType.APPLICATION_JSON).get();
             String content = response.readEntity(String.class);
             log.trace(content);
 
@@ -109,13 +120,38 @@ public class SmartSocRESTPeerManager implements PeerAuthenticationCallback, Peer
     public PeerInfo getPeerInfo(Identifier id) throws NoSuchPeerException {
 
         try {
-            WebTarget target = client.target(peerURL+ "/" + id.getId());
+            WebTarget target = client.target(peerURL.replace("<user_id>", id.getId()));
             target.queryParam("userId", userId);
-            target.queryParam("attributeDefinitionIds", "NULL");
 
             Response response = target.request(MediaType.APPLICATION_JSON).get();
             String content = response.readEntity(String.class);
             log.trace(content);
+
+            String[] strings = JSONConverter.parsePeerInfo(id, content);
+
+            PeerInfo info = new PeerInfo();
+            info.setId(id);
+            info.setDeliveryPolicy(DeliveryPolicy.Peer.values()[(int)Integer.valueOf(strings[4])]);
+            info.setPrivacyPolicies(null);
+
+            target = client.target(peerURL2.replace("<user_id>", strings[3]));
+            target.queryParam("userId", userId);
+
+            content = target.request(MediaType.APPLICATION_JSON).get(String.class);
+
+            String[] strings2 = JSONConverter.parseUserInfo(id, content);
+
+            List<PeerChannelAddress> addressList = new ArrayList<>(strings2.length);
+            for (String s : strings2) {
+                target = client.target(peerURL3.replace("<delivery_address_id>", s));
+                target.queryParam("userId", userId);
+
+                content = target.request(MediaType.APPLICATION_JSON).get(String.class);
+
+                addressList.add(JSONConverter.parsePeerAddressInfo(id, content));
+            }
+
+            info.setAddresses(addressList);
 
             return JSONConverter.getPeerInfo(id, content);
         } catch (NoSuchPeerException e) {

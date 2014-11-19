@@ -17,95 +17,81 @@
  */
 package at.ac.tuwien.dsg.smartcom.integration;
 
-import at.ac.tuwien.dsg.smartcom.model.*;
-import org.hamcrest.Matchers;
-import org.junit.Test;
+import at.ac.tuwien.dsg.smartcom.adapters.FreePortProviderUtil;
+import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchCollectiveException;
+import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
+import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
+import at.ac.tuwien.dsg.smartcom.model.CollectiveInfo;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
+import at.ac.tuwien.dsg.smartcom.model.PeerInfo;
+import at.ac.tuwien.dsg.smartcom.rest.ObjectMapperProvider;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.net.URI;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertNotNull;
 
 public class SmartSocRESTPeerManagerTest {
 
-    @Test
-    public void testGetCollectiveInfo() throws Exception {
-        String instance =
-                "{" +
-                    "\"name\": [\"test\", \"test1\", \"test3\"]," +
-                    "\"owner\": {}," +
-                    "\"members\": [" +
-                        "{ " +
-                            "\"username\": \"test1\"," +
-                            "\"password\": \"test1\"," +
-                            "\"peerId\": 1," +
-                            "\"mainProfileDefinitionId\": 2," +
-                            "\"defaultPolicies\": []," +
-                            "\"profileDefinitions\": []," +
-                            "\"id\": 1" +
-                        "}," +
-                        "{ " +
-                            "\"username\": \"test2\"," +
-                            "\"password\": \"test2\"," +
-                            "\"peerId\": 2," +
-                            "\"mainProfileDefinitionId\": 3," +
-                            "\"defaultPolicies\": []," +
-                            "\"profileDefinitions\": []," +
-                            "\"id\": 2" +
-                        "}," +
-                    "]," +
-                    "\"id\": 1" +
-                "}";
+    private HttpServer server;
+    private SmartSocRESTPeerManager manager;
 
+    public static void main(String[] args) throws NoSuchCollectiveException, NoSuchPeerException, PeerAuthenticationException {
+        SmartSocRESTPeerManager manager = new SmartSocRESTPeerManager(100);
 
-        CollectiveInfo collectiveInfo = JSONConverter.getCollectiveInfo(Identifier.collective("1"), instance);
+        CollectiveInfo collectiveInfo = manager.getCollectiveInfo(Identifier.collective("1"));
+        System.out.println(collectiveInfo);
 
-        assertEquals(Identifier.collective("1"), collectiveInfo.getId());
-        assertEquals(DeliveryPolicy.Collective.TO_ALL_MEMBERS, collectiveInfo.getDeliveryPolicy());
-        assertThat(collectiveInfo.getPeers(), Matchers.contains(Identifier.peer("1"), Identifier.peer("2")));
+        PeerInfo peerInfo = manager.getPeerInfo(Identifier.peer("1"));
+        System.out.println(peerInfo);
+
+        boolean authenticate = manager.authenticate(Identifier.peer("1"), "1");
+        System.out.println("Authentication: "+authenticate);
     }
 
-    @Test
-    public void testAuthenticate() throws Exception {
+//    @Before
+    public void setUp() throws Exception {
+        int freePort = FreePortProviderUtil.getFreePort();
 
-    }
+        String url = "http://localhost:" + freePort + "/test/";
+        server = GrizzlyHttpServerFactory.createHttpServer(URI.create(url), new RESTApplication());
+        manager = new SmartSocRESTPeerManager(100, url+"collective", url+"peer",url+"peer",url+"peer", url+"authenticate");
 
-    @Test
-    public void testGetPeerInfo() throws Exception {
-        String instance =
-                "{" +
-                    "\"definitionId\": 1," +
-                    "\"ownerId\": 1," +
-                    "\"name\": [\"peer1\", \"peer2\"]," +
-                    "\"deliveryPolicy\": 0," +
-                    "\"deliveryAddresses\": [" +
-                        "{"+
-                            "\"name\": \"email\"," +
-                            "\"type\": \"email\"," +
-                            "\"value\": [\"a.b@c.de\", \"c.b@a.de\"]"+
-                        "},"+
-                        "{"+
-                            "\"name\": \"rest\"," +
-                            "\"type\": \"rest\"," +
-                            "\"value\": [\"http://localhost:8080/peer\"]"+
-                        "}"+
-                    "]," +
-                    "\"agreedReqs\": null," +
-                    "\"id\": 1"+
-                "}";
-
-        PeerInfo peerInfo = JSONConverter.getPeerInfo(Identifier.peer("1"), instance);
-
-        assertEquals(Identifier.peer("1"), peerInfo.getId());
-        assertEquals(DeliveryPolicy.Peer.TO_ALL_CHANNELS, peerInfo.getDeliveryPolicy());
-        assertThat(peerInfo.getPrivacyPolicies(), Matchers.empty());
-        assertThat(peerInfo.getAddresses(), Matchers.hasSize(2));
-        for (PeerChannelAddress address : peerInfo.getAddresses()) {
-            if (Identifier.channelType("email").equals(address.getChannelType())) {
-                assertThat(address.getContactParameters(), Matchers.<Serializable>contains("a.b@c.de", "c.b@a.de"));
-            } else {
-                assertThat(address.getContactParameters(), Matchers.<Serializable>contains("http://localhost:8080/peer"));
-            }
+        try {
+            server.start();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
+
+//    @After
+    public void tearDown() throws Exception {
+        server.shutdownNow();
+    }
+
+//    @Test
+    public void testCollective() throws Exception {
+        CollectiveInfo collectiveInfo = manager.getCollectiveInfo(Identifier.collective("1"));
+        assertNotNull(collectiveInfo);
+    }
+
+//    @Test
+    public void testPeer() throws Exception {
+        PeerInfo peerInfo = manager.getPeerInfo(Identifier.peer("1"));
+        assertNotNull(peerInfo);
+    }
+
+    private class RESTApplication extends ResourceConfig {
+        private RESTApplication() {
+//            register(new LoggingFilter(java.util.logging.Logger.getLogger("Jersey"), true));
+            register(PeerManagerResource.class);
+            register(ObjectMapperProvider.class);
+            register(JacksonFeature.class);
+        }
+    }
+
 }

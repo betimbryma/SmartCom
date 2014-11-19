@@ -46,8 +46,8 @@ public final class JSONConverter {
 
         try {
             JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
-            if(jsonOutput.containsKey("members")) {
-                JSONArray members = (JSONArray) jsonOutput.get("members");
+            if(jsonOutput.containsKey("results")) {
+                JSONArray members = (JSONArray) jsonOutput.get("results");
                 if (members == null) {
                     throw new NoSuchCollectiveException();
                 }
@@ -55,9 +55,12 @@ public final class JSONConverter {
                     if (o == null) {
                         throw new NoSuchCollectiveException();
                     }
-                    JSONObject member = (JSONObject) o;
-                    String peerId = parseToString(member.get("peerId"));
-                    peerIDs.add(Identifier.peer(peerId));
+                    JSONArray array = (JSONArray)o;
+                    for (Object peer : array) {
+                        String peerId = parseToString(peer);
+                        peerIDs.add(Identifier.peer(peerId));
+                    }
+
                 }
             } else {
                 throw new NoSuchCollectiveException();
@@ -67,6 +70,100 @@ public final class JSONConverter {
         }
 
         return info;
+    }
+
+    public static String[] parsePeerInfo(Identifier peerId, String content) throws NoSuchPeerException {
+        String[] values = new String[5];
+        try {
+            JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
+            if (jsonOutput.containsKey("results")) {
+                JSONArray array = (JSONArray) jsonOutput.get("results");
+
+                if (array.size() == 0) {
+                    throw new NoSuchPeerException(peerId);
+                } if (array.size() > 0) {
+                    System.err.println("Multiple peers for a single peer returned... (JSONConverter)");
+                }
+
+                JSONArray innerArray = (JSONArray) array.get(0);
+                if (innerArray.size() != 5) {
+                    throw new NoSuchPeerException(peerId);
+                }
+
+                values[0] = parseToString(innerArray.get(0));
+                values[1] = parseToString(innerArray.get(1));
+                values[2] = parseToString(innerArray.get(2));
+                values[3] = parseToString(innerArray.get(3));
+                values[4] = parseToString(innerArray.get(4));
+
+                return values;
+            } else {
+                throw new NoSuchPeerException(peerId);
+            }
+        } catch (Exception e) {
+            throw new NoSuchPeerException(peerId);
+        }
+    }
+
+    public static String[] parseUserInfo(Identifier peerId, String content) throws NoSuchPeerException {
+        List<String> valueList = new ArrayList<>();
+        try {
+            JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
+            if (jsonOutput.containsKey("results")) {
+                JSONArray array = (JSONArray) jsonOutput.get("results");
+
+                if (array.size() == 0) {
+                    throw new NoSuchPeerException(peerId);
+                }
+
+                JSONArray innerArray = (JSONArray) array.get(0);
+                for (Object o : innerArray) {
+                    valueList.add(parseToString(o));
+                }
+
+                return valueList.toArray(new String[valueList.size()]);
+            } else {
+                throw new NoSuchPeerException(peerId);
+            }
+        } catch (Exception e) {
+            throw new NoSuchPeerException(peerId);
+        }
+    }
+
+    public static PeerChannelAddress parsePeerAddressInfo(Identifier peerId, String content) throws NoSuchPeerException {
+        PeerChannelAddress address = new PeerChannelAddress();
+        address.setPeerId(peerId);
+
+        List<String> valueList = new ArrayList<>();
+        try {
+            JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
+            if (jsonOutput.containsKey("results")) {
+                JSONArray array = (JSONArray) jsonOutput.get("results");
+
+                if (array.size() == 0) {
+                    throw new NoSuchPeerException(peerId);
+                }
+
+                JSONArray innerArray = (JSONArray) array.get(0);
+                boolean first = true;
+                for (Object o : innerArray) {
+                    if (first) {
+                        address.setChannelType(Identifier.channelType(parseToString(o)));
+                        first = false;
+                    } else {
+                        valueList.add(parseToString(o));
+                    }
+                }
+
+                address.setContactParameters(valueList);
+
+                return address;
+            } else {
+                throw new NoSuchPeerException(peerId);
+            }
+        } catch (Exception e) {
+            throw new NoSuchPeerException(peerId);
+        }
     }
 
     public static PeerInfo getPeerInfo(Identifier peerId, String content) throws NoSuchPeerException {

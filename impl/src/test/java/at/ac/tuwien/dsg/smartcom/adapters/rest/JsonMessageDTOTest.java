@@ -15,7 +15,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
- package at.ac.tuwien.dsg.smartcom.adapters.rest;
+package at.ac.tuwien.dsg.smartcom.adapters.rest;
 
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;

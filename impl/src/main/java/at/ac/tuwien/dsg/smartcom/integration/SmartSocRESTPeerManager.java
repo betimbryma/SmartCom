@@ -153,7 +153,7 @@ public class SmartSocRESTPeerManager implements PeerAuthenticationCallback, Peer
 
             info.setAddresses(addressList);
 
-            return JSONConverter.getPeerInfo(id, content);
+            return info;
         } catch (NoSuchPeerException e) {
             throw e;
         } catch (Exception e) {

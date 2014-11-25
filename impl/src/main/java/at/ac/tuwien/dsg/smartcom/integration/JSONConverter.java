@@ -19,17 +19,22 @@ package at.ac.tuwien.dsg.smartcom.integration;
 
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchCollectiveException;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
-import at.ac.tuwien.dsg.smartcom.model.*;
+import at.ac.tuwien.dsg.smartcom.model.CollectiveInfo;
+import at.ac.tuwien.dsg.smartcom.model.DeliveryPolicy;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.ProcessingException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public final class JSONConverter {
+    private static final Logger log = LoggerFactory.getLogger(JSONConverter.class);
 
     public static class ConverterException extends Exception {
 
@@ -43,30 +48,15 @@ public final class JSONConverter {
         final List<Identifier> peerIDs = new ArrayList<>();
         info.setPeers(peerIDs);
 
+        JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
+        String[] strings = parseResults(jsonOutput);
 
-        try {
-            JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
-            if(jsonOutput.containsKey("results")) {
-                JSONArray members = (JSONArray) jsonOutput.get("results");
-                if (members == null) {
-                    throw new NoSuchCollectiveException();
-                }
-                for (Object o : members) {
-                    if (o == null) {
-                        throw new NoSuchCollectiveException();
-                    }
-                    JSONArray array = (JSONArray)o;
-                    for (Object peer : array) {
-                        String peerId = parseToString(peer);
-                        peerIDs.add(Identifier.peer(peerId));
-                    }
-
-                }
-            } else {
-                throw new NoSuchCollectiveException();
-            }
-        } catch (ProcessingException | ClassCastException | IllegalStateException | ConverterException e) {
+        if (strings == null) {
             throw new NoSuchCollectiveException();
+        }
+
+        for (String string : strings) {
+            peerIDs.add(Identifier.peer(string));
         }
 
         return info;
@@ -74,153 +64,84 @@ public final class JSONConverter {
 
     public static String[] parsePeerInfo(Identifier peerId, String content) throws NoSuchPeerException {
         String[] values = new String[5];
-        try {
-            JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
-            if (jsonOutput.containsKey("results")) {
-                JSONArray array = (JSONArray) jsonOutput.get("results");
 
-                if (array.size() == 0) {
-                    throw new NoSuchPeerException(peerId);
-                } if (array.size() > 0) {
-                    System.err.println("Multiple peers for a single peer returned... (JSONConverter)");
-                }
+        JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
+        String[] strings = parseResults(jsonOutput);
 
-                JSONArray innerArray = (JSONArray) array.get(0);
-                if (innerArray.size() != 5) {
-                    throw new NoSuchPeerException(peerId);
-                }
-
-                values[0] = parseToString(innerArray.get(0));
-                values[1] = parseToString(innerArray.get(1));
-                values[2] = parseToString(innerArray.get(2));
-                values[3] = parseToString(innerArray.get(3));
-                values[4] = parseToString(innerArray.get(4));
-
-                return values;
-            } else {
-                throw new NoSuchPeerException(peerId);
-            }
-        } catch (Exception e) {
+        if (strings == null || strings.length != 5) {
             throw new NoSuchPeerException(peerId);
         }
+
+        values[0] = strings[0];
+        values[1] = strings[1];
+        values[2] = strings[2];
+        values[3] = strings[3];
+        values[4] = strings[4];
+
+        return values;
     }
 
     public static String[] parseUserInfo(Identifier peerId, String content) throws NoSuchPeerException {
-        List<String> valueList = new ArrayList<>();
-        try {
-            JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
-            if (jsonOutput.containsKey("results")) {
-                JSONArray array = (JSONArray) jsonOutput.get("results");
 
-                if (array.size() == 0) {
-                    throw new NoSuchPeerException(peerId);
-                }
+        JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
 
-                JSONArray innerArray = (JSONArray) array.get(0);
-                for (Object o : innerArray) {
-                    valueList.add(parseToString(o));
-                }
+        String[] strings = parseResults(jsonOutput);
 
-                return valueList.toArray(new String[valueList.size()]);
-            } else {
-                throw new NoSuchPeerException(peerId);
-            }
-        } catch (Exception e) {
+        if (strings == null) {
             throw new NoSuchPeerException(peerId);
         }
+
+        return strings;
     }
 
     public static PeerChannelAddress parsePeerAddressInfo(Identifier peerId, String content) throws NoSuchPeerException {
         PeerChannelAddress address = new PeerChannelAddress();
         address.setPeerId(peerId);
 
-        List<String> valueList = new ArrayList<>();
-        try {
-            JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
-            if (jsonOutput.containsKey("results")) {
-                JSONArray array = (JSONArray) jsonOutput.get("results");
+        JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
 
-                if (array.size() == 0) {
-                    throw new NoSuchPeerException(peerId);
-                }
+        String[] strings = parseResults(jsonOutput);
 
-                JSONArray innerArray = (JSONArray) array.get(0);
-                boolean first = true;
-                for (Object o : innerArray) {
-                    if (first) {
-                        address.setChannelType(Identifier.channelType(parseToString(o)));
-                        first = false;
-                    } else {
-                        valueList.add(parseToString(o));
-                    }
-                }
-
-                address.setContactParameters(valueList);
-
-                return address;
-            } else {
-                throw new NoSuchPeerException(peerId);
-            }
-        } catch (Exception e) {
+        if (strings == null || strings.length < 2) {
             throw new NoSuchPeerException(peerId);
         }
+
+        address.setChannelType(Identifier.channelType(strings[1]));
+
+        List<String> valueList = Arrays.asList(strings).subList(2, strings.length);
+        address.setContactParameters(valueList);
+
+        return address;
     }
 
-    public static PeerInfo getPeerInfo(Identifier peerId, String content) throws NoSuchPeerException {
-        PeerInfo info = new PeerInfo();
-        info.setId(peerId);
-        info.setPrivacyPolicies(Collections.<PrivacyPolicy>emptyList());
+    private static String[] parseResults(JSONObject json) {
+        List<String> valueList = new ArrayList<>();
 
-        try {
-            JSONObject jsonOutput = (JSONObject) JSONValue.parse(content);
-            if (jsonOutput.containsKey("deliveryPolicy")) {
-                DeliveryPolicy.Peer policy = DeliveryPolicy.Peer.values()[(int)(long) jsonOutput.get("deliveryPolicy")];
-                info.setDeliveryPolicy(policy);
-            } else {
-                throw new NoSuchPeerException(peerId);
+        if (json.containsKey("results")) {
+            JSONArray array = (JSONArray) json.get("results");
+
+            if (array.size() == 0) {
+                return null;
             }
 
-            //handle the delivery addresses
-            if(jsonOutput.containsKey("deliveryAddresses")) {
-                JSONArray addresses = (JSONArray) jsonOutput.get("deliveryAddresses");
-                if (addresses == null) {
-                    throw new NoSuchPeerException(peerId);
-                }
-
-                //add the list containing all addresses
-                List<PeerChannelAddress> addressList = new ArrayList<>(addresses.size());
-                info.setAddresses(addressList);
-
-                //add the addresses to the list
-                for (Object o : addresses) {
-                    if (o == null) {
-                        throw new NoSuchPeerException(peerId);
-                    }
-                    JSONObject address = (JSONObject) o;
-                    String name = parseToString(address.get("name"));
-
-                    //handle the parameters of the address
-                    JSONArray values = (JSONArray) address.get("value");
-                    if (values == null) {
-                        throw new NoSuchPeerException(peerId);
-                    }
-                    List<String> parameters = new ArrayList<>(values.size());
-                    for (Object obj : values) {
-                        if (obj == null) {
-                            throw new NoSuchPeerException(peerId);
-                        }
-                        parameters.add(parseToString(obj));
-                    }
-                    addressList.add(new PeerChannelAddress(peerId, Identifier.channelType(name), parameters));
-                }
-            } else {
-                throw new NoSuchPeerException(peerId);
+            if (array.size() > 1) {
+                log.warn("Multiple instances in 'results' returned, not sure how to handle this (ignoring further instances)...");
             }
-        } catch (ProcessingException | ClassCastException | IllegalStateException | ConverterException e) {
-            throw new NoSuchPeerException(peerId);
+
+            JSONArray innerArray = (JSONArray) array.get(0);
+
+            for (Object o : innerArray) {
+                try {
+                    valueList.add(parseToString(o));
+                } catch (ConverterException e) {
+                    return null;
+                }
+            }
+
+            return valueList.toArray(new String[valueList.size()]);
+        } else {
+            return null;
         }
-
-        return info;
     }
 
     private static String parseToString(Object obj) throws ConverterException {

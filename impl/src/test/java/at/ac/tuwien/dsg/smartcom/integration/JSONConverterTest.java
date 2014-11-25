@@ -17,17 +17,19 @@
  */
 package at.ac.tuwien.dsg.smartcom.integration;
 
-import at.ac.tuwien.dsg.smartcom.model.*;
+import at.ac.tuwien.dsg.smartcom.model.CollectiveInfo;
+import at.ac.tuwien.dsg.smartcom.model.DeliveryPolicy;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 import org.hamcrest.Matchers;
-
-import java.io.Serializable;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class JSONConverterTest {
 
-//    @Test
+    @Test
     public void testGetCollectiveInfo() throws Exception {
         String instance =
                 "{" +
@@ -52,7 +54,7 @@ public class JSONConverterTest {
 
     }
 
-//    @Test
+    @Test
     public void testGetPeerInfo() throws Exception {
         String instance =
                 "{" +
@@ -68,18 +70,46 @@ public class JSONConverterTest {
                     "]"+
                 "}";
 
-        PeerInfo peerInfo = JSONConverter.getPeerInfo(Identifier.peer("1"), instance);
+        Identifier peerId = Identifier.peer("1");
+        String[] strings = JSONConverter.parsePeerInfo(peerId, instance);
 
-        assertEquals(Identifier.peer("1"), peerInfo.getId());
-        assertEquals(DeliveryPolicy.Peer.TO_ALL_CHANNELS, peerInfo.getDeliveryPolicy());
-        assertThat(peerInfo.getPrivacyPolicies(), Matchers.empty());
-        assertThat(peerInfo.getAddresses(), Matchers.hasSize(2));
-        for (PeerChannelAddress address : peerInfo.getAddresses()) {
-            if (Identifier.channelType("email").equals(address.getChannelType())) {
-                assertThat(address.getContactParameters(), Matchers.<Serializable>contains("a.b@c.de", "c.b@a.de"));
-            } else {
-                assertThat(address.getContactParameters(), Matchers.<Serializable>contains("http://localhost:8080/peer"));
-            }
-        }
+        assertThat(strings, Matchers.hasItemInArray("Mary"));
+        assertThat(strings, Matchers.hasItemInArray("true"));
+        assertThat(strings, Matchers.hasItemInArray("Monday"));
+        assertThat(strings, Matchers.hasItemInArray("6604"));
+        assertThat(strings, Matchers.hasItemInArray("0"));
+
+        instance =
+                "{" +
+                    "\"@type\": \"EQLSearchResult\","+
+                    "\"results\": ["+
+                        "["+
+                            "\"3323\","+
+                            "\"3324\""+
+                        "]"+
+                    "]"+
+                "}";
+
+        strings = JSONConverter.parseUserInfo(peerId, instance);
+        assertThat(strings, Matchers.hasItemInArray("3323"));
+        assertThat(strings, Matchers.hasItemInArray("3324"));
+
+        instance =
+                "{" +
+                    "\"@type\": \"EQLSearchResult\"," +
+                    "\"results\": [" +
+                        "[" +
+                            "\"6005\"," +
+                            "\"Android\"," +
+                            "\"AndroidID31245\"" +
+                        "]" +
+                    "]" +
+                "}";
+
+        PeerChannelAddress address1 = JSONConverter.parsePeerAddressInfo(peerId, instance);
+
+        assertEquals(peerId, address1.getPeerId());
+        assertEquals(Identifier.channelType("Android"), address1.getChannelType());
+        assertThat(address1.getContactParameters(), Matchers.hasSize(1));
     }
 }

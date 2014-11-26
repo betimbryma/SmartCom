@@ -26,11 +26,12 @@ import java.io.Serializable;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public class Identifier implements Serializable {
+public class Identifier implements Serializable, Cloneable {
 
     private final IdentifierType type;
-    private final String id;
-    private final String postfix; //for stateful output adapters
+    private String id;
+    private String postfix; //for stateful output adapters
+    private String composedId;
 
     /**
      * @deprecated Should only be used by frameworks that require a default constructor
@@ -39,6 +40,7 @@ public class Identifier implements Serializable {
         type = null;
         id = null;
         postfix = null;
+        composedId = null;
     }
 
     private Identifier(IdentifierType type, String id) {
@@ -54,14 +56,31 @@ public class Identifier implements Serializable {
         } else {
             this.postfix = postfix;
         }
+
+        setComposedId(id, postfix);
+    }
+
+    private void setComposedId(String id, String postfix) {
+        if (id == null) {
+            composedId = null;
+        } else if (postfix == null || postfix.isEmpty()) {
+            composedId = id;
+        } else {
+            composedId = id+"."+postfix;
+        }
     }
 
     public IdentifierType getType() {
         return type;
     }
 
+    private void setId(String id) {
+        this.id = id;
+        setComposedId(id, postfix);
+    }
+
     public String getId() {
-        return id+(postfix.trim().isEmpty() ? "" : "."+postfix);
+        return composedId;
     }
 
     public String returnIdWithoutPostfix() {
@@ -70,6 +89,16 @@ public class Identifier implements Serializable {
 
     public String getPostfix() {
         return postfix;
+    }
+
+    private void setPostfix(String postfix) {
+        this.postfix = postfix;
+        setComposedId(id, postfix);
+    }
+
+    @Override
+    protected Identifier clone() {
+        return new Identifier(type, id, postfix);
     }
 
     @Override

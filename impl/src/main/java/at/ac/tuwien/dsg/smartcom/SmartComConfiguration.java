@@ -20,6 +20,7 @@ package at.ac.tuwien.dsg.smartcom;
 import at.ac.tuwien.dsg.smartcom.callback.CollectiveInfoCallback;
 import at.ac.tuwien.dsg.smartcom.callback.PeerAuthenticationCallback;
 import at.ac.tuwien.dsg.smartcom.callback.PeerInfoCallback;
+import at.ac.tuwien.dsg.smartcom.model.MessageLogLevel;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
 
@@ -33,6 +34,7 @@ public class SmartComConfiguration {
     public static final String ACTIVE_MQ_DEFAULT_HOST = "localhost";
     public static final int REST_API_DEFAULT_PORT = 8080;
     public static final boolean ADAPTER_INITIALISATION_DEFAULT = true;
+    public static final MessageLogLevel DEFAULT_MESSAGE_LOGLEVEL = MessageLogLevel.NONE;
 
     //Dependencies configuration
     PeerAuthenticationCallback peerManager;
@@ -49,6 +51,7 @@ public class SmartComConfiguration {
     boolean initActiveMQ = true;
     String activeMqHost = ACTIVE_MQ_DEFAULT_HOST;
     int activeMQPort = ACTIVE_MQ_DEFAULT_PORT;
+    MessageLogLevel messageLogLevel = DEFAULT_MESSAGE_LOGLEVEL;
 
     int restAPIPort = REST_API_DEFAULT_PORT;
     boolean initAdapters = ADAPTER_INITIALISATION_DEFAULT;

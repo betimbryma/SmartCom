@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.junit.Assert.*;
 
@@ -178,7 +179,7 @@ public class RESTInputAdapterTest {
     private class Scheduler implements TaskScheduler {
 
         @Override
-        public PushTask schedule(PushTask task) {
+        public Future<?> schedule(PushTask task) {
             return null;
         }
     }

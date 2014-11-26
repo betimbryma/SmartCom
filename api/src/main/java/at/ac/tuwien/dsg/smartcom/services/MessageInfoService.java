@@ -33,7 +33,9 @@ import at.ac.tuwien.dsg.smartcom.model.MessageInformation;
 public interface MessageInfoService {
 
     /**
-     * Returns information on a given message to the caller.
+     * Returns information on a given message to the caller. This contains how the message has to
+     * be interpreted, how it is related to other messages and which messages are expected in
+     * response to this message.
      *
      * @param message Can be a valid message ID or an instance of Message.
      * @return Returns the information for a given message

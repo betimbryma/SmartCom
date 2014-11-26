@@ -18,7 +18,7 @@
 package at.ac.tuwien.dsg.smartcom.utils;
 
 import at.ac.tuwien.dsg.smartcom.exception.IllegalQueryException;
-import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.MongoDBLoggingDAO;
+import at.ac.tuwien.dsg.smartcom.manager.messaging.logging.dao.MongoDBLoggingDAO;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.QueryCriteria;

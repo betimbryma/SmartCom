@@ -41,7 +41,6 @@ public class DynamicReplicationPolicy implements ReplicationPolicy {
             int handledPerHandler = Math.min(messagesHandled/handlers, 1);
 
             return new ReplicationPolicyResult(ReplicationType.DOWNSCALE, (deviation/handledPerHandler) - 1);
-            //TODO please check if there is an error in the code above
         } else {
             return new ReplicationPolicyResult(ReplicationType.NOSCALE, 0);
         }

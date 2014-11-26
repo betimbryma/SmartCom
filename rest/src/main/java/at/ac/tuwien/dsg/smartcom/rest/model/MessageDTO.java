@@ -17,6 +17,7 @@
  */
 package at.ac.tuwien.dsg.smartcom.rest.model;
 
+import at.ac.tuwien.dsg.smartcom.model.DeliveryPolicy;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 
 /**
@@ -40,7 +41,7 @@ import at.ac.tuwien.dsg.smartcom.model.Message;
  *    "ttl": 1,
  *    "language": "test",
  *    "securityToken": "asdf",
- *    "wantsAcknowledgement": true
+ *    "delivery": true
  *   }
  *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -57,7 +58,7 @@ public class MessageDTO {
     private long ttl;
     private String language;
     private String securityToken;
-    private boolean wantsAcknowledgement = false;
+    private String delivery;
 
     private IdentifierDTO refersTo; //in case of a control message, reporting failed delivery message, or ACK, this field indicates the Identifier of the original message that the control message refers to.
 
@@ -68,7 +69,10 @@ public class MessageDTO {
         this.ttl = message.getTtl();
         this.language = message.getLanguage();
         this.securityToken = message.getSecurityToken();
-        this.wantsAcknowledgement = message.isWantsAcknowledgement();
+        if (message.getDelivery() != null) {
+            this.delivery = message.getDelivery().name();
+        }
+
         this.content = message.getContent();
         this.type = message.getType();
         this.subtype = message.getSubtype();
@@ -96,7 +100,7 @@ public class MessageDTO {
         builder = builder.setTtl(this.ttl);
         builder = builder.setLanguage(this.language);
         builder = builder.setSecurityToken(this.securityToken);
-        builder = builder.setWantsAcknowledgement(this.wantsAcknowledgement);
+        builder = builder.setDeliveryPolicy(DeliveryPolicy.Message.valueOf(this.delivery));
         builder = builder.setContent(this.content);
         builder = builder.setType(this.type);
         builder = builder.setSubtype(this.subtype);
@@ -209,12 +213,12 @@ public class MessageDTO {
         this.refersTo = refersTo;
     }
 
-    public boolean isWantsAcknowledgement() {
-        return wantsAcknowledgement;
+    public String getDelivery() {
+        return delivery;
     }
 
-    public void setWantsAcknowledgement(boolean wantsAcknowledgement) {
-        this.wantsAcknowledgement = wantsAcknowledgement;
+    public void setDelivery(String delivery) {
+        this.delivery = delivery;
     }
 
     @Override

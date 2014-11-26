@@ -40,13 +40,16 @@ import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
 public interface Communication {
 
     /**
-     * Sends a message. This message is sent to a collective or a single peer.
-     * The method returns after the peer(s) have been determined. Errors and
-     * exceptions thereafter will be sent to the Notification Callback. Optional
-     * receipt acknowledgements are communicated back through the Notification
+     * Send a message to a collective or a single peer. The method assigns an ID to the message and
+     * handles the sending asynchronously, i.e., it returns immediately and does not wait for the
+     * sending to succeed or fail. Errors and exceptions thereafter will be sent to the Notification
+     * Callback. Optionally, receipt acknowledgements are communicated back through the Notification
      * Callback API.
      *
-     * @param message Specifies the message that should be handled by the middleware.
+     * The receiver of the message is defined within the message, it can be a peer or a collective.
+     *
+     * @param message Specifies the message that should be handled by the middleware.  The receiver of the message is
+     *                defined by the message.
      * @return Returns the internal ID of the middleware to track the message within the system.
      * @throws CommunicationException a generic exception that will be thrown if something went wrong
      *                                in the initial handling of the message.
@@ -146,6 +149,7 @@ public interface Communication {
      * available.
      *
      * @param callback callback for notification
+     * @return returns the identifier of the callback (can be used to remove it)
      */
     public Identifier registerNotificationCallback(NotificationCallback callback);
 

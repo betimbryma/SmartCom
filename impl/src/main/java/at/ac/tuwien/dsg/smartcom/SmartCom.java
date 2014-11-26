@@ -36,12 +36,13 @@ import at.ac.tuwien.dsg.smartcom.manager.auth.AuthenticationManagerImpl;
 import at.ac.tuwien.dsg.smartcom.manager.auth.AuthenticationRequestHandler;
 import at.ac.tuwien.dsg.smartcom.manager.auth.dao.MongoDBAuthenticationSessionDAO;
 import at.ac.tuwien.dsg.smartcom.manager.dao.MongoDBPeerChannelAddressResolverDAO;
-import at.ac.tuwien.dsg.smartcom.messaging.MessagingAndRoutingManagerImpl;
-import at.ac.tuwien.dsg.smartcom.messaging.PeerInfoService;
-import at.ac.tuwien.dsg.smartcom.messaging.PeerInfoServiceImpl;
-import at.ac.tuwien.dsg.smartcom.messaging.logging.LoggingService;
-import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.LoggingDAO;
-import at.ac.tuwien.dsg.smartcom.messaging.logging.dao.MongoDBLoggingDAO;
+import at.ac.tuwien.dsg.smartcom.manager.messaging.MessagingAndRoutingManagerImpl;
+import at.ac.tuwien.dsg.smartcom.manager.messaging.PeerInfoService;
+import at.ac.tuwien.dsg.smartcom.manager.messaging.PeerInfoServiceImpl;
+import at.ac.tuwien.dsg.smartcom.manager.messaging.logging.LoggingService;
+import at.ac.tuwien.dsg.smartcom.manager.messaging.logging.dao.LoggingDAO;
+import at.ac.tuwien.dsg.smartcom.manager.messaging.logging.dao.MongoDBLoggingDAO;
+import at.ac.tuwien.dsg.smartcom.model.MessageLogLevel;
 import at.ac.tuwien.dsg.smartcom.rest.CommunicationRESTImpl;
 import at.ac.tuwien.dsg.smartcom.services.MessageInfoService;
 import at.ac.tuwien.dsg.smartcom.services.MessageQueryService;
@@ -119,8 +120,6 @@ public class SmartCom {
     }
 
     private void addDefaultAdapters() throws CommunicationException {
-        //TODO
-
         //Email adapter
         communication.registerOutputAdapter(EmailOutputAdapter.class);
 
@@ -156,6 +155,7 @@ public class SmartCom {
         log.debug("Initializing messaging and routing manager");
 
         //Messaging and Routing Manager
+        pico.addComponent(MessageLogLevel.class, this.configuration.messageLogLevel);
         pico.addComponent(MessagingAndRoutingManager.class, MessagingAndRoutingManagerImpl.class);
         pico.addComponent(PeerInfoService.class, PeerInfoServiceImpl.class);
 

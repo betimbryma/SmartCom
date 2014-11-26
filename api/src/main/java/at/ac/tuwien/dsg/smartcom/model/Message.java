@@ -41,7 +41,7 @@ public class Message implements Serializable, Cloneable {
     private long ttl;
     private String language;
     private String securityToken;
-    private boolean wantsAcknowledgement = false;
+    private DeliveryPolicy.Message delivery = DeliveryPolicy.Message.UNACKNOWLEDGED;
     
     private Identifier refersTo; //in case of a control message, reporting failed delivery message, or ACK, this field indicates the Identifier of the original message that the control message refers to. 
 
@@ -133,34 +133,34 @@ public class Message implements Serializable, Cloneable {
 		this.refersTo = refersTo;
 	}
 
-    public boolean isWantsAcknowledgement() {
-        return wantsAcknowledgement;
+    public DeliveryPolicy.Message getDelivery() {
+        return delivery;
     }
 
-    public void setWantsAcknowledgement(boolean wantsAcknowledgement) {
-        this.wantsAcknowledgement = wantsAcknowledgement;
+    public void setDelivery(DeliveryPolicy.Message delivery) {
+        this.delivery = delivery;
     }
 
     @Override
     public Message clone() {
         Message msg = new Message();
         if (this.id != null) {
-            msg.id = new Identifier(this.id.getType(), this.id.getId(), this.id.getPostfix());
+            msg.id = this.id.clone();
         }
         msg.content = this.content;
         msg.type = this.type;
         msg.subtype = this.subtype;
         if (senderId != null) {
-            msg.senderId = new Identifier(this.senderId.getType(), this.senderId.getId(), this.senderId.getPostfix());
+            msg.senderId = this.senderId.clone();
         }
         if (receiverId != null) {
-            msg.receiverId = new Identifier(this.receiverId.getType(), this.receiverId.getId(), this.receiverId.getPostfix());
+            msg.receiverId = this.receiverId.clone();
         }
         msg.conversationId = this.conversationId;
         msg.ttl = this.ttl;
         msg.language = this.language;
         msg.securityToken = this.securityToken;
-        msg.wantsAcknowledgement = this.wantsAcknowledgement;
+        msg.delivery = this.delivery;
         return msg;
     }
 
@@ -178,6 +178,7 @@ public class Message implements Serializable, Cloneable {
                 ", language='" + language + '\'' +
                 ", securityToken='" + securityToken + '\'' +
                 ", refersTo='" + refersTo + '\'' +
+                ", delivery='" + delivery + "\'" +
                 '}';
     }
 
@@ -261,8 +262,8 @@ public class Message implements Serializable, Cloneable {
             return this;
         }
 
-        public MessageBuilder setWantsAcknowledgement(boolean acknowledgement) {
-            msg.wantsAcknowledgement = acknowledgement;
+        public MessageBuilder setDeliveryPolicy(DeliveryPolicy.Message deliveryPolicy) {
+            msg.delivery = deliveryPolicy;
             return this;
         }
 

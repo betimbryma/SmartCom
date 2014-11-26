@@ -22,6 +22,7 @@ import at.ac.tuwien.dsg.smartcom.callback.PeerAuthenticationCallback;
 import at.ac.tuwien.dsg.smartcom.callback.PeerInfoCallback;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.exception.ErrorCode;
+import at.ac.tuwien.dsg.smartcom.model.MessageLogLevel;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
 
@@ -83,6 +84,11 @@ public class SmartComBuilder {
 
     public SmartComBuilder setMongoDBDatabaseName(String databaseName) {
         this.configuration.mongoDBDatabaseName = databaseName;
+        return this;
+    }
+
+    public SmartComBuilder setMessageLogLevel(MessageLogLevel level) {
+        this.configuration.messageLogLevel = level;
         return this;
     }
 

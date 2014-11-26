@@ -15,22 +15,21 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package at.ac.tuwien.dsg.smartcom.adapter.util;
-
-import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
-
-import java.util.concurrent.Future;
+package at.ac.tuwien.dsg.smartcom.manager.messaging.util;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public interface TaskScheduler {
+public final class KeyProvider {
+    private KeyProvider() {
+    }
 
     /**
-     * Schedule a task
-     *
-     * @param task the task that should be scheduled
+     * Generate an unique id
+     * @return unique id
      */
-    public Future schedule(PushTask task);
+    public static String generateUniqueIdString() {
+        return TimeBasedUUID.getUUIDAsString();
+    }
 }

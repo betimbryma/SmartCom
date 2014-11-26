@@ -26,7 +26,6 @@ import at.ac.tuwien.dsg.smartcom.model.CollectiveInfo;
 import at.ac.tuwien.dsg.smartcom.model.DeliveryPolicy;
 import at.ac.tuwien.dsg.smartcom.utils.MongoDBInstance;
 import com.mongodb.MongoClient;
-import org.glassfish.jersey.client.ClientProperties;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,8 +63,8 @@ public class PeerManagerCollectiveInfoResourceTest {
 
         this.client = ClientBuilder.newBuilder()
                 .register(RequestMappingFeature.class)
-                .property(ClientProperties.CONNECT_TIMEOUT, 5000)
-                .property(ClientProperties.READ_TIMEOUT, 5000)
+//                .property(ClientProperties.CONNECT_TIMEOUT, 5000)
+//                .property(ClientProperties.READ_TIMEOUT, 5000)
                 .build();
 //        client.register(new LoggingFilter(java.util.logging.Logger.getLogger("Jersey"), true)); //enables this to have additional logging information
 
@@ -92,10 +91,11 @@ public class PeerManagerCollectiveInfoResourceTest {
 
         List<Collective> collectives = Arrays.asList(coll1, coll2, coll3, coll4, coll5);
 
-
         for (Collective collective : collectives) {
             WebTarget target = client.target(url +"/"+collective.getId());
-            CollectiveInfo info = target.request(MediaType.APPLICATION_JSON).get(CollectiveInfo.class);
+            Response resp = target.request(MediaType.APPLICATION_JSON).get();
+
+            CollectiveInfo info = resp.readEntity(CollectiveInfo.class);
 
             assertEquals(collective.getId(), info.getId().getId());
             assertEquals(collective.getDeliveryPolicy(), info.getDeliveryPolicy());

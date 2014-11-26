@@ -22,7 +22,9 @@ import at.ac.tuwien.dsg.smartcom.broker.InputPublisher;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * The Input Push Adapter API can be used to implement an adapter for a
@@ -41,8 +43,9 @@ import java.util.List;
  */
 public abstract class InputPushAdapter implements InputAdapter {
 
+    public static final int TASKLIST_THRESHOLD = 20;
     protected InputPublisher inputPublisher;
-    private List<PushTask> taskList = new ArrayList<>(1);
+    private final List<Future<?>> taskList = Collections.synchronizedList(new ArrayList<Future<?>>());
 
     /**
      * Publish a message that has been received. this method should only be
@@ -70,6 +73,25 @@ public abstract class InputPushAdapter implements InputAdapter {
      */
     protected final void schedule(PushTask task) {
         taskList.add(scheduler.schedule(task));
+
+        //remove tasks which are done after a while
+        if (taskList.size() > TASKLIST_THRESHOLD) {
+            scheduler.schedule(new PushTask() {
+                @Override
+                public void run() {
+                    synchronized (taskList) {
+                        List<Future<?>> remaining = new ArrayList<Future<?>>();
+                        for (Future<?> pushTask : taskList) {
+                            if (!pushTask.isDone()) {
+                                remaining.add(pushTask);
+                            }
+                        }
+                        taskList.clear();
+                        taskList.addAll(remaining);
+                    }
+                }
+            });
+        }
     }
 
     public void setScheduler(TaskScheduler scheduler) {
@@ -82,8 +104,8 @@ public abstract class InputPushAdapter implements InputAdapter {
      * Can be used to clean up and destroy handlers and so forth.
      */
     public final void preDestroy() {
-        for (PushTask pushTask : taskList) {
-            pushTask.cancel();
+        for (Future<?> pushTask : taskList) {
+            pushTask.cancel(true);
         }
         cleanUp();
     }
@@ -97,7 +119,8 @@ public abstract class InputPushAdapter implements InputAdapter {
 
     /**
      * Method that can be used to initialize the adapter and other handlers like a
-     * push notification handler (if needed)
+     * push notification handler (if needed).  E.g., to create a server socket that
+     * listens for connections on a specific port.
      */
     public abstract void init();
 }

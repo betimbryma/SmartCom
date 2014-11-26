@@ -25,11 +25,4 @@ package at.ac.tuwien.dsg.smartcom.adapter;
  */
 public abstract class PushTask implements Runnable {
 
-    /**
-     * cancel the execution of the task
-     */
-    public void cancel() {
-
-    }
-
 }

@@ -15,22 +15,16 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package at.ac.tuwien.dsg.smartcom.adapter.util;
+package at.ac.tuwien.dsg.smartcom.manager.messaging;
 
-import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
-
-import java.util.concurrent.Future;
+import at.ac.tuwien.dsg.smartcom.callback.PeerInfoCallback;
 
 /**
+ * Service that provides peer information internally. Usually provides a cache of
+ * already retrieved peer information from the peer manager.
+ *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public interface TaskScheduler {
-
-    /**
-     * Schedule a task
-     *
-     * @param task the task that should be scheduled
-     */
-    public Future schedule(PushTask task);
+public interface PeerInfoService extends PeerInfoCallback {
 }

@@ -15,22 +15,21 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package at.ac.tuwien.dsg.smartcom.adapter.util;
+package at.ac.tuwien.dsg.smartcom.manager.messaging.policies.delivery.peer;
 
-import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
+import at.ac.tuwien.dsg.smartcom.model.DeliveryPolicy;
 
-import java.util.concurrent.Future;
-
-/**
- * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
- * @version 1.0
- */
-public interface TaskScheduler {
-
-    /**
-     * Schedule a task
-     *
-     * @param task the task that should be scheduled
-     */
-    public Future schedule(PushTask task);
+public class SimplePreferredPeerPolicy extends AbstractPeerDeliveryPolicy {
+	
+	
+	public SimplePreferredPeerPolicy(){
+		super("SimplePreferredPeerPolicy", null);
+	}
+	public boolean check(int whatToCheck){
+		if (whatToCheck == DeliveryPolicy.CHECK_ACK){
+			return true; //we imply that this policy initially restricted the choice of adapters to 1, meaning this must be response from that one. 
+		}else{
+			return false; 
+		}
+	}
 }

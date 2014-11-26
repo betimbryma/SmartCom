@@ -47,9 +47,13 @@ public final class PredefinedMessageHelper {
     
     
     public static boolean isPredefinedType(Message message){
-    	if (message == null || message.equals("")) return false;
+    	if (message == null || message.getType().equals("")) {
+            return false;
+        }
+
     	switch (message.getType()){
 	    	case AUTH_TYPE:
+                return true;
 	    	case CONTROL_TYPE:
 	    		return true;
 	    	case DATA_TYPE:
@@ -103,7 +107,7 @@ public final class PredefinedMessageHelper {
                 .setReceiverId(message.getSenderId())
                 .setConversationId(message.getConversationId())
                 .setRefersTo(message.getId())
-                .setWantsAcknowledgement(message.isWantsAcknowledgement()) //this field indicAtes whether the sender wants the ACK sent back or not
+                .setDeliveryPolicy(message.getDelivery())
                 .setType(CONTROL_TYPE)
                 .setSubtype(ACK_SUBTYPE)
                 .create();

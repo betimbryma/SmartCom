@@ -15,22 +15,32 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package at.ac.tuwien.dsg.smartcom.adapter.util;
+package at.ac.tuwien.dsg.smartcom.manager.messaging.util;
 
-import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
+public class Pair<T,U> {
+    public final T first;
+    public final U second;
 
-import java.util.concurrent.Future;
+    public Pair (T First, U Second) {
+    	first = First;
+    	second = Second;
+    }
 
-/**
- * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
- * @version 1.0
- */
-public interface TaskScheduler {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-    /**
-     * Schedule a task
-     *
-     * @param task the task that should be scheduled
-     */
-    public Future schedule(PushTask task);
+        Pair pair = (Pair) o;
+
+        if (first != null ? !first.equals(pair.first) : pair.first != null) return false;
+        return !(second != null ? !second.equals(pair.second) : pair.second != null);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = first != null ? first.hashCode() : 0;
+        result = 31 * result + (second != null ? second.hashCode() : 0);
+        return result;
+    }
 }

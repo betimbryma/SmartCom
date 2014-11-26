@@ -15,22 +15,22 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package at.ac.tuwien.dsg.smartcom.adapter.util;
+package at.ac.tuwien.dsg.smartcom.manager.messaging.adapter;
 
-import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
-
-import java.util.concurrent.Future;
+import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.annotations.Adapter;
+import at.ac.tuwien.dsg.smartcom.model.Message;
+import at.ac.tuwien.dsg.smartcom.model.PeerChannelAddress;
 
 /**
- * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
- * @version 1.0
- */
-public interface TaskScheduler {
+* @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
+* @version 1.0
+*/
+@Adapter(name="stateful", stateful = true)
+public class StatefulAdapter implements OutputAdapter {
 
-    /**
-     * Schedule a task
-     *
-     * @param task the task that should be scheduled
-     */
-    public Future schedule(PushTask task);
+    @Override
+    public void push(Message message, PeerChannelAddress address) {
+        AdapterTestQueue.publish(address.getPeerId().getId()+"."+address.getChannelType().getId(), message);
+    }
 }

@@ -15,22 +15,20 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package at.ac.tuwien.dsg.smartcom.adapter.util;
+package at.ac.tuwien.dsg.smartcom.manager.messaging.logging.dao;
 
-import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
-
-import java.util.concurrent.Future;
+import at.ac.tuwien.dsg.smartcom.model.Message;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-public interface TaskScheduler {
+public interface LoggingDAO {
 
     /**
-     * Schedule a task
+     * Persists a message in an underlying database system.
      *
-     * @param task the task that should be scheduled
+     * @param message
      */
-    public Future schedule(PushTask task);
+    public void persist(Message message);
 }

@@ -15,22 +15,25 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package at.ac.tuwien.dsg.smartcom.adapter.util;
+package at.ac.tuwien.dsg.smartcom.manager.messaging.policies.delivery.peer;
 
-import at.ac.tuwien.dsg.smartcom.adapter.PushTask;
+import at.ac.tuwien.dsg.smartcom.manager.messaging.policies.delivery.AbstractDeliveryPolicy;
+import at.ac.tuwien.dsg.smartcom.model.PeerInfo;
 
-import java.util.concurrent.Future;
+public abstract class AbstractPeerDeliveryPolicy extends AbstractDeliveryPolicy {
+		
+		public final String name;
+		public final PeerInfo peer;
+		
+		public AbstractPeerDeliveryPolicy(String name, PeerInfo peer){
+			super(name);
+			this.name = name;
+			this.peer = peer;
+			
+		}
 
-/**
- * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
- * @version 1.0
- */
-public interface TaskScheduler {
+		
 
-    /**
-     * Schedule a task
-     *
-     * @param task the task that should be scheduled
-     */
-    public Future schedule(PushTask task);
+		
+		
 }

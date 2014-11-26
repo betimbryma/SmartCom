@@ -235,20 +235,8 @@ public class AdapterExecutionEngine implements TaskScheduler{
     }
 
     @Override
-    public PushTask schedule(final PushTask task) {
-        final Future<?> submit = pushExecutor.submit(task);
-
-        return new PushTask() {
-            @Override
-            public void run() {
-                task.run();
-            }
-
-            @Override
-            public void cancel() {
-                submit.cancel(true);
-            }
-        };
+    public Future schedule(final PushTask task) {
+        return pushExecutor.submit(task);
     }
 
     /**

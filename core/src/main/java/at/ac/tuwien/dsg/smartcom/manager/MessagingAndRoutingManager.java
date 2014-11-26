@@ -18,6 +18,7 @@
 package at.ac.tuwien.dsg.smartcom.manager;
 
 import at.ac.tuwien.dsg.smartcom.callback.NotificationCallback;
+import at.ac.tuwien.dsg.smartcom.exception.InvalidRuleException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
@@ -39,7 +40,7 @@ public interface MessagingAndRoutingManager {
 	 */
     public Identifier send(Message message);
 
-    public Identifier addRouting(RoutingRule rule);
+    public Identifier addRouting(RoutingRule rule) throws InvalidRuleException;
 
     public RoutingRule removeRouting(Identifier routeId);
 

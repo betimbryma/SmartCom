@@ -281,7 +281,11 @@ public class PeerManagerPeerResourceTest {
         File file = response.readEntity(File.class);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
-            assertEquals(5, reader.lines().count());
+            int lines = 0;
+            while (reader.readLine() != null) {
+                lines++;
+            }
+            assertEquals(5, lines);
         }
     }
 

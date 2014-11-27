@@ -28,13 +28,15 @@ public class RoutingRule {
     private final String type;
     private final String subtype;
     private final Identifier receiver;
+    private final Identifier sender;
 
     private final Identifier route;
 
-    public RoutingRule(String type, String subtype, Identifier receiver, Identifier route) {
+    public RoutingRule(String type, String subtype, Identifier receiver, Identifier sender, Identifier route) {
         this.type = type;
         this.subtype = subtype;
         this.receiver = receiver;
+        this.sender = sender;
         this.route = route;
     }
 
@@ -54,12 +56,17 @@ public class RoutingRule {
         return route;
     }
 
+    public Identifier getSender() {
+        return sender;
+    }
+
     @Override
     public String toString() {
         return "RoutingRule{" +
                 "type='" + type + '\'' +
                 ", subtype='" + subtype + '\'' +
                 ", receiver='" + receiver + '\'' +
+                ", sender='" + sender + '\'' +
                 ", route='" + route + '\'' +
                 '}';
     }
@@ -71,6 +78,7 @@ public class RoutingRule {
 
         RoutingRule that = (RoutingRule) o;
 
+        if (sender != null ? !sender.equals(that.sender) : that.sender != null) return false;
         if (receiver != null ? !receiver.equals(that.receiver) : that.receiver != null) return false;
         if (route != null ? !route.equals(that.route) : that.route != null) return false;
         if (subtype != null ? !subtype.equals(that.subtype) : that.subtype != null) return false;
@@ -84,6 +92,7 @@ public class RoutingRule {
         int result = type != null ? type.hashCode() : 0;
         result = 31 * result + (subtype != null ? subtype.hashCode() : 0);
         result = 31 * result + (receiver != null ? receiver.hashCode() : 0);
+        result = 31 * result + (sender != null ? sender.hashCode() : 0);
         result = 31 * result + (route != null ? route.hashCode() : 0);
         return result;
     }

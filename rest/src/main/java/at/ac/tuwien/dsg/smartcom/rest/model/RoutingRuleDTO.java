@@ -29,6 +29,7 @@ public class RoutingRuleDTO {
     private String type;
     private String subtype;
     private IdentifierDTO receiver;
+    private IdentifierDTO sender;
 
     private IdentifierDTO route;
 
@@ -41,6 +42,10 @@ public class RoutingRuleDTO {
 
         if (rule.getReceiver() != null) {
             this.receiver = new IdentifierDTO(rule.getReceiver());
+        }
+
+        if (rule.getSender() != null) {
+            this.sender = new IdentifierDTO(rule.getSender());
         }
 
         if (rule.getRoute() != null) {
@@ -60,6 +65,10 @@ public class RoutingRuleDTO {
         return receiver;
     }
 
+    public IdentifierDTO getSender() {
+        return sender;
+    }
+
     public IdentifierDTO getRoute() {
         return route;
     }
@@ -76,6 +85,10 @@ public class RoutingRuleDTO {
         this.receiver = receiver;
     }
 
+    public void setSender(IdentifierDTO sender) {
+        this.sender = sender;
+    }
+
     public void setRoute(IdentifierDTO route) {
         this.route = route;
     }
@@ -86,12 +99,17 @@ public class RoutingRuleDTO {
             receiver = this.receiver.create();
         }
 
+        Identifier sender = null;
+        if (this.sender != null) {
+            sender = this.sender.create();
+        }
+
         Identifier route = null;
         if (this.route != null) {
             route = this.route.create();
         }
 
-        return new RoutingRule(type, subtype, receiver, route);
+        return new RoutingRule(type, subtype, receiver, sender, route);
     }
 
     @Override
@@ -100,6 +118,7 @@ public class RoutingRuleDTO {
                 "type='" + type + '\'' +
                 ", subtype='" + subtype + '\'' +
                 ", receiver='" + receiver + '\'' +
+                ", sender='" + sender + '\'' +
                 ", route='" + route + '\'' +
                 '}';
     }
@@ -111,6 +130,7 @@ public class RoutingRuleDTO {
 
         RoutingRuleDTO that = (RoutingRuleDTO) o;
 
+        if (sender != null ? !sender.equals(that.receiver) : that.sender != null) return false;
         if (receiver != null ? !receiver.equals(that.receiver) : that.receiver != null) return false;
         if (route != null ? !route.equals(that.route) : that.route != null) return false;
         if (subtype != null ? !subtype.equals(that.subtype) : that.subtype != null) return false;
@@ -124,6 +144,7 @@ public class RoutingRuleDTO {
         int result = type != null ? type.hashCode() : 0;
         result = 31 * result + (subtype != null ? subtype.hashCode() : 0);
         result = 31 * result + (receiver != null ? receiver.hashCode() : 0);
+        result = 31 * result + (sender != null ? sender.hashCode() : 0);
         result = 31 * result + (route != null ? route.hashCode() : 0);
         return result;
     }

@@ -33,6 +33,7 @@ public class SmartComConfiguration {
     public static final int ACTIVE_MQ_DEFAULT_PORT = 61616;
     public static final String ACTIVE_MQ_DEFAULT_HOST = "localhost";
     public static final int REST_API_DEFAULT_PORT = 8080;
+    public static final int MIS_API_DEFAULT_PORT = 8081;
     public static final boolean ADAPTER_INITIALISATION_DEFAULT = true;
     public static final MessageLogLevel DEFAULT_MESSAGE_LOGLEVEL = MessageLogLevel.NONE;
 
@@ -55,4 +56,6 @@ public class SmartComConfiguration {
 
     int restAPIPort = REST_API_DEFAULT_PORT;
     boolean initAdapters = ADAPTER_INITIALISATION_DEFAULT;
+
+    int misAPIPort = MIS_API_DEFAULT_PORT;
 }

@@ -23,7 +23,9 @@ import at.ac.tuwien.dsg.smartcom.callback.PeerInfoCallback;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchCollectiveException;
 import at.ac.tuwien.dsg.smartcom.callback.exception.NoSuchPeerException;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
-import at.ac.tuwien.dsg.smartcom.model.*;
+import at.ac.tuwien.dsg.smartcom.model.CollectiveInfo;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
+import at.ac.tuwien.dsg.smartcom.model.PeerInfo;
 import at.ac.tuwien.dsg.smartcom.utils.PropertiesLoader;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.slf4j.Logger;
@@ -34,8 +36,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -80,7 +80,7 @@ public class SmartSocRESTPeerManager implements PeerAuthenticationCallback, Peer
     @Override
     public CollectiveInfo getCollectiveInfo(Identifier collective) throws NoSuchCollectiveException {
         try {
-            WebTarget target = client.target(collectiveURL.replace("<collective_id>", collective.getId()));
+            WebTarget target = client.target(collectiveURL.replace("<collectiveId>", collective.getId()));
             target.queryParam("userId", userId);
 //            target.queryParam("attributeDefinitionIds", "NULL");
 
@@ -120,40 +120,20 @@ public class SmartSocRESTPeerManager implements PeerAuthenticationCallback, Peer
     public PeerInfo getPeerInfo(Identifier id) throws NoSuchPeerException {
 
         try {
-            WebTarget target = client.target(peerURL.replace("<user_id>", id.getId()));
+            WebTarget target = client.target(peerURL.replace("<userId>", id.getId()));
             target.queryParam("userId", userId);
 
             Response response = target.request(MediaType.APPLICATION_JSON).get();
             String content = response.readEntity(String.class);
             log.trace(content);
 
-            String[] strings = JSONConverter.parsePeerInfo(id, content);
+            PeerInfo peerInfo = JSONConverter.getPeerInfo(id, content);
 
-            PeerInfo info = new PeerInfo();
-            info.setId(id);
-            info.setDeliveryPolicy(DeliveryPolicy.Peer.values()[(int)Integer.valueOf(strings[4])]);
-            info.setPrivacyPolicies(null);
-
-            target = client.target(peerURL2.replace("<user_id>", strings[3]));
-            target.queryParam("userId", userId);
-
-            content = target.request(MediaType.APPLICATION_JSON).get(String.class);
-
-            String[] strings2 = JSONConverter.parseUserInfo(id, content);
-
-            List<PeerChannelAddress> addressList = new ArrayList<>(strings2.length);
-            for (String s : strings2) {
-                target = client.target(peerURL3.replace("<delivery_address_id>", s));
-                target.queryParam("userId", userId);
-
-                content = target.request(MediaType.APPLICATION_JSON).get(String.class);
-
-                addressList.add(JSONConverter.parsePeerAddressInfo(id, content));
+            if (peerInfo == null) {
+                throw new NoSuchPeerException(id);
+            } else {
+                return peerInfo;
             }
-
-            info.setAddresses(addressList);
-
-            return info;
         } catch (NoSuchPeerException e) {
             throw e;
         } catch (Exception e) {

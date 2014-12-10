@@ -92,6 +92,11 @@ public class SmartComBuilder {
         return this;
     }
 
+    public SmartComBuilder setMessageInfoServicePort(int port) {
+        this.configuration.misAPIPort = port;
+        return this;
+    }
+
     public SmartCom create() throws CommunicationException {
         if (this.configuration.mongoClient == null) {
             try {

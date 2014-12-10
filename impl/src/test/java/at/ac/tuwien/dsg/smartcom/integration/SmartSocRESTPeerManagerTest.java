@@ -43,10 +43,17 @@ public class SmartSocRESTPeerManagerTest {
     public static void main(String[] args) throws NoSuchCollectiveException, NoSuchPeerException, PeerAuthenticationException {
         SmartSocRESTPeerManager manager = new SmartSocRESTPeerManager(100);
 
-        CollectiveInfo collectiveInfo = manager.getCollectiveInfo(Identifier.collective("1"));
+        CollectiveInfo collectiveInfo = manager.getCollectiveInfo(Identifier.collective("5927"));
         System.out.println(collectiveInfo);
 
-        PeerInfo peerInfo = manager.getPeerInfo(Identifier.peer("1"));
+        Identifier peerId;
+        if (collectiveInfo.getPeers().isEmpty()) {
+            peerId = Identifier.peer("5910");
+        } else {
+            peerId = collectiveInfo.getPeers().get(0);
+        }
+
+        PeerInfo peerInfo = manager.getPeerInfo(peerId);
         System.out.println(peerInfo);
 
         boolean authenticate = manager.authenticate(Identifier.peer("1"), "1");

@@ -45,8 +45,11 @@ import at.ac.tuwien.dsg.smartcom.manager.messaging.logging.dao.MongoDBLoggingDAO
 import at.ac.tuwien.dsg.smartcom.model.MessageLogLevel;
 import at.ac.tuwien.dsg.smartcom.rest.CommunicationRESTImpl;
 import at.ac.tuwien.dsg.smartcom.services.MessageInfoService;
+import at.ac.tuwien.dsg.smartcom.services.MessageInfoServiceImpl;
 import at.ac.tuwien.dsg.smartcom.services.MessageQueryService;
 import at.ac.tuwien.dsg.smartcom.services.MessageQueryServiceImpl;
+import at.ac.tuwien.dsg.smartcom.services.dao.MessageInfoDAO;
+import at.ac.tuwien.dsg.smartcom.services.dao.MongoDBMessageInfoDAO;
 import at.ac.tuwien.dsg.smartcom.services.dao.MongoDBMessageQueryDAO;
 import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
 import org.picocontainer.Characteristics;
@@ -63,7 +66,7 @@ public class SmartCom {
     private static final Logger log = LoggerFactory.getLogger(SmartCom.class);
 
     private Communication communication;
-    private MessageInfoService messageInfoService;
+    private MessageInfoServiceImpl messageInfoService;
     private MessageQueryService queryService;
 
     private MutablePicoContainer pico;
@@ -91,7 +94,7 @@ public class SmartCom {
 
         log.info("Creating component instances...");
         this.communication = pico.getComponent(Communication.class);
-        this.messageInfoService = pico.getComponent(MessageInfoService.class);
+        this.messageInfoService = (MessageInfoServiceImpl) pico.getComponent(MessageInfoService.class);
         this.queryService = pico.getComponent(MessageQueryService.class);
 
         log.info("Creating rest api...");
@@ -141,7 +144,11 @@ public class SmartCom {
 
     private void initMessageInfoService() throws CommunicationException {
         log.debug("Initializing message info service");
-        //TODO
+
+        pico.addComponent(new MongoDBMessageInfoDAO(this.configuration.mongoClient, this.configuration.mongoDBDatabaseName, "mis"));
+        messageInfoService = new MessageInfoServiceImpl(this.configuration.misAPIPort, "", pico.getComponent(MessageInfoDAO.class));
+        messageInfoService.init();
+        pico.addComponent(MessageInfoService.class, messageInfoService);
     }
 
     private void initAuthenticationManager() throws CommunicationException {
@@ -196,6 +203,7 @@ public class SmartCom {
 
     public void tearDownSmartCom() throws CommunicationException {
         communicationREST.cleanUp();
+        messageInfoService.cleanUp();
 
         pico.stop();
         pico.dispose();

@@ -20,8 +20,6 @@ package at.ac.tuwien.dsg.smartcom.model;
 import java.util.List;
 
 /**
- * TODO add description
- *
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */

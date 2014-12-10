@@ -111,10 +111,6 @@ public final class JSONConverter {
                 return null;
             }
 
-            if (array.size() > 1) {
-                log.warn("Multiple instances in 'results' returned, not sure how to handle this (ignoring further instances)...");
-            }
-
             List<String[]> outerList = new ArrayList<>();
             for (Object o : array) {
                 JSONArray innerArray = (JSONArray) o;

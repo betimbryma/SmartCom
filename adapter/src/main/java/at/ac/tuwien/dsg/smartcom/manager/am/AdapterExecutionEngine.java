@@ -182,8 +182,6 @@ public class AdapterExecutionEngine implements TaskScheduler{
 
             InputAdapterExecution execution = inputAdapterMap.remove(id);
 
-            //TODO
-
             return execution.getAdapter();
         }
     }

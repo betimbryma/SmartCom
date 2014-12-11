@@ -34,10 +34,7 @@ import javax.inject.Inject;
 import javax.ws.rs.container.AsyncResponse;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -55,7 +52,7 @@ public class PeerMailboxService {
     private final Map<String, List<AsyncResponse>> asynchResponsesMap = new HashMap<>();
 
     public PeerMailboxService(int port, String serverURIPostfix) {
-        this.serverURI = URI.create("http://localhost:" + port + "/" + serverURIPostfix);
+        this.serverURI = URI.create("http://0.0.0.0:" + port + "/" + serverURIPostfix);
     }
 
     public PeerMailboxService(int port, String serverURIPostfix, PeerMailboxDAO mailboxDAO) {
@@ -73,7 +70,9 @@ public class PeerMailboxService {
     }
 
     public void cleanUp() {
-        server.shutdown();
+        if (server != null) {
+            server.shutdown();
+        }
     }
 
     public JsonMessageDTO pullMessage(String receiver) {
@@ -114,9 +113,20 @@ public class PeerMailboxService {
             register(new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    bind(PeerMailboxService.this).to(PeerMailboxService.class);
+                    bindWebBindings(this);
                 }
             });
         }
+    }
+
+    public List<Class<?>> getWebResources() {
+        return Arrays.asList(MailboxResource.class,
+                MultiPartFeature.class,
+                ObjectMapperProvider.class,
+                JacksonFeature.class);
+    }
+
+    public void bindWebBindings(AbstractBinder binder) {
+        binder.bind(this).to(PeerMailboxService.class);
     }
 }

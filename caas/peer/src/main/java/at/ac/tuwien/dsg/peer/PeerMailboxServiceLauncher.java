@@ -50,7 +50,7 @@ public class PeerMailboxServiceLauncher {
             }
         }
 
-        PeerMailboxService service = startPeerMailboxService(port, uriPrefix, mongoDBHost, mongoDBPort);
+        PeerMailboxService service = startPeerMailboxService(port, uriPrefix, mongoDBHost, mongoDBPort, true);
 
         System.out.println("Press enter to shutdown the peer mailbox service");
         System.in.read();
@@ -58,17 +58,21 @@ public class PeerMailboxServiceLauncher {
         service.cleanUp();
     }
 
-    public static PeerMailboxService startPeerMailboxService(int port, String uriPrefix, String mongoDBHost, int mongoDBPort) throws UnknownHostException {
-        return startPeerManager(port, uriPrefix, new MongoClient(mongoDBHost, mongoDBPort));
+    public static PeerMailboxService startPeerMailboxService(int port, String uriPrefix, String mongoDBHost, int mongoDBPort, boolean init) throws UnknownHostException {
+        return startPeerMailboxService(port, uriPrefix, new MongoClient(mongoDBHost, mongoDBPort), init);
     }
 
-    public static PeerMailboxService startPeerManager(int port, String uriPrefix, MongoClient mongo) {
-        System.out.println("Running the peer mailbox service on port ["+port+"] and path '"+uriPrefix+"'");
+    public static PeerMailboxService startPeerMailboxService(int port, String uriPrefix, MongoClient mongo, boolean init) {
+        if (init) {
+            System.out.println("Running the peer mailbox service on port [" + port + "] and path '" + uriPrefix + "'");
+        }
 
         MongoDBPeerMailboxDAO mailboxDao = new MongoDBPeerMailboxDAO(mongo, "MAILBOX", "PEER");
 
         PeerMailboxService mailbox = new PeerMailboxService(port, uriPrefix, mailboxDao);
-        mailbox.init();
+        if (init) {
+            mailbox.init();
+        }
         return mailbox;
     }
 

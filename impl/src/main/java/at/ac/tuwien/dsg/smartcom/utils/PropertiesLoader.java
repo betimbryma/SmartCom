@@ -78,4 +78,16 @@ public final class PropertiesLoader {
         }
     }
 
+    public static Integer getIntProperty(String filename, String property) {
+        String prop = getProperty(filename, property);
+        if (prop == null) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(prop);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
 }

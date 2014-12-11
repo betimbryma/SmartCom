@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -65,7 +66,7 @@ public class PeerManager {
     private final LoadingCache<String, Peer> cache;
 
     public PeerManager(int port, String serverURIPostfix) {
-        this.serverURI = URI.create("http://localhost:" + port + "/" + serverURIPostfix);
+        this.serverURI = URI.create("http://0.0.0.0:" + port + "/" + serverURIPostfix);
 
         this.cache = CacheBuilder.newBuilder()
                 .maximumSize(CACHE_SIZE)
@@ -103,7 +104,9 @@ public class PeerManager {
     }
 
     public void cleanUp() {
-        server.shutdown();
+        if (server != null) {
+            server.shutdown();
+        }
     }
 
     public Peer addPeer(Peer peer) throws PeerAlreadyExistsException {
@@ -200,9 +203,24 @@ public class PeerManager {
             register(new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    bind(PeerManager.this).to(PeerManager.class);
+                    bindWebBindings(this);
                 }
             });
         }
+    }
+
+    public List<Class<?>> getWebResources() {
+        return Arrays.asList(PeerResource.class,
+                CollectiveResource.class,
+                PeerInfoResource.class,
+                CollectiveInfoResource.class,
+                PeerAuthenticationResource.class,
+                MultiPartFeature.class,
+                ObjectMapperProvider.class,
+                JacksonFeature.class);
+    }
+
+    public void bindWebBindings(AbstractBinder binder) {
+        binder.bind(this).to(PeerManager.class);
     }
 }

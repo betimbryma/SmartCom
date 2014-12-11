@@ -92,7 +92,7 @@ public class CommunicationRESTImpl {
     }
 
     public CommunicationRESTImpl(int port, String serverURIPostfix) {
-        this.serverURI = URI.create("http://localhost:" + port + "/" + serverURIPostfix);
+        this.serverURI = URI.create("http://0.0.0.0:" + port + "/" + serverURIPostfix);
     }
 
     public void cleanUp() {

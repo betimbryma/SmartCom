@@ -34,7 +34,7 @@ public class PeerManagerLauncher {
     public static void main(String[] args) throws IOException {
         int port;
         String uriPrefix = "PeerManager";
-        String mongoDBHost = "localhost";
+        String mongoDBHost = "0.0.0.0";
         int mongoDBPort = 12345;
 
         if (args.length == 0) {
@@ -51,7 +51,7 @@ public class PeerManagerLauncher {
             }
         }
 
-        PeerManager manager = startPeerManager(port, uriPrefix, mongoDBHost, mongoDBPort);
+        PeerManager manager = startPeerManager(port, uriPrefix, mongoDBHost, mongoDBPort, true);
 
         System.out.println("Press enter to shutdown the peer manager");
         System.in.read();
@@ -59,19 +59,23 @@ public class PeerManagerLauncher {
         manager.cleanUp();
     }
 
-    public static PeerManager startPeerManager(int port, String uriPrefix, MongoClient mongo) throws UnknownHostException {
-        System.out.println("Running the peer manager on port ["+port+"] and path '"+uriPrefix+"'");
+    public static PeerManager startPeerManager(int port, String uriPrefix, MongoClient mongo, boolean init) throws UnknownHostException {
+        if (init) {
+            System.out.println("Running the peer manager on port [" + port + "] and path '" + uriPrefix + "'");
+        }
 
         MongoDBPeerDAO peerDAO = new MongoDBPeerDAO(mongo, "PM", "PEER");
         MongoDBCollectiveDAO collectiveDAO = new MongoDBCollectiveDAO(mongo, "PM", "COLLECTIVE");
 
         PeerManager manager = new PeerManager(port, uriPrefix, peerDAO, collectiveDAO);
-        manager.init();
+        if (init) {
+            manager.init();
+        }
         return manager;
     }
 
-    public static PeerManager startPeerManager(int port, String uriPrefix, String mongoDBHost, int mongoDBPort) throws UnknownHostException {
-        return startPeerManager(port, uriPrefix, new MongoClient(mongoDBHost, mongoDBPort));
+    public static PeerManager startPeerManager(int port, String uriPrefix, String mongoDBHost, int mongoDBPort, boolean init) throws UnknownHostException {
+        return startPeerManager(port, uriPrefix, new MongoClient(mongoDBHost, mongoDBPort), init);
     }
 
     public static int getFreePort() {

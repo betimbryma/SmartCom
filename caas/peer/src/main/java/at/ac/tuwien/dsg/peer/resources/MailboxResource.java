@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
  * @version 1.0
  */
-@Path("/")
+@Path("/mailbox")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class MailboxResource {
@@ -50,7 +50,7 @@ public class MailboxResource {
 
     @GET
     @Path("/poll/{id}")
-    public void poll(@PathParam("id") String id, @Suspended final AsyncResponse asyncResponse) {
+    public Response poll(@PathParam("id") String id, @Suspended final AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(30, TimeUnit.SECONDS);
         asyncResponse.setTimeoutHandler(new TimeoutHandler() {
             @Override
@@ -64,6 +64,7 @@ public class MailboxResource {
         } else {
             service.registerAsynchResponse(asyncResponse, id);
         }
+        return Response.ok().build();
     }
 
     @GET

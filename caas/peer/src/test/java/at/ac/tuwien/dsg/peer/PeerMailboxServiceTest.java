@@ -68,7 +68,7 @@ public class PeerMailboxServiceTest {
 
         int freePort = FreePortProviderUtil.getFreePort();
         url = "http://localhost:"+freePort+"/mailbox";
-        mailbox = new PeerMailboxService(freePort, "mailbox", mailboxDao);
+        mailbox = new PeerMailboxService(freePort, "", mailboxDao);
         mailbox.init();
     }
 

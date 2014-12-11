@@ -27,9 +27,7 @@ import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
 import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.rest.ObjectMapperProvider;
-import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -40,6 +38,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Philipp Zeppezauer (philipp.zeppezauer@gmail.com)
@@ -55,7 +55,7 @@ public class AdapterRestService {
 
     public AdapterRestService(int port, String serverURIPostfix, Communication communication) {
         this.communication = communication;
-        this.serverURI = URI.create("http://localhost:" + port + "/" + serverURIPostfix);
+        this.serverURI = URI.create("http://0.0.0.0:" + port + "/" + serverURIPostfix);
     }
 
     public AdapterRestService(Communication communication) {
@@ -67,12 +67,6 @@ public class AdapterRestService {
         registerResourceConfig(this, config);
 
         server = GrizzlyHttpServerFactory.createHttpServer(serverURI, config);
-        server.getServerConfiguration().addHttpHandler(new HttpHandler() {
-            @Override
-            public void service(Request request, org.glassfish.grizzly.http.server.Response response) throws Exception {
-
-            }
-        }, "/");
         try {
             server.start();
         } catch (IOException e) {
@@ -81,7 +75,9 @@ public class AdapterRestService {
     }
 
     public void cleanUp() {
-        server.shutdown();
+        if (server != null) {
+            server.shutdown();
+        }
     }
 
     public Identifier addPushAdapter(InputPushAdapter adapter) {
@@ -120,6 +116,20 @@ public class AdapterRestService {
         config.register(EmailAdapterResource.class);
         config.register(RESTAdapterResource.class);
         config.register(DropboxAdapterResource.class);
+    }
+
+    public List<Class<?>> getWebResources() {
+        return Arrays.asList(AdapterResource.class,
+                EmailAdapterResource.class,
+                RESTAdapterResource.class,
+                DropboxAdapterResource.class,
+                MultiPartFeature.class,
+                ObjectMapperProvider.class,
+                JacksonFeature.class);
+    }
+
+    public void bindWebBindings(AbstractBinder binder) {
+        binder.bind(this).to(AdapterRestService.class);
     }
 
     public static void bindServices(AdapterRestService restService, AbstractBinder binder) {

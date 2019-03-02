@@ -38,7 +38,7 @@ public class PeerAuthenticationResource {
     @GET
     @Path("/{id}")
     public boolean authenticatePeer(@PathParam("id") String id, @HeaderParam("password") String password) {
-        return id.equals(password);
+        return id.equals(password); //WTF
     }
 
 }

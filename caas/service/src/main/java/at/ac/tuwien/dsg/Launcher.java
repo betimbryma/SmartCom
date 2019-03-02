@@ -22,10 +22,12 @@ import at.ac.tuwien.dsg.peer.PeerMailboxServiceLauncher;
 import at.ac.tuwien.dsg.pm.PeerManager;
 import at.ac.tuwien.dsg.pm.PeerManagerLauncher;
 import at.ac.tuwien.dsg.rest.adapter.AdapterRestService;
+import at.ac.tuwien.dsg.smartcom.GreenMailOutputAdapter;
 import at.ac.tuwien.dsg.smartcom.SmartCom;
 import at.ac.tuwien.dsg.smartcom.SmartComBuilder;
 import at.ac.tuwien.dsg.smartcom.callback.exception.PeerAuthenticationException;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
+import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.utils.PropertiesLoader;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -78,7 +80,8 @@ public class Launcher {
 
         AdapterRestService adapterRestService = new AdapterRestService(adapterRestPort, adapterRestUri, smartCom.getCommunication());
         HttpServer server = startServer(peerManager, mailboxService, adapterRestService, port, uri);
-
+        smartCom.getCommunication().removeOutputAdapter(Identifier.adapter("Email"));
+        smartCom.getCommunication().registerOutputAdapter(GreenMailOutputAdapter.class);
         System.out.println("Press enter to shutdown the application");
         System.in.read();
 

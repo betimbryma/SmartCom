@@ -18,12 +18,16 @@
 package at.ac.tuwien.dsg.smartcom.rest;
 
 import at.ac.tuwien.dsg.smartcom.Communication;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPullAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.InputPushAdapter;
+import at.ac.tuwien.dsg.smartcom.adapter.OutputAdapter;
 import at.ac.tuwien.dsg.smartcom.callback.NotificationCallback;
 import at.ac.tuwien.dsg.smartcom.exception.CommunicationException;
 import at.ac.tuwien.dsg.smartcom.exception.InvalidRuleException;
 import at.ac.tuwien.dsg.smartcom.model.Identifier;
 import at.ac.tuwien.dsg.smartcom.model.Message;
 import at.ac.tuwien.dsg.smartcom.model.RoutingRule;
+import at.ac.tuwien.dsg.smartcom.rest.NotificationCallback.NotificationRESTCallback;
 import at.ac.tuwien.dsg.smartcom.rest.model.MessageDTO;
 import at.ac.tuwien.dsg.smartcom.rest.model.NotificationDTO;
 import at.ac.tuwien.dsg.smartcom.rest.model.RoutingRuleDTO;
@@ -31,6 +35,7 @@ import at.ac.tuwien.dsg.smartcom.statistic.Statistic;
 import at.ac.tuwien.dsg.smartcom.statistic.StatisticBean;
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.util.HttpStatus;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -41,6 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.print.attribute.standard.Media;
 import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -85,6 +91,7 @@ public class CommunicationRESTImpl {
         this(port, serverURIPostfix);
         this.communication = communication;
         this.statistic = statistic;
+        //WebClie
     }
 
     public CommunicationRESTImpl() {
@@ -176,47 +183,52 @@ public class CommunicationRESTImpl {
     @POST
     @Path("notification")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void registerNotificationCallback(NotificationDTO callback) {
-        if (!callback.getUrl().startsWith("http://")) {
+    public Response registerNotificationCallback(NotificationDTO callback) {
+        if (callback != null && !callback.getUrl().startsWith("http://")) {
             callback.setUrl("http://"+callback.getUrl());
         }
 
         communication.registerNotificationCallback(new NotificationRESTCallback(callback.getUrl()));
+        return Response.ok().build();
     }
 
-    private class NotificationRESTCallback implements NotificationCallback {
+    @POST
+    @Path("adapter/push/add")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Identifier addPushAdapter(InputPushAdapter adapter) {
+        if(adapter == null)
+            throw new WebApplicationException();
+        return communication.addPushAdapter(adapter);
+    }
 
-        private final Client client;
-        private final String url;
+    @POST
+    @Path("adapter/pull/add/{interval}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Identifier addPullAdapter(InputPullAdapter adapter, @PathParam("interval") long interval){
+        if(adapter == null)
+            throw new WebApplicationException();
+        return communication.addPullAdapter(adapter, interval);
+    }
 
-        private NotificationRESTCallback(String url) {
-            this.url = url;
-            this.client = ClientBuilder.newBuilder()
-                    .register(JacksonFeature.class)
-                    .property(ClientProperties.CONNECT_TIMEOUT, 1000)
-                    .property(ClientProperties.READ_TIMEOUT,    1000)
-                    .build();
-        }
+    @DELETE
+    @Path("adapter/{adapterId}")
+    public Response removeInputAdapter(@PathParam("adapterId") String adapterId) {
+        if(adapterId == null)
+            throw new WebApplicationException();
 
-        @Override
-        public void notify(final Message message) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        WebTarget target = client.target(url);
+        Identifier identifier = Identifier.adapter(adapterId);
 
-                        Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.json(new MessageDTO(message)), Response.class);
+        return Response.ok().build();
+    }
 
-                        if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
-                            log.error("Could not send message {} to notification callback \nResponse: {}", message, response);
-                        }
-                    } catch (Exception ignored) {
-                        log.debug("Could not notify rest callback", ignored);
-                    }
-                }
-            });
-        }
+    @POST
+    @Path("adapter/output/add")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Identifier registerOutputAdapter(Class<? extends OutputAdapter> outputAdapter) throws CommunicationException {
+        if(outputAdapter == null)
+            throw new WebApplicationException();
+        return null;//communication.registerOutputAdapter(outputAdapter);
     }
 
     private class RESTApplication extends ResourceConfig {
